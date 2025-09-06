@@ -1,3 +1,5 @@
+'use client';
+
 import GridPattern from '@/components/GridPattern';
 import LabeledSeparator from '@/components/LabeledSeparator';
 import Logo from '@/components/Logo';
@@ -11,12 +13,45 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from '@/components/ui/Form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { providers } from '@/constants';
+import { signUpSchema, SignUpSchemaType } from '@/utils/schemas';
+import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
+import { SubmitHandler, useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 
 const SignUp = () => {
+  const form = useForm<SignUpSchemaType>({
+    defaultValues: {
+      email: '',
+      password: '',
+      confirmPassword: '',
+    },
+    resolver: zodResolver(signUpSchema),
+  });
+
+  const onSubmit: SubmitHandler<SignUpSchemaType> = (data) => {
+    console.log(data);
+    const promise = new Promise((res) => setTimeout(res, 2000));
+
+    toast.promise(promise, {
+      success: 'Signup successfully',
+      loading: 'creating account',
+      error: 'failed to create account',
+      richColors: true,
+      position: 'top-center',
+    });
+  };
+
   return (
     <>
       <Card className="max-w-md w-full relative rounded-3xl">
@@ -63,32 +98,74 @@ const SignUp = () => {
 
             <LabeledSeparator label="or" className="mt-6" />
 
-            <form className="mt-10">
-              <Input placeholder="Email..." variant="lg" type="email" />
-              <Input
-                placeholder="Password..."
-                type="password"
-                variant="lg"
-                className="mt-7"
-              />
-              <Input
-                placeholder="Confirm password..."
-                type="password"
-                variant="lg"
-                className="mt-7"
-              />
+            <Form {...form}>
+              <form className="mt-10" onSubmit={form.handleSubmit(onSubmit)}>
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          placeholder="Email..."
+                          variant="lg"
+                          type="email"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          placeholder="Password..."
+                          type="password"
+                          variant="lg"
+                          className="mt-7"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          placeholder="Confirm password..."
+                          type="password"
+                          variant="lg"
+                          className="mt-7"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              <Label className="flex items-center gap-2 mt-4">
-                <Checkbox />
-                <span className="text-sm">
-                  By registering you agree with our Terms & Conditions
-                </span>
-              </Label>
+                <Label className="flex items-center gap-2 mt-4">
+                  <Checkbox />
+                  <span className="text-sm">
+                    By registering you agree with our Terms & Conditions
+                  </span>
+                </Label>
 
-              <Button type="submit" className="w-full mt-6" size="lg">
-                Sign Up
-              </Button>
-            </form>
+                <Button type="submit" className="w-full mt-6" size="lg">
+                  Sign Up
+                </Button>
+              </form>
+            </Form>
           </CardContent>
 
           <CardFooter>
