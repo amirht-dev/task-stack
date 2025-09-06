@@ -1,3 +1,4 @@
+import GridPattern from '@/components/GridPattern';
 import LabeledSeparator from '@/components/LabeledSeparator';
 import Logo from '@/components/Logo';
 import { Button } from '@/components/ui/button';
@@ -12,48 +13,8 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
+import { providers } from '@/constants';
 import Link from 'next/link';
-import { ComponentProps, useId } from 'react';
-import { FaGithub } from 'react-icons/fa';
-import { FcGoogle } from 'react-icons/fc';
-
-const providers = [FcGoogle, FaGithub];
-
-function GridPattern({ className, ...props }: ComponentProps<'svg'>) {
-  const id = useId();
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      {...props}
-      className={cn(
-        '[--fg:theme(colors.neutral.200)] [--bg:none] [--zoom:2] [--width:1px]',
-        className
-      )}
-    >
-      <defs>
-        <pattern
-          id={id}
-          width="20"
-          height="20"
-          style={{
-            transform: 'scale(var(--zoom))',
-          }}
-          patternUnits="userSpaceOnUse"
-        >
-          <rect width="100%" height="100%" fill="var(--bg)" />
-          <path
-            fill="none"
-            strokeWidth="var(--width)"
-            stroke="var(--fg)"
-            d="M10 0v20ZM0 10h20Z"
-          />
-        </pattern>
-      </defs>
-      <rect width="800%" height="800%" fill={`url(#${id})`} />
-    </svg>
-  );
-}
 
 const SignIn = () => {
   return (
