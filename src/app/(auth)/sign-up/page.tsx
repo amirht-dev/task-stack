@@ -96,12 +96,27 @@ const SignUp = () => {
             )}
           />
 
-          <Label className="flex items-center gap-2 mt-4">
-            <Checkbox />
-            <span className="text-sm">
-              By registering you agree with our Terms & Conditions
-            </span>
-          </Label>
+          <FormField
+            control={form.control}
+            name="termAndConditions"
+            render={({ field: { value, onChange, ...fields } }) => (
+              <FormItem>
+                <FormControl>
+                  <Label className="flex items-center gap-2 mt-4">
+                    <Checkbox
+                      checked={value}
+                      onCheckedChange={onChange}
+                      {...fields}
+                    />
+                    <span className="text-sm">
+                      By registering you agree with our Terms & Conditions
+                    </span>
+                  </Label>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
           <Button type="submit" className="w-full mt-6" size="lg">
             Sign Up

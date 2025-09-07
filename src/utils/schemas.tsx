@@ -11,6 +11,9 @@ export const signUpSchema = z
       .refine((value) => value, 'password is required')
       .min(8, 'password must be at least 8 characters'),
     confirmPassword: z.string(),
+    termAndConditions: z
+      .boolean()
+      .refine(Boolean, 'you must accept terms and conditions'),
   })
   .superRefine(({ password, confirmPassword }, ctx) => {
     if (password !== confirmPassword)
