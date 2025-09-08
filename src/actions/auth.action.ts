@@ -2,6 +2,8 @@
 
 import { createAdminClient } from '@/lib/appwrite/server';
 import { ServerFunction } from '@/types/next';
+import { SignInSchemaType } from '@/utils/schemas';
+import { cookies } from 'next/headers';
 import { ID } from 'node-appwrite';
 
 export const signupAction: ServerFunction<
@@ -9,11 +11,22 @@ export const signupAction: ServerFunction<
 > = async ({ email, password }) => {
   const { account } = await createAdminClient();
 
-  const user = await account.create({
+  await account.create({
     userId: ID.unique(),
     email,
     password,
   });
+};
 
-  console.log(user);
+export const signinAction: ServerFunction<
+  [credentials: SignInSchemaType]
+> = async ({ email, password }) => {
+  const { account } = await createAdminClient();
+
+  const session = await account.createEmailPasswordSession({ email, password });
+
+  (await cookies()).set('session', session.secret, {
+    expires: new Date(session.expire),
+    sameSite: 'strict',
+  });
 };

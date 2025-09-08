@@ -27,3 +27,10 @@ export const signUpSchema = z
   });
 
 export type SignUpSchemaType = z.infer<typeof signUpSchema>;
+
+export const signInSchema = z.object({
+  email: signUpSchema.shape.email,
+  password: signUpSchema.shape.password,
+});
+
+export type SignInSchemaType = z.infer<typeof signInSchema>;
