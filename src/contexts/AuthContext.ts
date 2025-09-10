@@ -4,6 +4,7 @@ import { createContext, useContext } from 'react';
 
 export type AuthContextType = AuthState & {
   signIn: (credentials: SignInSchemaType) => Promise<void>;
+  signout: () => Promise<void>;
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);

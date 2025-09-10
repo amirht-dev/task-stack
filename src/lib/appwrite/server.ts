@@ -1,7 +1,6 @@
 import 'server-only';
 
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 import { Account, Client } from 'node-appwrite';
 import { cache } from 'react';
 
@@ -37,13 +36,12 @@ export async function createAdminClient() {
   };
 }
 
-export const auth = cache(async () => {
+export const getLoggedInUser = cache(async () => {
   try {
     const { account } = await createSessionClient();
-
     return await account.get();
   } catch (error) {
-    console.error(error);
-    redirect('/sign-in');
+    if (error instanceof Error) console.log(error.message);
+    else console.log(error);
   }
 });

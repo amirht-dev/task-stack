@@ -13,6 +13,7 @@ export function createClientSideClient() {
   if (session) client.setSession(session);
 
   return {
+    client,
     get account() {
       return new Account(client);
     },

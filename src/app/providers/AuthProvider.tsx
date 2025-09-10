@@ -1,10 +1,10 @@
 'use client';
 
-import { signinAction } from '@/actions/auth.action';
+import { signinAction, signoutAction } from '@/actions/auth.action';
 import { AuthContext } from '@/contexts/AuthContext';
 import { createClientSideClient } from '@/lib/appwrite/client';
 import { SignInSchemaType } from '@/utils/schemas';
-import { Account, Models } from 'appwrite';
+import { Models } from 'appwrite';
 import { useRouter } from 'next/navigation';
 import {
   PropsWithChildren,
@@ -57,7 +57,9 @@ const reducer: Reducer<AuthState, AuthAction> = (state, action) => {
 };
 
 const AuthProvider = ({ children }: PropsWithChildren) => {
-  const clientRef = useRef<{ account: Account } | null>(null);
+  const clientRef = useRef<ReturnType<typeof createClientSideClient> | null>(
+    null
+  );
   const router = useRouter();
   const [state, dispatch] = useReducer(reducer, {
     state: 'pending',
@@ -65,16 +67,21 @@ const AuthProvider = ({ children }: PropsWithChildren) => {
   });
 
   const updateUser = useCallback(async () => {
-    const user = await clientRef.current?.account.get();
-    if (user) dispatch({ type: 'LOGGED_IN', payload: { user } });
+    try {
+      const user = await clientRef.current?.account.get();
+      if (user) dispatch({ type: 'LOGGED_IN', payload: { user } });
+    } catch (error) {
+      console.log(error);
+      dispatch({ type: 'LOGOUT' });
+    }
   }, []);
 
   const refresh = useCallback(async () => {
     try {
       dispatch({ type: 'REFRESHING' });
-      updateUser();
+      await updateUser();
     } catch (error) {
-      console.error(error);
+      console.warn('[refresh] -', error);
 
       dispatch({ type: 'LOGOUT' });
     }
@@ -83,13 +90,22 @@ const AuthProvider = ({ children }: PropsWithChildren) => {
   const signIn = async (credentials: SignInSchemaType) => {
     try {
       dispatch({ type: 'LOGGING_IN' });
-      await signinAction(credentials);
+      const session = await signinAction(credentials);
+      clientRef.current?.client.setSession(session.secret);
       await updateUser();
-      router.push('/');
+      router.replace('/');
     } catch (error) {
-      console.error(error);
+      console.log(error);
 
       dispatch({ type: 'LOGOUT' });
+    }
+  };
+
+  const signout = async () => {
+    try {
+      await signoutAction();
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -113,7 +129,7 @@ const AuthProvider = ({ children }: PropsWithChildren) => {
   }, [refresh]);
 
   return (
-    <AuthContext.Provider value={{ ...state, signIn }}>
+    <AuthContext.Provider value={{ ...state, signIn, signout }}>
       {children}
     </AuthContext.Provider>
   );
