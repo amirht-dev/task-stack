@@ -3,6 +3,7 @@
 import GridPattern from '@/components/GridPattern';
 import LabeledSeparator from '@/components/LabeledSeparator';
 import Logo from '@/components/Logo';
+import OAuthProviders from '@/components/OAuthProviders';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -22,7 +23,6 @@ import {
 } from '@/components/ui/Form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { providers } from '@/constants';
 import { useAuthContext } from '@/contexts/AuthContext';
 import { signInSchema, SignInSchemaType } from '@/utils/schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -83,18 +83,7 @@ const SignIn = () => {
           </CardHeader>
 
           <CardContent className="mt-6 p-0">
-            <div className="flex gap-4">
-              {providers.map((Icon, idx) => (
-                <Button
-                  key={idx}
-                  className="flex-1"
-                  variant="outline"
-                  size="lg"
-                >
-                  <Icon className="size-6" />
-                </Button>
-              ))}
-            </div>
+            <OAuthProviders />
 
             <LabeledSeparator label="or" className="mt-6" />
 

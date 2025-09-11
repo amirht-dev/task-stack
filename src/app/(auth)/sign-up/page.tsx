@@ -2,6 +2,7 @@
 
 import AuthCard from '@/components/AuthCard';
 import LabeledSeparator from '@/components/LabeledSeparator';
+import OAuthProviders from '@/components/OAuthProviders';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -13,7 +14,6 @@ import {
 } from '@/components/ui/Form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { providers } from '@/constants';
 import useSignup from '@/hooks/useSignup';
 import Link from 'next/link';
 
@@ -30,13 +30,7 @@ const SignUp = () => {
         </>
       }
     >
-      <div className="flex gap-4">
-        {providers.map((Icon, idx) => (
-          <Button key={idx} className="flex-1" variant="outline" size="lg">
-            <Icon className="size-6" />
-          </Button>
-        ))}
-      </div>
+      <OAuthProviders />
 
       <LabeledSeparator label="or" className="mt-6" />
 
