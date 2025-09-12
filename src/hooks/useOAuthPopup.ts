@@ -8,18 +8,20 @@ function useOAuthPopup({
   popupName = 'OAuth',
   onStart,
   onSuccess,
-  onFailed,
+  onError,
 }: {
   popupName?: string;
   onStart?: () => void;
   onSuccess?: () => void;
-  onFailed?: () => void;
+  onError?: (error: string) => void;
 }) {
   const login = async (providerId: OAuthProvider) => {
     onStart?.();
-    const url = await oauthGetURLAction(providerId);
+    const res = await oauthGetURLAction(providerId);
 
-    openPopup(url, popupName, { width: 700, height: 700 });
+    if (res.success)
+      openPopup(res.data, popupName, { width: 700, height: 700 });
+    else onError?.(res.error);
   };
 
   useEffect(() => {
@@ -35,7 +37,7 @@ function useOAuthPopup({
       if (result.success) {
         const res = await oauthSigninAction(result.data);
         if (res.success) onSuccess?.();
-        else onFailed?.();
+        else onError?.(res.error);
       }
     };
 
@@ -44,7 +46,7 @@ function useOAuthPopup({
     return () => {
       window.removeEventListener('message', messageListener);
     };
-  }, [popupName, onStart, onSuccess, onFailed]);
+  }, [popupName, onStart, onSuccess, onError]);
 
   return login;
 }
