@@ -1,4 +1,4 @@
-import { AuthState } from '@/app/providers/AuthProvider';
+import { AuthState } from '@/providers/AuthProvider';
 import { SignInSchemaType } from '@/utils/schemas';
 import { OAuthProvider } from 'appwrite';
 import { createContext, useContext } from 'react';
