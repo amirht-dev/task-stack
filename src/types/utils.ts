@@ -2,14 +2,14 @@ import {
   ComponentPropsWithoutRef,
   ComponentPropsWithRef,
   ElementType,
-} from "react";
+} from 'react';
 import {
   Merge,
   OmitIndexSignature,
   PickIndexSignature,
   Primitive,
-} from "type-fest";
-import { SimpleMerge } from "type-fest/source/merge";
+} from 'type-fest';
+import { SimpleMerge } from 'type-fest/source/merge';
 
 export type PropsWithAsChild<P = object> = Merge<
   P,
@@ -20,12 +20,12 @@ export type PropsWithAsChild<P = object> = Merge<
 
 export type PropsWithComponentPropsWithoutRef<
   T extends ElementType,
-  P = object,
+  P = object
 > = Merge<ComponentPropsWithoutRef<T>, P>;
 
 export type PropsWithComponentPropsWithRef<
   T extends ElementType,
-  P = object,
+  P = object
 > = Merge<ComponentPropsWithRef<T>, P>;
 
 export type OneOrMore<T> = T | T[];
@@ -45,3 +45,11 @@ export type UnSimplifiedMerge<Destination, Source> = SimpleMerge<
   PickIndexSignature<Source>
 > &
   SimpleMerge<OmitIndexSignature<Destination>, OmitIndexSignature<Source>>;
+
+export type DiscriminatedResponse =
+  | { success: true }
+  | { success: false; error: string };
+
+export type DiscriminatedResponseWithData<TData> =
+  | { success: true; data: TData }
+  | { success: false; error: string };

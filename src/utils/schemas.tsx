@@ -34,3 +34,10 @@ export const signInSchema = z.object({
 });
 
 export type SignInSchemaType = z.infer<typeof signInSchema>;
+
+export const oauthSchema = z.object({
+  userId: z.string(),
+  secret: z.string(),
+});
+
+export type OAuthSchemaType = z.infer<typeof oauthSchema>;

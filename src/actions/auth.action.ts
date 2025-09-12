@@ -1,11 +1,15 @@
 'use server';
 
-import { AUTHENTICATED_REDIRECT_PARAM_KEY } from '@/constants/auth';
+import { SESSION_COOKIE_KEY } from '@/constants/auth';
 import { createAdminClient, createSessionClient } from '@/lib/appwrite/server';
 import { ServerFunction } from '@/types/next';
-import { SignInSchemaType } from '@/utils/schemas';
+import {
+  DiscriminatedResponse,
+  DiscriminatedResponseWithData,
+} from '@/types/utils';
+import { OAuthSchemaType, SignInSchemaType } from '@/utils/schemas';
+import { setSessionCookie } from '@/utils/server';
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 import { ID, Models, OAuthProvider } from 'node-appwrite';
 
 export const signupAction: ServerFunction<
@@ -28,39 +32,85 @@ export const signinAction: ServerFunction<
 
   const session = await account.createEmailPasswordSession({ email, password });
 
-  (await cookies()).set('session', session.secret, {
-    expires: new Date(session.expire),
-    sameSite: 'strict',
-  });
+  setSessionCookie(session);
 
   return session;
 };
 
-export const signoutAction: ServerFunction<[]> = async () => {
-  const { account } = await createSessionClient();
-
-  await account.deleteSession({ sessionId: 'current' });
-
-  (await cookies()).delete('session');
+export const signoutAction: ServerFunction<
+  [],
+  DiscriminatedResponse
+> = async () => {
+  try {
+    const { account } = await createSessionClient();
+    await account.deleteSession({ sessionId: 'current' });
+    (await cookies()).delete(SESSION_COOKIE_KEY);
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'failed to signout',
+    };
+  }
 };
 
-export const OAuthSignin: ServerFunction<
-  [provider: OAuthProvider, options?: { redirectTo?: string | false }]
-> = async (
-  provider,
-  { redirectTo = process.env.NEXT_PUBLIC_ORIGIN_URL } = {}
-) => {
+export const oauthGetURLAction: ServerFunction<
+  [provider: OAuthProvider, options?: { redirectTo?: string | false }],
+  string
+> = async (provider) => {
   const { account } = await createAdminClient();
 
-  const successURL = new URL('/api/oauth', process.env.NEXT_PUBLIC_ORIGIN_URL);
-
-  if (redirectTo)
-    successURL.searchParams.set(AUTHENTICATED_REDIRECT_PARAM_KEY, redirectTo);
+  const successURL = new URL(
+    '/oauth/callback',
+    process.env.NEXT_PUBLIC_ORIGIN_URL
+  );
 
   const url = await account.createOAuth2Token({
     provider,
     success: successURL.toString(),
   });
 
-  redirect(url);
+  return url;
+};
+
+export const oauthSigninAction: ServerFunction<
+  [data: OAuthSchemaType],
+  { success: true } | { success: false; error: string }
+> = async (data) => {
+  try {
+    const { account } = await createAdminClient();
+
+    const session = await account.createSession(data);
+
+    await setSessionCookie(session);
+
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : typeof error === 'string'
+          ? error
+          : 'failed to signin with oauth',
+    };
+  }
+};
+
+export const getCurrentUserAction: ServerFunction<
+  [],
+  DiscriminatedResponseWithData<Models.User<Models.Preferences>>
+> = async () => {
+  try {
+    const { account } = await createSessionClient();
+    const user = await account.get();
+    return { success: true, data: user };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error ? error.message : 'failed to get current user',
+    };
+  }
 };

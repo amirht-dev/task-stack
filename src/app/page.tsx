@@ -1,22 +1,36 @@
-import { signoutAction } from '@/actions/auth.action';
-import { Button } from '@/components/ui/button';
-import { getLoggedInUser } from '@/lib/appwrite/server';
-import Link from 'next/link';
+'use client';
 
-export default async function Home() {
-  const user = await getLoggedInUser();
+import { SignIn, SigningIn, SignOut } from '@/components/Auth';
+import { Button } from '@/components/ui/button';
+import { AUTHENTICATED_REDIRECT_PARAM_KEY } from '@/constants/auth';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
+
+export default function Home() {
+  const { signout } = useAuthContext();
+  const router = useRouter();
 
   return (
     <div>
-      {user ? (
-        <form action={signoutAction}>
-          <Button type="submit">signout</Button>
-        </form>
-      ) : (
-        <Button asChild>
-          <Link href="/sign-in">signin</Link>
+      <SignIn>
+        <Button onClick={signout}>sign out</Button>
+      </SignIn>
+
+      <SigningIn>loading...</SigningIn>
+
+      <SignOut>
+        <Button
+          onClick={() =>
+            router.push(
+              `/sign-in?${new URLSearchParams({
+                [AUTHENTICATED_REDIRECT_PARAM_KEY]: location.href,
+              }).toString()}`
+            )
+          }
+        >
+          sign in
         </Button>
-      )}
+      </SignOut>
     </div>
   );
 }

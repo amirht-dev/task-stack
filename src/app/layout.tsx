@@ -20,7 +20,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`text-base antialiased ${inter.className}`}>
         <AuthProvider>
-          <Toaster />
+          <Toaster richColors position="top-center" />
           {children}
         </AuthProvider>
       </body>

@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { SESSION_COOKIE_KEY } from '@/constants/auth';
 import { cookies } from 'next/headers';
 import { Account, Client } from 'node-appwrite';
 import { cache } from 'react';
@@ -9,7 +10,7 @@ export async function createSessionClient() {
     .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT)
     .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID);
 
-  const session = (await cookies()).get('session');
+  const session = (await cookies()).get(SESSION_COOKIE_KEY);
   if (!session || !session.value) {
     throw new Error('No session');
   }

@@ -1,5 +1,5 @@
-import { FC, ReactNode } from "react";
-import { Simplify, UnionToIntersection } from "type-fest";
+import { FC, ReactNode } from 'react';
+import { Simplify, UnionToIntersection } from 'type-fest';
 
 type PromiseAble<T> = T | Promise<T>;
 
@@ -9,7 +9,7 @@ type OptionalCatchAllParam<P extends string = string> = P[][];
 
 type ParamObjectType<
   TParamKey extends string = string,
-  TParamValue = unknown,
+  TParamValue = unknown
 > = Record<TParamKey, TParamValue>;
 
 type ConvertAbleParams<P extends string = string> =
@@ -21,25 +21,26 @@ type ParamType<P extends string = string> =
   | ConvertAbleParams<P>
   | ParamObjectType<P, unknown>;
 
-type ParamObject<T extends ConvertAbleParams> =
-  T extends OptionalCatchAllParam<infer P>
-    ? ParamObjectType<P, string[] | undefined>
-    : T extends CatchAllParam<infer P>
-      ? ParamObjectType<P, string[]>
-      : T extends SingleParam<infer P>
-        ? ParamObjectType<P, string>
-        : never;
+type ParamObject<T extends ConvertAbleParams> = T extends OptionalCatchAllParam<
+  infer P
+>
+  ? ParamObjectType<P, string[] | undefined>
+  : T extends CatchAllParam<infer P>
+  ? ParamObjectType<P, string[]>
+  : T extends SingleParam<infer P>
+  ? ParamObjectType<P, string>
+  : never;
 
 export type NextParams<
   T extends ParamType,
-  TParentParams extends ParamObjectType = never,
+  TParentParams extends ParamObjectType = never
 > = Simplify<
   UnionToIntersection<
     | (T extends ParamObjectType
         ? T
         : T extends ConvertAbleParams
-          ? ParamObject<T>
-          : never)
+        ? ParamObject<T>
+        : never)
     | TParentParams
   >
 >;
@@ -78,19 +79,20 @@ export type GenericStaticParams<TParams extends ParamType> =
 
 export type ServerFunction<TParams extends unknown[], TReturn = void> = (
   ...params: TParams
-) => Promise<TReturn>;
+) => [TReturn] extends unknown ? Promise<TReturn> : never;
+// ) => TReturn extends Promise<unknown> ? TReturn : Promise<TReturn>;
 
 export type FormServerAction<
   TParams extends unknown[] = [],
-  TReturn = void,
+  TReturn = void
 > = ServerFunction<[...TParams, formData: FormData], TReturn>;
 
 export type UseActionStateServerActionFunction<
   T = void,
-  TParams extends unknown[] = [],
+  TParams extends unknown[] = []
 > = FormServerAction<[currentState: T, ...TParams], T>;
 
 export type UseActionStateServerFunctionFunction<
   T = void,
-  TParams extends unknown[] = [],
+  TParams extends unknown[] = []
 > = ServerFunction<[currentState: T, ...TParams], T>;
