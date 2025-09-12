@@ -11,6 +11,7 @@ import { OAuthSchemaType, SignInSchemaType } from '@/utils/schemas';
 import { setSessionCookie } from '@/utils/server';
 import { cookies } from 'next/headers';
 import { ID, Models, OAuthProvider } from 'node-appwrite';
+import { Promisable } from 'type-fest';
 
 export const signupAction: ServerFunction<
   [credentials: { email: string; password: string }]
@@ -24,17 +25,48 @@ export const signupAction: ServerFunction<
   });
 };
 
-export const signinAction: ServerFunction<
-  [credentials: SignInSchemaType],
-  Models.Session
-> = async ({ email, password }) => {
-  const { account } = await createAdminClient();
+async function handleError(
+  cb: () => Promisable<void>
+): Promise<DiscriminatedResponse>;
+async function handleError<T>(
+  cb: () => Promisable<T>
+): Promise<DiscriminatedResponseWithData<T>>;
+async function handleError(
+  cb: () => unknown
+): Promise<DiscriminatedResponse | DiscriminatedResponseWithData<unknown>> {
+  try {
+    const data = await cb();
+    return {
+      success: true,
+      data,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : typeof error === 'string'
+          ? error
+          : 'some',
+    };
+  }
+}
 
-  const session = await account.createEmailPasswordSession({ email, password });
+export const emailPasswordSigninAction = async ({
+  email,
+  password,
+}: SignInSchemaType) => {
+  return handleError(async () => {
+    const { account } = await createAdminClient();
 
-  setSessionCookie(session);
+    const session = await account.createEmailPasswordSession({
+      email,
+      password,
+    });
 
-  return session;
+    await setSessionCookie(session);
+  });
 };
 
 export const signoutAction: ServerFunction<

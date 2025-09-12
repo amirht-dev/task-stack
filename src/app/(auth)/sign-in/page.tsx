@@ -28,10 +28,9 @@ import { signInSchema, SignInSchemaType } from '@/utils/schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 
 const SignIn = () => {
-  const { signIn } = useAuthContext();
+  const { emailPasswordSignIn } = useAuthContext();
   const form = useForm<SignInSchemaType>({
     defaultValues: {
       email: '',
@@ -41,15 +40,7 @@ const SignIn = () => {
   });
 
   const submitHandler = form.handleSubmit(async (data) => {
-    toast.promise(signIn(data), {
-      loading: 'signing in...',
-      success: 'logged in successfully',
-      error: (error) => ({
-        message: error instanceof Error ? error.message : 'failed to login',
-      }),
-      richColors: true,
-      position: 'top-center',
-    });
+    await emailPasswordSignIn(data);
   });
 
   return (

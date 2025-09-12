@@ -4,9 +4,9 @@ import { OAuthProvider } from 'appwrite';
 import { createContext, useContext } from 'react';
 
 export type AuthContextType = AuthState & {
-  signIn: (credentials: SignInSchemaType) => Promise<void>;
+  emailPasswordSignIn: (credentials: SignInSchemaType) => Promise<void>;
   signout: () => Promise<void>;
-  oauthSignIn: (provider: OAuthProvider) => void;
+  oauthSignIn: (provider: OAuthProvider) => Promise<void>;
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);

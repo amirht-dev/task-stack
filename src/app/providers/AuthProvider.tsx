@@ -1,8 +1,8 @@
 'use client';
 
 import {
+  emailPasswordSigninAction,
   getCurrentUserAction,
-  signinAction,
   signoutAction,
 } from '@/actions/auth.action';
 import { AUTHENTICATED_REDIRECT_PARAM_KEY } from '@/constants/auth';
@@ -101,17 +101,18 @@ const AuthProvider = ({ children }: PropsWithChildren) => {
     else dispatch({ type: 'SIGNOUT' });
   }, []);
 
-  const signIn = async (credentials: SignInSchemaType) => {
-    try {
-      dispatch({ type: 'SIGNING_IN' });
-      const session = await signinAction(credentials);
-      clientRef.current?.client.setSession(session.secret);
+  const emailPasswordSignIn = async (credentials: SignInSchemaType) => {
+    dispatch({ type: 'SIGNING_IN' });
+    toast.loading('signing in...', { id: OAUTH_TOAST_ID });
+    const res = await emailPasswordSigninAction(credentials);
+    if (res.success) {
       await updateUser();
-      router.replace('/');
-    } catch (error) {
-      console.log(error);
-
+      toast.success('signed in successfully', { id: OAUTH_TOAST_ID });
+      const redirectURL = searchParams.get(AUTHENTICATED_REDIRECT_PARAM_KEY);
+      if (redirectURL) router.replace(redirectURL);
+    } else {
       dispatch({ type: 'SIGNOUT' });
+      toast.error(`failed to sign in. ${res.error}`, { id: OAUTH_TOAST_ID });
     }
   };
 
@@ -133,7 +134,7 @@ const AuthProvider = ({ children }: PropsWithChildren) => {
     <AuthContext.Provider
       value={{
         ...state,
-        signIn,
+        emailPasswordSignIn,
         oauthSignIn,
         signout,
       }}
