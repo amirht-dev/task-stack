@@ -33,6 +33,8 @@ export async function handleResponse(
       data,
     };
   } catch (error) {
+    if (process.env.NODE_ENV === 'development') console.error(error);
+
     return {
       success: false,
       error:

@@ -5,7 +5,7 @@ import { createAdminClient, createSessionClient } from '@/lib/appwrite/server';
 import { ServerFunction } from '@/types/next';
 import { OAuthSchemaType, SignInSchemaType } from '@/utils/schemas';
 import { handleResponse, setSessionCookie } from '@/utils/server';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { ID, OAuthProvider } from 'node-appwrite';
 
 export const signupAction: ServerFunction<
@@ -45,13 +45,12 @@ export const signoutAction = async () => {
 export const oauthGetURLAction = async (provider: OAuthProvider) => {
   return handleResponse(async () => {
     const { account } = await createAdminClient();
-    const successURL = new URL(
-      '/oauth/callback',
-      process.env.NEXT_PUBLIC_ORIGIN_URL
-    );
+    const origin = (await headers()).get('origin');
+    if (!origin) throw new Error('No origin');
+    const successURL = new URL('/oauth/callback', origin).toString();
     return await account.createOAuth2Token({
       provider,
-      success: successURL.toString(),
+      success: successURL,
     });
   });
 };
