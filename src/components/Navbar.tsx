@@ -1,5 +1,3 @@
-'use client';
-
 import UserButton from '@/components/UserButton';
 
 const Navbar = () => {

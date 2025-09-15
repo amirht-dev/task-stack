@@ -1,12 +1,13 @@
-'use client';
-
+import { getLoggedInUser } from '@/lib/appwrite/server';
 import { GoSignOut } from 'react-icons/go';
+import SignoutButton from './SignoutButton';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import DialogContent, {
   Dialog,
   DialogBody,
   DialogClose,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -19,13 +20,14 @@ type UserButtonProps = {
   triggerClassName?: string;
 };
 
-export default function UserButton({ triggerClassName }: UserButtonProps) {
-  const name = 'amir hossein';
-  const email = 'amirht.dev@gmail.com';
+export default async function UserButton({
+  triggerClassName,
+}: UserButtonProps) {
+  const user = await getLoggedInUser();
 
-  const avatarFallback = name
-    .split(' ')
-    .map((part) => part[0].toUpperCase())
+  const avatarFallback = user?.name
+    ?.split(' ')
+    .map((part) => part[0]?.toUpperCase())
     .join('');
 
   return (
@@ -37,16 +39,16 @@ export default function UserButton({ triggerClassName }: UserButtonProps) {
           className="flex items-center gap-2 w-[160px] cursor-pointer hover:bg-neutral-100 py-1 px-2 transition-colors rounded-lg"
         >
           <Avatar className="shrink-0">
-            <AvatarImage src="https://i.pravatar.cc/300" alt={name} />
+            <AvatarImage src="https://i.pravatar.cc/300" alt={user?.name} />
             <AvatarFallback>{avatarFallback}</AvatarFallback>
           </Avatar>
 
           <div className="flex flex-col items-start flex-1 text-start min-w-0">
             <span className="font-semibold text-sm capitalize text-neutral-950 text-ellipsis text-nowrap w-full overflow-hidden">
-              {name}
+              {user?.name}
             </span>
             <span className="text-xs text-neutral-600 text-ellipsis text-nowrap w-full overflow-hidden">
-              {email}
+              {user?.email}
             </span>
           </div>
         </Button>
@@ -55,14 +57,14 @@ export default function UserButton({ triggerClassName }: UserButtonProps) {
       <PopoverContent align="end">
         <div className="flex flex-col items-center">
           <Avatar className="size-16">
-            <AvatarImage src="https://i.pravatar.cc/300" alt={name} />
+            <AvatarImage src="https://i.pravatar.cc/300" alt={user?.name} />
             <AvatarFallback>{avatarFallback}</AvatarFallback>
           </Avatar>
 
           <span className="font-semibold text-neutral-950 capitalize mt-2">
-            {name}
+            {user?.name}
           </span>
-          <span className="text-xs text-neutral-600">{email}</span>
+          <span className="text-xs text-neutral-600">{user?.email}</span>
         </div>
 
         <Separator className="my-4" />
@@ -91,9 +93,9 @@ function SignoutDialog() {
         </DialogHeader>
 
         <DialogBody>
-          <p className="text-sm">
+          <DialogDescription className="text-sm">
             After logout you need to input your detail to get back this app
-          </p>
+          </DialogDescription>
         </DialogBody>
 
         <DialogFooter>
@@ -101,7 +103,7 @@ function SignoutDialog() {
             <Button variant="outline">Cancel</Button>
           </DialogClose>
 
-          <Button variant="destructive">Sign out</Button>
+          <SignoutButton />
         </DialogFooter>
       </DialogContent>
     </Dialog>
