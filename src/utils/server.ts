@@ -1,9 +1,11 @@
 import { SESSION_COOKIE_KEY } from '@/constants/auth';
+import { getLoggedInUser } from '@/lib/appwrite/server';
 import {
   DiscriminatedResponse,
   DiscriminatedResponseWithData,
 } from '@/types/utils';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import { Models } from 'node-appwrite';
 import 'server-only';
 import { Promisable } from 'type-fest';
@@ -45,4 +47,10 @@ export async function handleResponse(
           : 'something wrong happened please try again later',
     };
   }
+}
+
+export async function protect() {
+  const user = await getLoggedInUser();
+
+  if (!user) redirect('/sign-in');
 }

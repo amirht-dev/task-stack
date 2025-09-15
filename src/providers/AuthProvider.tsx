@@ -37,15 +37,10 @@ const authToast = {
 const AuthProvider = ({ children }: PropsWithChildren) => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  // const [state, dispatch] = useReducer(reducer, {
-  //   state: 'pending',
-  //   user: null,
-  // });
   const [state, dispatch] = useAuthState();
 
   const handleRedirect = () => {
-    const redirectURL = searchParams.get(AUTHENTICATED_REDIRECT_PARAM_KEY);
-    if (redirectURL) router.replace(redirectURL);
+    router.replace(searchParams.get(AUTHENTICATED_REDIRECT_PARAM_KEY) ?? '/');
   };
 
   const oauthSignIn = useOAuthPopup({

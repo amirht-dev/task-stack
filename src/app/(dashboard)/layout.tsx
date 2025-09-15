@@ -1,8 +1,11 @@
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
 import { NextLayout } from '@/types/next';
+import { protect } from '@/utils/server';
 
-const DashboardLayout: NextLayout = ({ children }) => {
+const DashboardLayout: NextLayout = async ({ children }) => {
+  await protect();
+
   return (
     <div className="h-dvh flex">
       <Sidebar />

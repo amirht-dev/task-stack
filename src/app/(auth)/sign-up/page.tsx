@@ -1,124 +1,13 @@
-'use client';
+import SignUpCard from '@/components/SignUpCard';
+import { getLoggedInUser } from '@/lib/appwrite/server';
+import { redirect } from 'next/navigation';
 
-import AuthCard from '@/components/AuthCard';
-import LabeledSeparator from '@/components/LabeledSeparator';
-import OAuthProviders from '@/components/OAuthProviders';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from '@/components/ui/Form';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import useSignup from '@/hooks/useSignup';
-import Link from 'next/link';
+const SignUp = async () => {
+  const user = await getLoggedInUser();
 
-const SignUp = () => {
-  const { form, submitHandler } = useSignup();
+  if (user) redirect('/');
 
-  return (
-    <AuthCard
-      title="Create an account"
-      description="Get started with an account in Task Stack"
-      footer={
-        <>
-          Already have an account? <Link href="/sign-in">Sign in</Link>
-        </>
-      }
-    >
-      <OAuthProviders />
-
-      <LabeledSeparator label="or" className="mt-6" />
-
-      <Form {...form}>
-        <form className="mt-10" onSubmit={submitHandler}>
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <Input
-                    placeholder="Email..."
-                    variant="lg"
-                    type="email"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <Input
-                    placeholder="Password..."
-                    type="password"
-                    variant="lg"
-                    className="mt-7"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="confirmPassword"
-            render={({ field }) => (
-              <FormItem>
-                <FormControl>
-                  <Input
-                    placeholder="Confirm password..."
-                    type="password"
-                    variant="lg"
-                    className="mt-7"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="termAndConditions"
-            render={({ field: { value, onChange, ...fields } }) => (
-              <FormItem>
-                <FormControl>
-                  <Label className="flex items-center gap-2 mt-4">
-                    <Checkbox
-                      checked={value}
-                      onCheckedChange={onChange}
-                      {...fields}
-                    />
-                    <span className="text-sm">
-                      By registering you agree with our Terms & Conditions
-                    </span>
-                  </Label>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <Button type="submit" className="w-full mt-6" size="lg">
-            Sign Up
-          </Button>
-        </form>
-      </Form>
-    </AuthCard>
-  );
+  return <SignUpCard />;
 };
 
 export default SignUp;
