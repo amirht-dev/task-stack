@@ -1,4 +1,4 @@
-import SignUpCard from '@/components/SignUpCard';
+import SignUpCard from '@/features/auth/components/SignUpCard';
 import { getLoggedInUser } from '@/lib/appwrite/server';
 import { redirect } from 'next/navigation';
 

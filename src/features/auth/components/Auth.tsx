@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuthContext } from '@/contexts/AuthContext';
+import { useAuthContext } from '@/features/auth/contexts/AuthContext';
 import { PropsWithChildren } from 'react';
 
 export const SignIn = ({ children }: PropsWithChildren) => {

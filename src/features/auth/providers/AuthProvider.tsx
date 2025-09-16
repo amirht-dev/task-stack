@@ -4,12 +4,12 @@ import {
   emailPasswordSigninAction,
   getCurrentUserAction,
   signoutAction,
-} from '@/actions/auth.action';
-import { AUTHENTICATED_REDIRECT_PARAM_KEY } from '@/constants/auth';
-import { AuthContext } from '@/contexts/AuthContext';
-import useAuthState from '@/hooks/useAuthState';
-import useOAuthPopup from '@/hooks/useOAuthPopup';
-import { SignInSchemaType } from '@/utils/schemas';
+} from '@/features/auth/actions';
+import { AUTHENTICATED_REDIRECT_PARAM_KEY } from '@/features/auth/constants';
+import { AuthContext } from '@/features/auth/contexts/AuthContext';
+import useAuthState from '@/features/auth/hooks/useAuthState';
+import useOAuthPopup from '@/features/auth/hooks/useOAuthPopup';
+import { SignInSchemaType } from '@/features/auth/schemas';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PropsWithChildren, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';

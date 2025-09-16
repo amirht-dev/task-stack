@@ -1,6 +1,6 @@
-import { AUTHENTICATED_REDIRECT_PARAM_KEY } from '@/constants/auth';
+import { AUTHENTICATED_REDIRECT_PARAM_KEY } from '@/features/auth/constants';
+import { setSessionCookie } from '@/features/auth/utils/server';
 import { createAdminClient } from '@/lib/appwrite/server';
-import { setSessionCookie } from '@/utils/server';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const GET = async (req: NextRequest) => {

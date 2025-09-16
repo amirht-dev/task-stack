@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { SESSION_COOKIE_KEY } from '@/constants/auth';
+import { SESSION_COOKIE_KEY } from '@/features/auth/constants';
 import { cookies } from 'next/headers';
 import { Account, Client } from 'node-appwrite';
 import { cache } from 'react';

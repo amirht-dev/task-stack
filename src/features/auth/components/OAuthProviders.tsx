@@ -1,10 +1,10 @@
 'use client';
 
-import { providers } from '@/constants/auth';
-import { useAuthContext } from '@/contexts/AuthContext';
+import { providers } from '@/features/auth/constants';
+import { useAuthContext } from '@/features/auth/contexts/AuthContext';
 import { PropsWithComponentPropsWithRef } from '@/types/utils';
 import { ArrayValues, Except } from 'type-fest';
-import { Button } from './ui/button';
+import { Button } from '../../../components/ui/button';
 
 const OAuthProviders = () => {
   return (

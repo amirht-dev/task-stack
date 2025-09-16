@@ -1,8 +1,8 @@
 'use client';
 
-import { useAuthContext } from '@/contexts/AuthContext';
+import { useAuthContext } from '@/features/auth/contexts/AuthContext';
 import { ComponentProps, MouseEventHandler, useTransition } from 'react';
-import { Button } from './ui/button';
+import { Button } from '../../../components/ui/button';
 
 type SignoutButtonProps = ComponentProps<typeof Button>;
 

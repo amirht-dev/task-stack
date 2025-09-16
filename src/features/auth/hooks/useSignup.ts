@@ -1,5 +1,5 @@
-import { signupAction } from '@/actions/auth.action';
-import { signUpSchema, SignUpSchemaType } from '@/utils/schemas';
+import { signupAction } from '@/features/auth/actions';
+import { signUpSchema, SignUpSchemaType } from '@/features/auth/schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';

@@ -1,6 +1,6 @@
 import { getLoggedInUser } from '@/lib/appwrite/server';
 import { GoSignOut } from 'react-icons/go';
-import SignoutButton from './SignoutButton';
+import SignoutButton from '../features/auth/components/SignoutButton';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import DialogContent, {

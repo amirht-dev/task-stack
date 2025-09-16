@@ -1,7 +1,7 @@
 import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
+import { protect } from '@/features/auth/utils/server';
 import { NextLayout } from '@/types/next';
-import { protect } from '@/utils/server';
 
 const DashboardLayout: NextLayout = async ({ children }) => {
   await protect();

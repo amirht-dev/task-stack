@@ -1,12 +1,13 @@
 'use server';
 
-import { SESSION_COOKIE_KEY } from '@/constants/auth';
+import { SESSION_COOKIE_KEY } from '@/features/auth/constants';
+import { OAuthSchemaType, SignInSchemaType } from '@/features/auth/schemas';
 import { createAdminClient, createSessionClient } from '@/lib/appwrite/server';
 import { ServerFunction } from '@/types/next';
-import { OAuthSchemaType, SignInSchemaType } from '@/utils/schemas';
-import { handleResponse, setSessionCookie } from '@/utils/server';
+import { handleResponse } from '@/utils/server';
 import { cookies, headers } from 'next/headers';
 import { ID, OAuthProvider } from 'node-appwrite';
+import { setSessionCookie } from './utils/server';
 
 export const signupAction: ServerFunction<
   [credentials: { email: string; password: string }]

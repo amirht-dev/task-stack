@@ -3,7 +3,6 @@
 import GridPattern from '@/components/GridPattern';
 import LabeledSeparator from '@/components/LabeledSeparator';
 import Logo from '@/components/Logo';
-import OAuthProviders from '@/components/OAuthProviders';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -23,8 +22,9 @@ import {
 } from '@/components/ui/Form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuthContext } from '@/contexts/AuthContext';
-import { signInSchema, SignInSchemaType } from '@/utils/schemas';
+import OAuthProviders from '@/features/auth/components/OAuthProviders';
+import { useAuthContext } from '@/features/auth/contexts/AuthContext';
+import { signInSchema, SignInSchemaType } from '@/features/auth/schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';

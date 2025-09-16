@@ -1,6 +1,6 @@
-import { oauthGetURLAction, oauthSigninAction } from '@/actions/auth.action';
+import { oauthGetURLAction, oauthSigninAction } from '@/features/auth/actions';
+import { oauthSchema } from '@/features/auth/schemas';
 import { openPopup } from '@/utils/client';
-import { oauthSchema } from '@/utils/schemas';
 import { OAuthProvider } from 'appwrite';
 import { useEffect } from 'react';
 

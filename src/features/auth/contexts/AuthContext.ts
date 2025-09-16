@@ -1,5 +1,5 @@
-import { AuthState } from '@/hooks/useAuthState';
-import { SignInSchemaType } from '@/utils/schemas';
+import { AuthState } from '@/features/auth/hooks/useAuthState';
+import { SignInSchemaType } from '@/features/auth/schemas';
 import { OAuthProvider } from 'appwrite';
 import { createContext, useContext } from 'react';
 

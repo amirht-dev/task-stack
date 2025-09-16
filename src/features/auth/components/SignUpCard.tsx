@@ -1,8 +1,6 @@
 'use client';
 
-import AuthCard from '@/components/AuthCard';
 import LabeledSeparator from '@/components/LabeledSeparator';
-import OAuthProviders from '@/components/OAuthProviders';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -14,7 +12,9 @@ import {
 } from '@/components/ui/Form';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import useSignup from '@/hooks/useSignup';
+import AuthCard from '@/features/auth/components/AuthCard';
+import OAuthProviders from '@/features/auth/components/OAuthProviders';
+import useSignup from '@/features/auth/hooks/useSignup';
 import Link from 'next/link';
 
 const SignUpCard = () => {
