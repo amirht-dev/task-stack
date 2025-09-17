@@ -1,4 +1,6 @@
-import { getLoggedInUser } from '@/lib/appwrite/server';
+'use client';
+
+import { useAuthContext } from '@/features/auth/contexts/AuthContext';
 import { GoSignOut } from 'react-icons/go';
 import SignoutButton from '../features/auth/components/SignoutButton';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -15,40 +17,45 @@ import DialogContent, {
 } from './ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Separator } from './ui/separator';
+import { Skeleton } from './ui/skeleton';
 
 type UserButtonProps = {
   triggerClassName?: string;
 };
 
-export default async function UserButton({
-  triggerClassName,
-}: UserButtonProps) {
-  const user = await getLoggedInUser();
+export default function UserButton({ triggerClassName }: UserButtonProps) {
+  const { user, state } = useAuthContext();
 
   const avatarFallback = user?.name
     ?.split(' ')
     .map((part) => part[0]?.toUpperCase())
     .join('');
 
+  if (state === 'unauthenticated') return null;
+
   return (
     <Popover modal={false}>
-      <PopoverTrigger className={triggerClassName} asChild>
+      <PopoverTrigger className={triggerClassName} disabled={!user} asChild>
         <Button
           variant="ghost"
           autoHeight
           className="flex items-center gap-2 w-[160px] cursor-pointer hover:bg-neutral-100 py-1 px-2 transition-colors rounded-lg"
         >
-          <Avatar className="shrink-0">
-            <AvatarImage src="https://i.pravatar.cc/300" alt={user?.name} />
-            <AvatarFallback>{avatarFallback}</AvatarFallback>
-          </Avatar>
+          {user ? (
+            <Avatar className="shrink-0">
+              <AvatarImage src="https://i.pravatar.cc/300" alt={user?.name} />
+              <AvatarFallback>{avatarFallback}</AvatarFallback>
+            </Avatar>
+          ) : (
+            <Skeleton className="rounded-full size-10" />
+          )}
 
-          <div className="flex flex-col items-start flex-1 text-start min-w-0">
+          <div className="flex flex-col items-start flex-1 text-start min-w-0 gap-1">
             <span className="font-semibold text-sm capitalize text-neutral-950 text-ellipsis text-nowrap w-full overflow-hidden">
-              {user?.name}
+              {user ? user.name : <Skeleton className="w-3/4 h-[1em]" />}
             </span>
             <span className="text-xs text-neutral-600 text-ellipsis text-nowrap w-full overflow-hidden">
-              {user?.email}
+              {user ? user.email : <Skeleton className="w-full h-[1em]" />}
             </span>
           </div>
         </Button>
