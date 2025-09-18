@@ -5,5 +5,7 @@ namespace NodeJS {
     NEXT_PUBLIC_APPWRITE_ENDPOINT: string;
     NEXT_APPWRITE_KEY: string;
     NEXT_PUBLIC_ORIGIN_URL: string;
+    NEXT_PUBLIC_APPWRITE_DATABASE_ID: string;
+    NEXT_PUBLIC_APPWRITE_WORKSPACES_ID: string;
   }
 }

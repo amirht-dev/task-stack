@@ -1,3 +1,5 @@
+import GlobalStoreProvider from '@/providers/GlobalStoreProvider';
+import QueryClientProvider from '@/providers/QueryClientProvider';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { Toaster } from 'sonner';
@@ -19,10 +21,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`text-base antialiased ${inter.className}`}>
-        <AuthProvider>
-          <Toaster richColors position="top-center" />
-          {children}
-        </AuthProvider>
+        <QueryClientProvider>
+          <AuthProvider>
+            <GlobalStoreProvider>{children}</GlobalStoreProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+        <Toaster richColors position="top-center" />
       </body>
     </html>
   );
