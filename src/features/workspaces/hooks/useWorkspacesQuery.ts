@@ -22,6 +22,7 @@ export const getWorkspacesQueryOptions = () => {
         rows: rowsWithImageUrl,
       };
     },
+    staleTime: Infinity,
   });
 };
 

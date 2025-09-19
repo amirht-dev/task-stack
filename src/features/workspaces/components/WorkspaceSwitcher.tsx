@@ -1,5 +1,6 @@
 'use client';
 
+import { ProgressCircle } from '@/components/ui/progress';
 import {
   Select,
   SelectContent,
@@ -17,10 +18,11 @@ type WorkspaceSwitcherProps = {
 };
 
 const WorkspaceSwitcher = ({ classname }: WorkspaceSwitcherProps) => {
-  const { data, isError, isLoading } = useWorkspacesQuery();
+  const { data, isError, isLoading, isSuccess, isFetching } =
+    useWorkspacesQuery();
   const { selectedWorkspace, selectWorkspace } = useSelectWorkspace();
 
-  if (isError) return null;
+  if (isError || (isSuccess && data.total === 0)) return null;
 
   return (
     <Select
@@ -31,6 +33,14 @@ const WorkspaceSwitcher = ({ classname }: WorkspaceSwitcherProps) => {
     >
       <SelectTrigger icon={<HiOutlineSelector />} className={classname}>
         <SelectValue placeholder="Select workspace" />
+        {isFetching && (
+          <ProgressCircle
+            value={25}
+            size={16}
+            strokeWidth={2}
+            className="text-primary animate-spin ms-auto"
+          />
+        )}
       </SelectTrigger>
 
       <SelectContent>
