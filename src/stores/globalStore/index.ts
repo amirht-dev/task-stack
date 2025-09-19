@@ -1,6 +1,7 @@
 import 'client-only';
 import { type Simplify } from 'type-fest';
 import { createStore } from 'zustand';
+import { devtools } from 'zustand/middleware';
 import {
   sidebarStoreSlice,
   type SidebarGlobalStoreAction,
@@ -23,11 +24,13 @@ export type GlobalStoreAction = Simplify<
 export type GlobalStoreType = Simplify<GlobalStoreState & GlobalStoreAction>;
 
 export function createGlobalStore(initialState?: GlobalStoreState) {
-  return createStore<GlobalStoreType>((...args) => ({
-    ...initialState,
-    ...sidebarStoreSlice(...args),
-    ...workspaceStoreSlice(...args),
-  }));
+  return createStore<GlobalStoreType, [['zustand/devtools', never]]>(
+    devtools((...args) => ({
+      ...initialState,
+      ...sidebarStoreSlice(...args),
+      ...workspaceStoreSlice(...args),
+    }))
+  );
 }
 
 export type GlobalStoreApi = ReturnType<typeof createGlobalStore>;
