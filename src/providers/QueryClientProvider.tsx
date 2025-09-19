@@ -5,16 +5,11 @@ import {
   isServer,
   QueryClient,
 } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { PropsWithChildren, useEffect } from 'react';
 
 function makeQueryClient() {
-  return new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: 60 * 1000,
-      },
-    },
-  });
+  return new QueryClient();
 }
 
 let browserQueryClient: QueryClient | null = null;
@@ -40,6 +35,7 @@ const QueryClientProvider = ({ children }: PropsWithChildren) => {
   return (
     <BaseQueryCLientProvider client={queryClient}>
       {children}
+      <ReactQueryDevtools initialIsOpen={false} />
     </BaseQueryCLientProvider>
   );
 };
