@@ -2,7 +2,7 @@ import 'server-only';
 
 import { SESSION_COOKIE_KEY } from '@/features/auth/constants';
 import { cookies } from 'next/headers';
-import { Account, Client, TablesDB } from 'node-appwrite';
+import { Account, Client, Storage, TablesDB, Tokens } from 'node-appwrite';
 import { cache } from 'react';
 
 export async function createSessionClient() {
@@ -24,6 +24,9 @@ export async function createSessionClient() {
     get database() {
       return new TablesDB(client);
     },
+    get storage() {
+      return new Storage(client);
+    },
   };
 }
 
@@ -36,6 +39,9 @@ export async function createAdminClient() {
   return {
     get account() {
       return new Account(client);
+    },
+    get tokens() {
+      return new Tokens(client);
     },
   };
 }

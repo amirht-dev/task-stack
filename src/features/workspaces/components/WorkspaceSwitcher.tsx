@@ -1,6 +1,5 @@
 'use client';
 
-import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import {
   Select,
   SelectContent,
@@ -8,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import Image from 'next/image';
 import { HiOutlineSelector } from 'react-icons/hi';
 import useSelectWorkspace from '../hooks/useSelectWorkspace';
 import useWorkspacesQuery from '../hooks/useWorkspacesQuery';
@@ -37,9 +37,16 @@ const WorkspaceSwitcher = ({ classname }: WorkspaceSwitcherProps) => {
         {data?.rows.map((workspace) => (
           <SelectItem key={workspace.$id} value={workspace.$id}>
             <span className="flex items-center gap-2">
-              <Avatar className="size-4">
-                <AvatarImage src={workspace.image} alt={workspace.name} />
-              </Avatar>
+              {workspace.imageUrl && (
+                <div className="relative size-4 rounded overflow-hidden">
+                  <Image
+                    src={workspace.imageUrl}
+                    alt={workspace.name}
+                    className="object-cover object-center absolute"
+                    fill
+                  />
+                </div>
+              )}
               {workspace.name}
             </span>
           </SelectItem>

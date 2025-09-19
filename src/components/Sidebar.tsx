@@ -6,13 +6,20 @@ import useIsActiveLink from '@/hooks/useIsActiveLink';
 import { cn } from '@/lib/utils';
 import { Slot } from '@radix-ui/react-slot';
 import { ArrowLeftToLine, ArrowRightToLine } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { PropsWithChildren, ReactNode } from 'react';
+import { BsPlusCircleFill } from 'react-icons/bs';
 import { GoHome, GoHomeFill } from 'react-icons/go';
 import Logo from './Logo';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+
+const WorkspaceFormDialog = dynamic(
+  () => import('@/features/workspaces/components/WorkspaceFormDialog'),
+  { ssr: false }
+);
 
 const navigationItems = [
   {
@@ -59,7 +66,7 @@ export default function Sidebar() {
 
       <Separator />
 
-      <div className="px-4 py-5 space-y-3 flex flex-col">
+      <div className="px-4 py-5 gap-5 flex flex-col">
         {!isExpanded && (
           <Button
             mode="icon"
@@ -72,9 +79,22 @@ export default function Sidebar() {
           </Button>
         )}
 
-        <SidebarGroup title="workspace">
-          {isExpanded && <WorkspaceSwitcher />}
-        </SidebarGroup>
+        {isExpanded && (
+          <SidebarGroup
+            title="workspace"
+            action={
+              <WorkspaceFormDialog
+                trigger={
+                  <button>
+                    <BsPlusCircleFill className="size-4 text-neutral-400 hover:text-neutral-500 transition-colors" />
+                  </button>
+                }
+              />
+            }
+          >
+            <WorkspaceSwitcher />
+          </SidebarGroup>
+        )}
 
         <SidebarGroup title="general">
           <nav>
@@ -108,23 +128,28 @@ export default function Sidebar() {
 
 type SidebarGroupProps = PropsWithChildren<{
   title: string;
+  action?: ReactNode;
 }>;
 
-function SidebarGroup({ children, title }: SidebarGroupProps) {
+function SidebarGroup({ children, action, title }: SidebarGroupProps) {
   const sidebarStatus = useGlobalStore((store) => store.sidebarState);
 
   const isExpanded = sidebarStatus === 'expanded';
 
   return (
-    <div className="space-y-1">
-      <span
-        className={cn(
-          'uppercase text-xs text-neutral-400',
-          !isExpanded && 'hidden'
-        )}
-      >
-        {title}
-      </span>
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <span
+          className={cn(
+            'uppercase text-xs text-neutral-400',
+            !isExpanded && 'hidden'
+          )}
+        >
+          {title}
+        </span>
+
+        {action}
+      </div>
       {children}
     </div>
   );

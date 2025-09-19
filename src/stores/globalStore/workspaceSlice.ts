@@ -1,11 +1,13 @@
-import { Workspace } from '@/lib/appwrite/appwrite';
+import { WorkspaceWithImageUrl } from '@/lib/appwrite/appwrite';
 import { Simplify } from 'type-fest';
 import { StateCreator } from 'zustand';
 
-export type WorkspaceGlobalStoreState = { workspace: Workspace | null };
+export type WorkspaceGlobalStoreState = {
+  workspace: WorkspaceWithImageUrl | null;
+};
 
 export type WorkspaceGlobalStoreAction = {
-  setWorkspace: (workspaceId: Workspace | null) => void;
+  setWorkspace: (workspace: WorkspaceWithImageUrl | null) => void;
 };
 
 export type WorkspaceGlobalStoreType = Simplify<
