@@ -73,15 +73,16 @@ export const useFileUpload = (
     onError,
   } = options;
 
-  const [state, setState] = useState<FileUploadState>(() => ({
-    files: initialFiles.map((file) => ({
-      file,
-      id: file.id,
-      preview: file.url,
-    })),
-    isDragging: false,
-    errors: [],
-  }));
+  const [filesWithPreview, setFilesWithPreview] = useState<FileWithPreview[]>(
+    () =>
+      initialFiles.map((file) => ({
+        file,
+        id: file.id,
+        preview: file.url,
+      }))
+  );
+  const [isDragging, setIsDragging] = useState(false);
+  const [errors, setErrors] = useState<string[]>([]);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -153,9 +154,8 @@ export const useFileUpload = (
   }, []);
 
   const clearFiles = useCallback(() => {
-    setState((prev) => {
-      // Clean up object URLs
-      for (const file of prev.files) {
+    setFilesWithPreview((prev) => {
+      for (const file of prev) {
         if (
           file.preview &&
           file.file instanceof File &&
@@ -165,19 +165,18 @@ export const useFileUpload = (
         }
       }
 
-      if (inputRef.current) {
-        inputRef.current.value = '';
-      }
+      const newFiles: FileWithPreview[] = [];
 
-      const newState = {
-        ...prev,
-        files: [],
-        errors: [],
-      };
+      onFilesChange?.(newFiles);
 
-      onFilesChange?.(newState.files);
-      return newState;
+      return newFiles;
     });
+
+    if (inputRef.current) {
+      inputRef.current.value = '';
+    }
+
+    setErrors([]);
   }, [onFilesChange]);
 
   const addFiles = useCallback(
@@ -188,7 +187,7 @@ export const useFileUpload = (
       const errors: string[] = [];
 
       // Clear existing errors when new files are uploaded
-      setState((prev) => ({ ...prev, errors: [] }));
+      setErrors([]);
 
       // In single file mode, clear existing files first
       if (!multiple) {
@@ -199,11 +198,11 @@ export const useFileUpload = (
       if (
         multiple &&
         maxFiles !== Number.POSITIVE_INFINITY &&
-        state.files.length + newFilesArray.length > maxFiles
+        filesWithPreview.length + newFilesArray.length > maxFiles
       ) {
         errors.push(`You can only upload a maximum of ${maxFiles} files.`);
         onError?.(errors);
-        setState((prev) => ({ ...prev, errors }));
+        setErrors(errors);
         return;
       }
 
@@ -212,7 +211,7 @@ export const useFileUpload = (
       for (const file of newFilesArray) {
         // Only check for duplicates if multiple files are allowed
         if (multiple) {
-          const isDuplicate = state.files.some(
+          const isDuplicate = filesWithPreview.some(
             (existingFile) =>
               existingFile.file.name === file.name &&
               existingFile.file.size === file.size
@@ -251,23 +250,16 @@ export const useFileUpload = (
         // Call the onFilesAdded callback with the newly added valid files
         onFilesAdded?.(validFiles);
 
-        setState((prev) => {
-          const newFiles = !multiple
-            ? validFiles
-            : [...prev.files, ...validFiles];
+        setFilesWithPreview((prev) => {
+          const newFiles = !multiple ? validFiles : [...prev, ...validFiles];
           onFilesChange?.(newFiles);
-          return {
-            ...prev,
-            files: newFiles,
-            errors,
-          };
+
+          return newFiles;
         });
+        setErrors(errors);
       } else if (errors.length > 0) {
         onError?.(errors);
-        setState((prev) => ({
-          ...prev,
-          errors,
-        }));
+        setErrors(errors);
       }
 
       // Reset input value after handling files
@@ -276,10 +268,11 @@ export const useFileUpload = (
       }
     },
     [
-      state.files,
+      filesWithPreview,
       maxFiles,
       multiple,
       maxSize,
+      onError,
       validateFile,
       createPreview,
       generateUniqueId,
@@ -291,8 +284,8 @@ export const useFileUpload = (
 
   const removeFile = useCallback(
     (id: string) => {
-      setState((prev) => {
-        const fileToRemove = prev.files.find((file) => file.id === id);
+      setFilesWithPreview((prev) => {
+        const fileToRemove = prev.find((file) => file.id === id);
         if (
           fileToRemove &&
           fileToRemove.preview &&
@@ -301,31 +294,24 @@ export const useFileUpload = (
         ) {
           URL.revokeObjectURL(fileToRemove.preview);
         }
-
-        const newFiles = prev.files.filter((file) => file.id !== id);
+        const newFiles = prev.filter((file) => file.id !== id);
         onFilesChange?.(newFiles);
 
-        return {
-          ...prev,
-          files: newFiles,
-          errors: [],
-        };
+        return newFiles;
       });
+      setErrors([]);
     },
     [onFilesChange]
   );
 
   const clearErrors = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      errors: [],
-    }));
+    setErrors([]);
   }, []);
 
   const handleDragEnter = useCallback((e: DragEvent<HTMLElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    setState((prev) => ({ ...prev, isDragging: true }));
+    setIsDragging(true);
   }, []);
 
   const handleDragLeave = useCallback((e: DragEvent<HTMLElement>) => {
@@ -336,7 +322,7 @@ export const useFileUpload = (
       return;
     }
 
-    setState((prev) => ({ ...prev, isDragging: false }));
+    setIsDragging(false);
   }, []);
 
   const handleDragOver = useCallback((e: DragEvent<HTMLElement>) => {
@@ -348,7 +334,7 @@ export const useFileUpload = (
     (e: DragEvent<HTMLElement>) => {
       e.preventDefault();
       e.stopPropagation();
-      setState((prev) => ({ ...prev, isDragging: false }));
+      setIsDragging(false);
 
       // Don't process files if the input is disabled
       if (inputRef.current?.disabled) {
@@ -398,7 +384,7 @@ export const useFileUpload = (
   );
 
   return [
-    state,
+    { files: filesWithPreview, isDragging, errors },
     {
       addFiles,
       removeFile,

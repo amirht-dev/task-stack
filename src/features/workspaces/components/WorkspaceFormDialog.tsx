@@ -18,10 +18,13 @@ import {
   FormMessage,
 } from '@/components/ui/Form';
 import { Input } from '@/components/ui/input';
+import { FileWithPreview } from '@/hooks/useFileUpload';
+import { generateRandomColorImageFile } from '@/utils/client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { ReactNode, useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { FaArrowsRotate } from 'react-icons/fa6';
 import { toast } from 'sonner';
 import { createWorkspaceAction } from '../actions';
 import { getWorkspacesQueryOptions } from '../hooks/useWorkspacesQuery';
@@ -34,6 +37,7 @@ type WorkspaceFormDialogProps = {
 const WorkspaceFormDialog = ({ trigger }: WorkspaceFormDialogProps) => {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
+  const [file, setFile] = useState<FileWithPreview>();
   const form = useForm<WorkspaceSchema>({
     defaultValues: {
       name: '',
@@ -106,22 +110,50 @@ const WorkspaceFormDialog = ({ trigger }: WorkspaceFormDialogProps) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Workspace image:</FormLabel>
-                    <ImageInput
-                      name={field.name}
-                      ref={field.ref}
-                      onChange={field.onChange}
-                      onBlur={field.onBlur}
-                      disabled={field.disabled}
-                      onFilesChange={(files) => {
-                        const file = files[0]?.file;
-                        field.onChange(file instanceof File ? file : null);
-                      }}
-                      onError={(errors) =>
-                        errors.forEach((err) =>
-                          form.setError('image', { message: err })
-                        )
-                      }
-                    />
+                    <div className="flex justify-between">
+                      <ImageInput
+                        name={field.name}
+                        ref={field.ref}
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        disabled={field.disabled}
+                        file={file}
+                        onFileChange={(file) => {
+                          setFile(file);
+                          form.setValue(
+                            'image',
+                            file?.file instanceof File ? file.file : null
+                          );
+                        }}
+                        onError={(errors) =>
+                          errors.forEach((err) =>
+                            form.setError('image', { message: err })
+                          )
+                        }
+                      />
+                      <Button
+                        variant="dim"
+                        type="button"
+                        onClick={async () => {
+                          const file = await generateRandomColorImageFile();
+                          setFile((prev) => {
+                            if (prev?.preview)
+                              URL.revokeObjectURL(prev.preview);
+
+                            return {
+                              file,
+                              id: 'random-color',
+                              preview: URL.createObjectURL(file),
+                            };
+                          });
+                          form.setValue('image', file);
+                        }}
+                      >
+                        <FaArrowsRotate />
+                        <span>generate random color</span>
+                      </Button>
+                    </div>
+
                     <FormMessage />
                   </FormItem>
                 )}

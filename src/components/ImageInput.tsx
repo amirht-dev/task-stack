@@ -1,5 +1,6 @@
 import {
   FileUploadOptions,
+  FileWithPreview,
   formatBytes,
   useFileUpload,
 } from '@/hooks/useFileUpload';
@@ -13,12 +14,16 @@ import { Button } from './ui/button';
 
 type ImageInputProps = Merge<
   ComponentPropsWithRef<'input'>,
-  Pick<FileUploadOptions, 'maxSize' | 'onFilesChange' | 'onError'>
+  Pick<FileUploadOptions, 'maxSize' | 'onError'> & {
+    file?: FileWithPreview;
+    onFileChange?: (file: FileWithPreview) => void;
+  }
 >;
 
 const ImageInput = ({
   maxSize = 500 * 1024,
-  onFilesChange,
+  file,
+  onFileChange,
   onError,
   ...inputProps
 }: ImageInputProps) => {
@@ -37,13 +42,20 @@ const ImageInput = ({
     accept: 'image/*',
     multiple: false,
     maxFiles: 1,
-    onFilesChange,
+    onFilesChange: (files) => {
+      const file = files[0];
+      onFileChange?.(file ?? undefined);
+    },
     maxSize,
     onError,
   });
 
-  const currentFile = files[0];
-  const previewUrl = currentFile?.preview;
+  const currentFile: FileWithPreview = file ?? files[0];
+  const previewUrl =
+    currentFile?.preview ??
+    (currentFile?.file instanceof File
+      ? URL.createObjectURL(currentFile?.file)
+      : undefined);
 
   const handleRemove = () => {
     if (currentFile) {
@@ -86,6 +98,7 @@ const ImageInput = ({
         </div>
         {currentFile && (
           <Button
+            type="button"
             size="icon"
             variant="outline"
             onClick={handleRemove}
