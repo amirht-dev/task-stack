@@ -1,4 +1,4 @@
-import { WorkspaceWithImageUrl } from '@/lib/appwrite/appwrite';
+import { WorkspaceWithImageUrl } from '@/features/workspaces/types';
 import { Simplify } from 'type-fest';
 import { StateCreator } from 'zustand';
 

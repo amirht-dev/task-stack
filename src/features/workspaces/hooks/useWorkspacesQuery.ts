@@ -1,4 +1,4 @@
-import { WorkspaceWithImageUrl } from '@/lib/appwrite/appwrite';
+import { WorkspaceWithImageUrl } from '@/features/workspaces/types';
 import { queryOptions, useQuery } from '@tanstack/react-query';
 import { Models } from 'node-appwrite';
 import { getWorkspacesAction } from '../actions';

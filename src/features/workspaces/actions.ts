@@ -1,6 +1,6 @@
 'use server';
 
-import { Workspace, WorkspaceWithImageBlob } from '@/lib/appwrite/appwrite';
+import { Workspace, WorkspaceWithImageBlob } from '@/features/workspaces/types';
 import { createSessionClient } from '@/lib/appwrite/server';
 import { handleResponse } from '@/utils/server';
 import { ID, Models } from 'node-appwrite';
