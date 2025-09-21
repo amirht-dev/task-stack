@@ -7,7 +7,7 @@ import {
 import { createSessionClient } from '@/lib/appwrite/server';
 import { DiscriminatedResponseWithData } from '@/types/utils';
 import { handleResponse } from '@/utils/server';
-import { ID, Models } from 'node-appwrite';
+import { ID, Models, Permission, Role } from 'node-appwrite';
 import { WorkspaceSchema } from './schemas';
 
 export async function getWorkspaceImageAction(imageId: string) {
@@ -129,6 +129,10 @@ export async function createWorkspaceAction(newWorkspace: unknown) {
           userId: user?.$id,
           teamId: team.$id,
         },
+        permissions: [
+          Permission.write(Role.user(user.$id)),
+          Permission.read(Role.team(team.$id)),
+        ],
       });
     } catch (error) {
       if (uploadedFile)
