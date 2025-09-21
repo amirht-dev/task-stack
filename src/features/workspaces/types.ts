@@ -1,15 +1,17 @@
 import type { Models } from 'node-appwrite';
 
-export type Workspace = Models.Row & {
+export type DatabaseWorkspace = Models.Row & {
   name: string;
   userId: string;
   imageId: string | null;
+  teamId: string;
 };
 
-export type WorkspaceWithImageBlob = Workspace & {
+export type ResponseWorkspace = DatabaseWorkspace & {
   imageBlob: Blob | null;
+  members: Models.MembershipList;
 };
 
-export type WorkspaceWithImageUrl = Workspace & {
+export type Workspace = ResponseWorkspace & {
   imageUrl: string | null;
 };

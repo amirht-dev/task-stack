@@ -1,13 +1,13 @@
-import { WorkspaceWithImageUrl } from '@/features/workspaces/types';
+import { Workspace } from '@/features/workspaces/types';
 import { Simplify } from 'type-fest';
 import { StateCreator } from 'zustand';
 
 export type WorkspaceGlobalStoreState = {
-  workspace: WorkspaceWithImageUrl | null;
+  workspace: Workspace | null;
 };
 
 export type WorkspaceGlobalStoreAction = {
-  setWorkspace: (workspace: WorkspaceWithImageUrl | null) => void;
+  setWorkspace: (workspace: Workspace | null) => void;
 };
 
 export type WorkspaceGlobalStoreType = Simplify<

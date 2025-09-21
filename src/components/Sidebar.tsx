@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { PropsWithChildren, ReactNode } from 'react';
 import { BsPlusCircleFill } from 'react-icons/bs';
 import { GoHome, GoHomeFill } from 'react-icons/go';
+import { MdOutlineWorkspaces, MdWorkspaces } from 'react-icons/md';
 import Logo from './Logo';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
@@ -26,6 +27,11 @@ const navigationItems = [
     label: 'Home',
     href: '/',
     icon: { disactive: <GoHome />, active: <GoHomeFill /> },
+  },
+  {
+    label: 'Workspaces',
+    href: '/workspaces',
+    icon: { disactive: <MdOutlineWorkspaces />, active: <MdWorkspaces /> },
   },
 ];
 

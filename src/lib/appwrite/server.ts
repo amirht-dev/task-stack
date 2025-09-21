@@ -2,7 +2,14 @@ import 'server-only';
 
 import { SESSION_COOKIE_KEY } from '@/features/auth/constants';
 import { cookies } from 'next/headers';
-import { Account, Client, Storage, TablesDB, Tokens } from 'node-appwrite';
+import {
+  Account,
+  Client,
+  Storage,
+  TablesDB,
+  Teams,
+  Tokens,
+} from 'node-appwrite';
 import { cache } from 'react';
 
 export async function createSessionClient() {
@@ -26,6 +33,9 @@ export async function createSessionClient() {
     },
     get storage() {
       return new Storage(client);
+    },
+    get Teams() {
+      return new Teams(client);
     },
   };
 }
