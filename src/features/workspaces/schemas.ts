@@ -13,3 +13,27 @@ export const WorkspaceSchema = z.object({
 });
 
 export type WorkspaceSchema = z.infer<typeof WorkspaceSchema>;
+
+export const WorkspaceNameFormUpdateSchema = (currentName: string) =>
+  z.object({
+    name: z
+      .string()
+      .trim()
+      .refine((value) => value !== '', 'name is required')
+      .refine(
+        (value) => value !== currentName,
+        'name is equal to current name'
+      ),
+  });
+
+export type WorkspaceNameFormUpdateSchema = z.infer<
+  ReturnType<typeof WorkspaceNameFormUpdateSchema>
+>;
+
+export const WorkspaceImageFormUpdateSchema = WorkspaceSchema.pick({
+  image: true,
+});
+
+export type WorkspaceImageFormUpdateSchema = z.infer<
+  typeof WorkspaceImageFormUpdateSchema
+>;

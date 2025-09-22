@@ -61,13 +61,18 @@ export type NextPage<TParams extends ParamType = never> = FC<
   NextPageProps<TParams>
 >;
 
-export type NextLayoutProps<TParams extends ParamType = never> = {
+export type NextLayoutProps<
+  TParams extends ParamType = never,
+  TSlots extends string = never
+> = {
   children: ReactNode;
-} & NextParamsObject<TParams>;
+} & NextParamsObject<TParams> &
+  Record<TSlots, ReactNode>;
 
-export type NextLayout<TParams extends ParamType = never> = FC<
-  NextLayoutProps<TParams>
->;
+export type NextLayout<
+  TParams extends ParamType = never,
+  TSlots extends string = never
+> = FC<NextLayoutProps<TParams, TSlots>>;
 // ==========================
 
 // functions

@@ -8,7 +8,11 @@ import { createSessionClient } from '@/lib/appwrite/server';
 import { DiscriminatedResponseWithData } from '@/types/utils';
 import { handleResponse } from '@/utils/server';
 import { ID, Models, Permission, Role } from 'node-appwrite';
-import { WorkspaceSchema } from './schemas';
+import {
+  WorkspaceImageFormUpdateSchema,
+  WorkspaceNameFormUpdateSchema,
+  WorkspaceSchema,
+} from './schemas';
 
 export async function getWorkspaceImageAction(imageId: string) {
   return handleResponse(async () => {
@@ -95,6 +99,18 @@ export async function getWorkspacesAction() {
   });
 }
 
+export async function getWorkspaceAction(workspaceId: string) {
+  return handleResponse(async () => {
+    const { database } = await createSessionClient();
+
+    return await database.getRow<DatabaseWorkspace>({
+      databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+      tableId: process.env.NEXT_PUBLIC_APPWRITE_WORKSPACES_ID,
+      rowId: workspaceId,
+    });
+  });
+}
+
 export async function createWorkspaceAction(newWorkspace: unknown) {
   return handleResponse(async () => {
     const workspace = WorkspaceSchema.parse(newWorkspace);
@@ -142,5 +158,111 @@ export async function createWorkspaceAction(newWorkspace: unknown) {
         });
       throw error;
     }
+  });
+}
+
+export async function updateWorkspaceNameAction(
+  workspaceId: string,
+  { name }: WorkspaceNameFormUpdateSchema
+) {
+  return handleResponse(async () => {
+    const { database } = await createSessionClient();
+
+    return await database.updateRow<DatabaseWorkspace>({
+      databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+      tableId: process.env.NEXT_PUBLIC_APPWRITE_WORKSPACES_ID,
+      rowId: workspaceId,
+      data: {
+        name,
+      },
+    });
+  });
+}
+
+export async function updateWorkspaceImageAction(
+  workspaceId: string,
+  { image }: WorkspaceImageFormUpdateSchema
+) {
+  return handleResponse(async () => {
+    const { database, storage } = await createSessionClient();
+
+    const workspaceResult = await getWorkspaceAction(workspaceId);
+
+    if (!workspaceResult.success) throw new Error(workspaceResult.error);
+
+    const { data: workspace } = workspaceResult;
+
+    const deleteOldImagePromise = workspace.imageId
+      ? storage.deleteFile({
+          bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
+          fileId: workspace.imageId,
+        })
+      : undefined;
+
+    const uploadNewImagePromise = new Promise<Models.File>(async (res, rej) => {
+      try {
+        if (image) {
+          const result = await storage.createFile({
+            bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
+            fileId: ID.unique(),
+            file: image,
+          });
+          res(result);
+        }
+      } catch (error) {
+        rej(error);
+      }
+    });
+
+    const [, newImageResponse] = await Promise.all([
+      deleteOldImagePromise,
+      uploadNewImagePromise,
+    ]);
+
+    const updatedWorkspace = await database.updateRow<DatabaseWorkspace>({
+      databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+      tableId: process.env.NEXT_PUBLIC_APPWRITE_WORKSPACES_ID,
+      rowId: workspaceId,
+      data: {
+        imageId: newImageResponse.$id,
+      },
+    });
+
+    return updatedWorkspace;
+  });
+}
+
+export async function deleteWorkspaceAction(workspaceId: string) {
+  return handleResponse(async () => {
+    const { database, storage, Teams } = await createSessionClient();
+
+    const workspaceRes = await getWorkspaceAction(workspaceId);
+
+    if (!workspaceRes.success) throw new Error(workspaceRes.error);
+
+    const { data: workspace } = workspaceRes;
+
+    const deleteWorkspacePromise = database.deleteRow({
+      databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+      tableId: process.env.NEXT_PUBLIC_APPWRITE_WORKSPACES_ID,
+      rowId: workspaceId,
+    });
+
+    const deleteWorkspaceImagePromise = workspace.imageId
+      ? storage.deleteFile({
+          bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
+          fileId: workspace.imageId,
+        })
+      : undefined;
+
+    const deleteWorkspaceTeamPromise = Teams.delete({
+      teamId: workspace.teamId,
+    });
+
+    await Promise.all([
+      deleteWorkspacePromise,
+      deleteWorkspaceImagePromise,
+      deleteWorkspaceTeamPromise,
+    ]);
   });
 }

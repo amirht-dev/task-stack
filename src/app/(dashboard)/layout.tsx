@@ -10,11 +10,9 @@ const DashboardLayout: NextLayout = async ({ children }) => {
     <div className="h-dvh flex">
       <Sidebar />
 
-      <div className="flex-1 bg-neutral-100 overflow-y-auto h-full">
+      <div className="flex-1 flex flex-col bg-neutral-100 overflow-y-auto h-full">
         <Navbar />
-        <div className="p-10">
-          <div className="bg-white h-[200vh] p-6 rounded-xl">{children}</div>
-        </div>
+        <div className="flex-1">{children}</div>
       </div>
     </div>
   );

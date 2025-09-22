@@ -3,7 +3,7 @@ import { NextPage } from '@/types/next';
 
 const WorkspacesPage: NextPage = () => {
   return (
-    <div>
+    <div className="py-8 container">
       <WorkspacesList />
     </div>
   );
