@@ -1,9 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { ProgressCircle } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAuthContext } from '@/features/auth/contexts/AuthContext';
 import useWorkspace from '@/features/workspaces/hooks/useWorkspace';
 import { formatMembersCount } from '@/features/workspaces/utils';
 import useIsActiveLink from '@/hooks/useIsActiveLink';
@@ -12,16 +10,9 @@ import Link from 'next/link';
 import { PropsWithChildren, use } from 'react';
 import { GoChevronLeft } from 'react-icons/go';
 
-const WorkspaceLayout: NextLayout<'workspace_id', 'owner'> = ({
-  children,
-  params,
-  owner,
-}) => {
+const WorkspaceLayout: NextLayout<'workspace_id'> = ({ children, params }) => {
   const { workspace_id } = use(params);
   const workspace = useWorkspace(workspace_id);
-  const { user, state } = useAuthContext();
-
-  const isOwner = user?.$id === workspace.data?.userId;
 
   return (
     <div className="flex flex-col h-full">
@@ -96,20 +87,7 @@ const WorkspaceLayout: NextLayout<'workspace_id', 'owner'> = ({
         </div>
       </div>
 
-      {workspace.isLoading || state === 'pending' ? (
-        <div className="flex-1 flex items-center justify-center">
-          <ProgressCircle
-            value={25}
-            size={100}
-            strokeWidth={5}
-            className="text-primary animate-spin"
-          />
-        </div>
-      ) : (
-        <div className="container flex-1 py-8">
-          {isOwner ? owner : children}
-        </div>
-      )}
+      <div className="flex-1 py-8 container">{children}</div>
     </div>
   );
 };
