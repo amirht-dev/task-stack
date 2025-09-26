@@ -29,8 +29,9 @@ import {
   updateWorkspaceNameAction,
 } from '@/features/workspaces/actions';
 import WorkspaceImageInput from '@/features/workspaces/components/WorkspaceImageInput';
-import useWorkspace from '@/features/workspaces/hooks/useWorkspace';
+import useWorkspaceQuery from '@/features/workspaces/hooks/useWorkspaceQuery';
 import { getWorkspacesQueryOptions } from '@/features/workspaces/hooks/useWorkspacesQuery';
+import useWorkspaceUserRoles from '@/features/workspaces/hooks/useWorkspaceUserRoles';
 import {
   WorkspaceImageFormUpdateSchema,
   WorkspaceNameFormUpdateSchema,
@@ -56,10 +57,9 @@ const WorkspaceContext = createContext<{ workspaceId: string } | null>(null);
 
 const WorkspacePreviewPage: NextPage<'workspace_id'> = ({ params }) => {
   const { workspace_id } = use(params);
-  const workspace = useWorkspace(workspace_id);
-  const { user, state } = useAuthContext();
-
-  const isOwner = user?.$id === workspace.data?.userId;
+  const workspace = useWorkspaceQuery(workspace_id);
+  const { isOwner } = useWorkspaceUserRoles(workspace_id);
+  const { state } = useAuthContext();
 
   if (workspace.isLoading || state === 'pending')
     return (
@@ -90,7 +90,7 @@ const WorkspacePreviewPage: NextPage<'workspace_id'> = ({ params }) => {
 function NameFormSectionCard() {
   const { workspaceId } = useContext(WorkspaceContext)!;
   const queryClient = useQueryClient();
-  const workspace = useWorkspace(workspaceId);
+  const workspace = useWorkspaceQuery(workspaceId);
   const form = useForm({
     values: { name: workspace.data?.name ?? '' },
     resolver: zodResolver(
@@ -120,7 +120,7 @@ function NameFormSectionCard() {
         ),
       });
       queryClient.invalidateQueries({
-        queryKey: getWorkspacesQueryOptions().queryKey,
+        queryKey: ['workspaces'],
       });
       form.reset({
         name: res.data.name,
@@ -172,7 +172,7 @@ function NameFormSectionCard() {
 
 function ImageFormSectionCard() {
   const { workspaceId } = useContext(WorkspaceContext)!;
-  const workspace = useWorkspace(workspaceId);
+  const workspace = useWorkspaceQuery(workspaceId);
   const queryClient = useQueryClient();
   const [file, setFile] = useState<FileWithPreview>();
   const form = useForm({
@@ -274,7 +274,7 @@ function ImageFormSectionCard() {
 
 function DeleteWorkspaceSectionCard() {
   const { workspaceId } = useContext(WorkspaceContext)!;
-  const workspace = useWorkspace(workspaceId);
+  const workspace = useWorkspaceQuery(workspaceId);
   const queryClient = useQueryClient();
   const router = useRouter();
 
@@ -335,7 +335,7 @@ function DeleteWorkspaceSectionCard() {
                   </span>
                   <small className="text-xs text-muted-foreground">
                     {workspace.data?.members &&
-                      formatMembersCount(workspace.data.members)}
+                      formatMembersCount(workspace.data.members.total)}
                   </small>
                 </div>
               </div>

@@ -2,57 +2,66 @@ import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import Image from 'next/image';
 import Link from 'next/link';
-import useWorkspace from '../hooks/useWorkspace';
-import { Workspace } from '../types';
+import useWorkspaceQuery from '../hooks/useWorkspaceQuery';
+import useWorkspaceUserRoles from '../hooks/useWorkspaceUserRoles';
+import { formatMembersCount } from '../utils';
 
 type WorkspaceCardProps = {
-  workspace: Workspace;
+  workspaceId: string;
 };
 
-function WorkspaceCard({ workspace }: WorkspaceCardProps) {
-  const { userRoles } = useWorkspace(workspace.$id);
+function WorkspaceCard({ workspaceId }: WorkspaceCardProps) {
+  const {
+    isLoading,
+    isSuccess,
+    data: workspace,
+  } = useWorkspaceQuery(workspaceId);
+  const { roles } = useWorkspaceUserRoles(workspaceId);
 
-  return (
-    <Link href={`/workspaces/${workspace.$id}`}>
-      <Card className="overflow-hidden">
-        <div className="relative h-[100px] bg-red-100">
-          {workspace.imageUrl && (
-            <Image
-              alt={workspace.name}
-              src={workspace.imageUrl}
-              fill
-              className="object-cover object-center"
-            />
-          )}
-        </div>
+  if (isLoading) return 'loading...';
 
-        <div className="p-2">
-          <div className="flex items-center justify-between">
-            <h4 className="font-semibold line-clamp-1" title={workspace.name}>
-              {workspace.name}
-            </h4>
-
-            <small className="text-muted-foreground text-xs text-nowrap">
-              {workspace.members.total} member
-              {workspace.members.total > 1 && 's'}
-            </small>
+  if (isSuccess)
+    return (
+      <Link href={`/workspaces/${workspace.$id}`}>
+        <Card className="overflow-hidden h-[178px]">
+          <div className="relative h-[100px] bg-red-100">
+            {workspace.imageUrl && (
+              <Image
+                alt={workspace.name}
+                src={workspace.imageUrl}
+                fill
+                className="object-cover object-center"
+              />
+            )}
           </div>
 
-          <div className="flex items-center gap-2 mt-3">
-            {userRoles?.map((role) => (
-              <Badge
-                key={role}
-                appearance="light"
-                variant={role === 'owner' ? 'primary' : 'info'}
-              >
-                {role}
-              </Badge>
-            ))}
+          <div className="p-2">
+            <div className="flex items-center justify-between">
+              <h4 className="font-semibold line-clamp-1" title={workspace.name}>
+                {workspace.name}
+              </h4>
+
+              <small className="text-muted-foreground text-xs text-nowrap">
+                {formatMembersCount(workspace.members.total)}
+              </small>
+            </div>
+
+            <div className="flex items-center gap-2 mt-3 overflow-x-auto">
+              {roles?.map((role) => (
+                <Badge
+                  key={role}
+                  appearance="light"
+                  variant={role === 'owner' ? 'primary' : 'info'}
+                  className="shrink-0"
+                >
+                  {role}
+                </Badge>
+              ))}
+            </div>
           </div>
-        </div>
-      </Card>
-    </Link>
-  );
+        </Card>
+      </Link>
+    );
 }
 
 export default WorkspaceCard;

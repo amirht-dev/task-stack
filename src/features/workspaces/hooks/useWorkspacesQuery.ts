@@ -1,6 +1,4 @@
-import { Workspace } from '@/features/workspaces/types';
 import { queryOptions, useQuery } from '@tanstack/react-query';
-import { Models } from 'node-appwrite';
 import { getWorkspacesAction } from '../actions';
 
 export const getWorkspacesQueryOptions = () => {
@@ -10,12 +8,12 @@ export const getWorkspacesQueryOptions = () => {
       const res = await getWorkspacesAction();
       if (!res.success) throw new Error(res.error);
 
-      const rowsWithImageUrl = res.data.rows.map<Workspace>((row) => ({
+      const rowsWithImageUrl = res.data.rows.map((row) => ({
         ...row,
         imageUrl: row.imageBlob ? URL.createObjectURL(row.imageBlob) : null,
       }));
 
-      return <Models.RowList<Workspace>>{
+      return {
         ...res.data,
         rows: rowsWithImageUrl,
       };

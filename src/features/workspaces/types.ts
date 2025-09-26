@@ -1,4 +1,6 @@
+import { DiscriminatedResponseWithData } from '@/types/utils';
 import type { Models } from 'node-appwrite';
+import { getWorkspacesAction } from './actions';
 
 export type DatabaseWorkspace = Models.Row & {
   name: string;
@@ -7,11 +9,8 @@ export type DatabaseWorkspace = Models.Row & {
   teamId: string;
 };
 
-export type ResponseWorkspace = DatabaseWorkspace & {
-  imageBlob: Blob | null;
-  members: Models.MembershipList;
-};
-
-export type Workspace = ResponseWorkspace & {
-  imageUrl: string | null;
-};
+export type ResponseWorkspaces = Awaited<
+  ReturnType<typeof getWorkspacesAction>
+> extends DiscriminatedResponseWithData<infer TData>
+  ? TData
+  : unknown;

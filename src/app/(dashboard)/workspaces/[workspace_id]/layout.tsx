@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import useWorkspace from '@/features/workspaces/hooks/useWorkspace';
+import useWorkspaceQuery from '@/features/workspaces/hooks/useWorkspaceQuery';
 import { formatMembersCount } from '@/features/workspaces/utils';
 import useIsActiveLink from '@/hooks/useIsActiveLink';
 import { NextLayout } from '@/types/next';
@@ -12,7 +12,7 @@ import { GoChevronLeft } from 'react-icons/go';
 
 const WorkspaceLayout: NextLayout<'workspace_id'> = ({ children, params }) => {
   const { workspace_id } = use(params);
-  const workspace = useWorkspace(workspace_id);
+  const { isLoading, data: workspace } = useWorkspaceQuery(workspace_id);
 
   return (
     <div className="flex flex-col h-full">
@@ -27,47 +27,31 @@ const WorkspaceLayout: NextLayout<'workspace_id'> = ({ children, params }) => {
 
             <div className="flex flex-col gap-2">
               <h3 className="text-2xl">
-                <Skeleton
-                  size="text"
-                  className="w-50"
-                  loading={workspace.isLoading}
-                >
-                  {workspace.data?.name}
+                <Skeleton size="text" className="w-50" loading={isLoading}>
+                  {workspace?.name}
                 </Skeleton>
               </h3>
               <small className="text-xs text-muted-foreground">
-                <Skeleton
-                  size="text"
-                  className="w-20"
-                  loading={workspace.isLoading}
-                >
-                  {workspace.data?.members &&
-                    formatMembersCount(workspace.data?.members)}
+                <Skeleton size="text" className="w-20" loading={isLoading}>
+                  {workspace?.members &&
+                    formatMembersCount(workspace?.members.total)}
                 </Skeleton>
               </small>
             </div>
 
             <div className="flex flex-col ms-auto gap-2 items-end">
               <span className="text-muted-foreground text-sm">
-                <Skeleton
-                  size="text"
-                  className="w-60"
-                  loading={workspace.isLoading}
-                >
+                <Skeleton size="text" className="w-60" loading={isLoading}>
                   Created At:{' '}
-                  {workspace.data?.$createdAt &&
-                    new Date(workspace.data.$createdAt).toLocaleString()}
+                  {workspace?.$createdAt &&
+                    new Date(workspace.$createdAt).toLocaleString()}
                 </Skeleton>
               </span>
               <span className="text-muted-foreground text-sm">
-                <Skeleton
-                  size="text"
-                  className="w-60"
-                  loading={workspace.isLoading}
-                >
+                <Skeleton size="text" className="w-60" loading={isLoading}>
                   Updated At:{' '}
-                  {workspace.data?.$updatedAt &&
-                    new Date(workspace.data.$updatedAt).toLocaleString()}
+                  {workspace?.$updatedAt &&
+                    new Date(workspace.$updatedAt).toLocaleString()}
                 </Skeleton>
               </span>
             </div>

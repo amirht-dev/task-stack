@@ -1,11 +1,7 @@
 'use server';
 
-import {
-  DatabaseWorkspace,
-  ResponseWorkspace,
-} from '@/features/workspaces/types';
+import { DatabaseWorkspace } from '@/features/workspaces/types';
 import { createSessionClient } from '@/lib/appwrite/server';
-import { DiscriminatedResponseWithData } from '@/types/utils';
 import { handleResponse } from '@/utils/server';
 import { ID, Models, Permission, Role } from 'node-appwrite';
 import {
@@ -60,22 +56,14 @@ export async function getWorkspacesAction() {
 
     const rowsWithImageBlob = await Promise.all(
       workspacesListRows.rows.map((workspace) => {
-        return new Promise<ResponseWorkspace>(async (res, rej) => {
-          let workspaceImagePromise:
-            | Promise<
-                DiscriminatedResponseWithData<{
-                  data: Models.File;
-                  image: Blob;
-                }>
-              >
-            | undefined = undefined;
-
-          if (workspace.imageId)
-            workspaceImagePromise = getWorkspaceImageAction(workspace.imageId);
-
+        return new Promise<
+          DatabaseWorkspace & { imageBlob: Blob | null; totalMembers: number }
+        >(async (res, rej) => {
           const [membersResponse, imageResponse] = await Promise.all([
             getWorkspaceMembersAction(workspace.teamId),
-            workspaceImagePromise,
+            workspace.imageId
+              ? getWorkspaceImageAction(workspace.imageId)
+              : undefined,
           ]);
 
           if (!membersResponse.success)
@@ -86,13 +74,13 @@ export async function getWorkspacesAction() {
           res({
             ...workspace,
             imageBlob: imageResponse?.data.image ?? null,
-            members: membersResponse.data,
-          } satisfies ResponseWorkspace);
+            totalMembers: membersResponse.data.total,
+          });
         });
       })
     );
 
-    return <Models.RowList<ResponseWorkspace>>{
+    return {
       ...workspacesListRows,
       rows: rowsWithImageBlob,
     };
@@ -103,11 +91,27 @@ export async function getWorkspaceAction(workspaceId: string) {
   return handleResponse(async () => {
     const { database } = await createSessionClient();
 
-    return await database.getRow<DatabaseWorkspace>({
+    const workspace = await database.getRow<DatabaseWorkspace>({
       databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
       tableId: process.env.NEXT_PUBLIC_APPWRITE_WORKSPACES_ID,
       rowId: workspaceId,
     });
+
+    const [membersRes, imageRes] = await Promise.all([
+      getWorkspaceMembersAction(workspace.teamId),
+      workspace.imageId
+        ? getWorkspaceImageAction(workspace.imageId)
+        : undefined,
+    ]);
+
+    if (!membersRes.success) throw new Error(membersRes.error);
+    if (imageRes && !imageRes.success) throw new Error(imageRes.error);
+
+    return {
+      ...workspace,
+      imageBlob: imageRes?.data.image ?? null,
+      members: membersRes.data,
+    };
   });
 }
 

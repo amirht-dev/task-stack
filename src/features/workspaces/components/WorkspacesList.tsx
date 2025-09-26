@@ -12,7 +12,7 @@ const WorkspacesList = () => {
     <ul className="grid grid-cols-5 gap-4">
       {data.rows.map((workspace) => (
         <li key={workspace.$id}>
-          <WorkspaceCard workspace={workspace} />
+          <WorkspaceCard workspaceId={workspace.$id} />
         </li>
       ))}
     </ul>
