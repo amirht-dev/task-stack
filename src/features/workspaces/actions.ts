@@ -39,9 +39,13 @@ export async function getWorkspaceImageAction(imageId: string) {
 export async function getWorkspaceMembersAction(teamId: string) {
   return handleResponse(async () => {
     const { Teams } = await createSessionClient();
-    return await Teams.listMemberships({
+    const list = await Teams.listMemberships({
       teamId: teamId,
     });
+    // list.memberships.map((member) => {
+    //   return new Promise((res) => {});
+    // });
+    return list;
   });
 }
 

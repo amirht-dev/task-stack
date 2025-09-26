@@ -1,6 +1,6 @@
 import { DiscriminatedResponseWithData } from '@/types/utils';
 import type { Models } from 'node-appwrite';
-import { getWorkspacesAction } from './actions';
+import { getWorkspaceAction, getWorkspacesAction } from './actions';
 
 export type DatabaseWorkspace = Models.Row & {
   name: string;
@@ -9,8 +9,16 @@ export type DatabaseWorkspace = Models.Row & {
   teamId: string;
 };
 
-export type ResponseWorkspaces = Awaited<
+export type WorkspacesList = Awaited<
   ReturnType<typeof getWorkspacesAction>
+> extends DiscriminatedResponseWithData<infer TData>
+  ? TData extends Models.RowList<infer T>
+    ? T[]
+    : unknown
+  : unknown;
+
+export type Workspace = Awaited<
+  ReturnType<typeof getWorkspaceAction>
 > extends DiscriminatedResponseWithData<infer TData>
   ? TData
   : unknown;
