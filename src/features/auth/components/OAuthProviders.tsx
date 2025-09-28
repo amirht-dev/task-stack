@@ -1,16 +1,23 @@
 'use client';
 
 import { providers } from '@/features/auth/constants';
-import { useAuthContext } from '@/features/auth/contexts/AuthContext';
 import { PropsWithComponentPropsWithRef } from '@/types/utils';
 import { ArrayValues, Except } from 'type-fest';
 import { Button } from '../../../components/ui/button';
+import useSignIn from '../hooks/useSignIn';
 
 const OAuthProviders = () => {
+  const { signIn } = useSignIn();
+
   return (
     <div className="flex gap-4">
       {providers.map((provider) => (
-        <OAuthButton className="flex-1" {...provider} key={provider.id} />
+        <OAuthButton
+          className="flex-1"
+          onClick={() => signIn({ method: 'OAuth', data: provider.id })}
+          {...provider}
+          key={provider.id}
+        />
       ))}
     </div>
   );
@@ -23,20 +30,9 @@ type OAuthButtonProps = Except<
   'children'
 >;
 
-const OAuthButton = ({ icon: Icon, id, ...props }: OAuthButtonProps) => {
-  const { oauthSignIn } = useAuthContext();
+const OAuthButton = ({ icon: Icon, ...props }: OAuthButtonProps) => {
   return (
-    <Button
-      variant="outline"
-      size="lg"
-      {...props}
-      onClick={(e) => {
-        props.onClick?.(e);
-        if (!e.isDefaultPrevented() && !props.disabled) {
-          oauthSignIn(id);
-        }
-      }}
-    >
+    <Button variant="outline" size="lg" {...props}>
       <Icon className="size-6" />
     </Button>
   );

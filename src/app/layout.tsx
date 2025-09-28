@@ -1,9 +1,9 @@
+import ClientProvider from '@/providers/ClientProvider';
 import GlobalStoreProvider from '@/providers/GlobalStoreProvider';
 import QueryClientProvider from '@/providers/QueryClientProvider';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { Toaster } from 'sonner';
-import AuthProvider from '../features/auth/providers/AuthProvider';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -22,9 +22,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`text-base antialiased ${inter.className}`}>
         <QueryClientProvider>
-          <AuthProvider>
+          <ClientProvider>
             <GlobalStoreProvider>{children}</GlobalStoreProvider>
-          </AuthProvider>
+          </ClientProvider>
         </QueryClientProvider>
         <Toaster richColors position="top-center" />
       </body>

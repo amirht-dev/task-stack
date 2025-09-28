@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/Form';
 import { Input } from '@/components/ui/input';
 import { ProgressCircle } from '@/components/ui/progress';
-import { useAuthContext } from '@/features/auth/contexts/AuthContext';
+import useAuth from '@/features/auth/hooks/useAuth';
 import {
   deleteWorkspaceAction,
   updateWorkspaceImageAction,
@@ -62,9 +62,9 @@ const WorkspacePreviewPage: NextPage<'workspace_id'> = ({ params }) => {
   const { workspace_id } = use(params);
   const workspace = useWorkspaceQuery(workspace_id);
   const { isOwner } = useWorkspaceUserRoles(workspace_id);
-  const { state } = useAuthContext();
+  const { isAuthenticating } = useAuth();
 
-  if (workspace.isLoading || state === 'pending')
+  if (workspace.isLoading || isAuthenticating)
     return (
       <div className="h-full flex items-center justify-center">
         <ProgressCircle

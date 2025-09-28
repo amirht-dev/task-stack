@@ -1,7 +1,7 @@
 'use client';
 
-import { setJWTCookie } from '@/features/auth/actions';
-import { useAuthContext } from '@/features/auth/contexts/AuthContext';
+import { useClientContext } from '@/contexts/ClientContext';
+import useAuth from '@/features/auth/hooks/useAuth';
 import { InviteMembershipParamsSchema } from '@/features/workspaces/schemas';
 import { NextPage } from '@/types/next';
 import { redirect, useRouter } from 'next/navigation';
@@ -11,7 +11,8 @@ import { toast } from 'sonner';
 const InvitePage: NextPage = ({ searchParams }) => {
   const _searchParams = use(searchParams);
   const router = useRouter();
-  const { updateUser, client } = useAuthContext();
+  const { refetchUser } = useAuth();
+  const client = useClientContext();
 
   useEffect(() => {
     const { success, data } =
@@ -32,9 +33,8 @@ const InvitePage: NextPage = ({ searchParams }) => {
           userId,
           secret
         );
-        const { jwt } = await client.account.createJWT();
-        await setJWTCookie(jwt);
-        await updateUser();
+        client.setJWTCookie();
+        await refetchUser();
         toast.success('You have successfully invited', { id, description: '' });
         router.replace(`/workspaces/${workspaceId}`);
       } catch (error) {
@@ -50,7 +50,7 @@ const InvitePage: NextPage = ({ searchParams }) => {
       }
     };
     confirmInvite();
-  }, [_searchParams, router, updateUser, client]);
+  }, [_searchParams, router, refetchUser, client]);
 
   return null;
 };

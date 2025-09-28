@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuthContext } from '@/features/auth/contexts/AuthContext';
+import useAuth from '@/features/auth/hooks/useAuth';
 import { GoSignOut } from 'react-icons/go';
 import SignoutButton from '../features/auth/components/SignoutButton';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -24,14 +24,14 @@ type UserButtonProps = {
 };
 
 export default function UserButton({ triggerClassName }: UserButtonProps) {
-  const { user, state } = useAuthContext();
+  const { user, isUnauthenticated } = useAuth();
 
   const avatarFallback = user?.name
     ?.split(' ')
     .map((part) => part[0]?.toUpperCase())
     .join('');
 
-  if (state === 'unauthenticated') return null;
+  if (isUnauthenticated) return null;
 
   return (
     <Popover modal={false}>

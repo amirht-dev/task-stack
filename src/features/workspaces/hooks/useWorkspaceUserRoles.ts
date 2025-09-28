@@ -1,8 +1,8 @@
-import { useAuthContext } from '@/features/auth/contexts/AuthContext';
+import useAuth from '@/features/auth/hooks/useAuth';
 import useWorkspaceQuery from './useWorkspaceQuery';
 
 function useWorkspaceUserRoles(workspaceId: string) {
-  const { user } = useAuthContext();
+  const { user } = useAuth();
   const { data: workspace } = useWorkspaceQuery(workspaceId);
 
   const roles = workspace?.members.memberships.find(

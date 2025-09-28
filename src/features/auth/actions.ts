@@ -39,7 +39,9 @@ export const signoutAction = async () => {
   return handleResponse(async () => {
     const { account } = await createSessionClient();
     await account.deleteSession({ sessionId: 'current' });
-    (await cookies()).delete(SESSION_COOKIE_KEY);
+    const cookie = await cookies();
+    cookie.delete(SESSION_COOKIE_KEY);
+    cookie.delete(JWT_COOKIE_KEY);
   });
 };
 
@@ -71,7 +73,7 @@ export const getCurrentUserAction = async () => {
   });
 };
 
-export const setJWTCookie = async (jwt: string) => {
+export const setJWTCookieAction = async (jwt: string) => {
   const cookie = await cookies();
   cookie.set(JWT_COOKIE_KEY, jwt);
 };

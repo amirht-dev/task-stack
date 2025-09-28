@@ -1,21 +1,21 @@
 'use client';
 
-import { useAuthContext } from '@/features/auth/contexts/AuthContext';
 import { PropsWithChildren } from 'react';
+import useAuth from '../hooks/useAuth';
 
 export const SignIn = ({ children }: PropsWithChildren) => {
-  const { state } = useAuthContext();
+  const { isAuthenticated } = useAuth();
 
-  if (state === 'authenticated') return children;
+  if (isAuthenticated) return children;
 };
 
 export const SignOut = ({ children }: PropsWithChildren) => {
-  const { state } = useAuthContext();
+  const { isUnauthenticated } = useAuth();
 
-  if (state === 'unauthenticated') return children;
+  if (isUnauthenticated) return children;
 };
 export const SigningIn = ({ children }: PropsWithChildren) => {
-  const { state } = useAuthContext();
+  const { isAuthenticating } = useAuth();
 
-  if (state === 'pending') return children;
+  if (isAuthenticating) return children;
 };

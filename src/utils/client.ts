@@ -20,6 +20,44 @@ export function openPopup(
   );
 }
 
+export function requestPopupData<T>(...args: Parameters<typeof openPopup>) {
+  let data: unknown = undefined;
+
+  return new Promise<T>((resolve, reject) => {
+    const popup = openPopup(...args);
+
+    const messageListener = (e: MessageEvent) => {
+      if (
+        e.origin !== window.location.origin ||
+        (e.source as Window).name !== popup?.name
+      )
+        return;
+
+      data = e.data;
+      resolve(e.data);
+      popup?.close();
+    };
+
+    window.addEventListener('message', messageListener);
+
+    const unsubscribeMessage = () => {
+      window.removeEventListener('message', messageListener);
+    };
+
+    const popupCloseListener = () => {
+      if (!data) reject(new Error('popup closed before sending data'));
+      unsubscribeMessage();
+      unsubscribeClose();
+    };
+
+    popup?.addEventListener('beforeunload', popupCloseListener);
+
+    const unsubscribeClose = () => {
+      popup?.removeEventListener('beforeunload', popupCloseListener);
+    };
+  });
+}
+
 export function generateRandomHexColor() {
   const hex = Math.floor(Math.random() * 0xffffff)
     .toString(16)

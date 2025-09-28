@@ -11,7 +11,6 @@ const OAuthCallback = () => {
     const secret = searchParams.get('secret');
 
     (window.opener as Window)?.postMessage({ userId, secret }, location.origin);
-    window.close();
   }, [searchParams]);
 
   return 'loading...';

@@ -1,9 +1,10 @@
 'use client';
 
+import { useClientContext } from '@/contexts/ClientContext';
 import {
   emailPasswordSigninAction,
   getCurrentUserAction,
-  setJWTCookie,
+  setJWTCookieAction,
   signoutAction,
 } from '@/features/auth/actions';
 import { AUTHENTICATED_REDIRECT_PARAM_KEY } from '@/features/auth/constants';
@@ -11,13 +12,12 @@ import { AuthContext } from '@/features/auth/contexts/AuthContext';
 import useAuthState from '@/features/auth/hooks/useAuthState';
 import useOAuthPopup from '@/features/auth/hooks/useOAuthPopup';
 import { SignInSchemaType } from '@/features/auth/schemas';
-import { createClientSideClient } from '@/lib/appwrite/client';
 import {
   DiscriminatedResponse,
   DiscriminatedResponseWithData,
 } from '@/types/utils';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { PropsWithChildren, useCallback, useEffect, useState } from 'react';
+import { PropsWithChildren, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 
 const OAUTH_TOAST_ID = 'oauth-toast';
@@ -41,7 +41,7 @@ const authToast = {
 };
 
 const AuthProvider = ({ children }: PropsWithChildren) => {
-  const [client] = useState(createClientSideClient);
+  const client = useClientContext();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [state, dispatch] = useAuthState();
@@ -64,7 +64,7 @@ const AuthProvider = ({ children }: PropsWithChildren) => {
           try {
             const { jwt } = await client.account.createJWT();
             console.log('jwt refreshed');
-            await setJWTCookie(jwt);
+            await setJWTCookieAction(jwt);
           } catch (error) {
             console.error(error);
           }

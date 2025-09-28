@@ -1,26 +1,21 @@
 'use client';
 
-import { useAuthContext } from '@/features/auth/contexts/AuthContext';
-import { ComponentProps, MouseEventHandler, useTransition } from 'react';
+import { ComponentProps, MouseEventHandler } from 'react';
 import { Button } from '../../../components/ui/button';
+import useSignOut from '../hooks/useSignOut';
 
 type SignoutButtonProps = ComponentProps<typeof Button>;
 
 const SignoutButton = ({ onClick, disabled, ...props }: SignoutButtonProps) => {
-  const { signout } = useAuthContext();
+  const { signOut, isSigningOut } = useSignOut();
 
-  const [pending, startTransition] = useTransition();
-
-  const isDisabled = pending || disabled;
+  const isDisabled = isSigningOut || disabled;
 
   const handleClick: MouseEventHandler<HTMLButtonElement> = (e) => {
     onClick?.(e);
-
-    if (!e.isDefaultPrevented() || !isDisabled)
-      startTransition(() => {
-        signout();
-      });
+    if (!e.isDefaultPrevented() || !isDisabled) signOut();
   };
+
   return (
     <Button
       variant="destructive"

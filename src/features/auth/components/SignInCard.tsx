@@ -23,14 +23,14 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import OAuthProviders from '@/features/auth/components/OAuthProviders';
-import { useAuthContext } from '@/features/auth/contexts/AuthContext';
 import { signInSchema, SignInSchemaType } from '@/features/auth/schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
+import useSignIn from '../hooks/useSignIn';
 
 const SignInCard = () => {
-  const { emailPasswordSignIn } = useAuthContext();
+  const { signIn } = useSignIn();
   const form = useForm<SignInSchemaType>({
     defaultValues: {
       email: '',
@@ -40,7 +40,7 @@ const SignInCard = () => {
   });
 
   const submitHandler = form.handleSubmit(async (data) => {
-    await emailPasswordSignIn(data);
+    signIn({ method: 'credentials', data });
   });
 
   return (

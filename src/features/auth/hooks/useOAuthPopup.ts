@@ -21,7 +21,7 @@ function useOAuthPopup({
 
     if (res.success)
       openPopup(res.data, popupName, { width: 700, height: 700 });
-    else onError?.(res.error);
+    else onError?.(res.error.message);
   };
 
   useEffect(() => {
@@ -37,7 +37,7 @@ function useOAuthPopup({
       if (result.success) {
         const res = await oauthSigninAction(result.data);
         if (res.success) onSuccess?.();
-        else onError?.(res.error);
+        else onError?.(res.error.message);
       }
     };
 
