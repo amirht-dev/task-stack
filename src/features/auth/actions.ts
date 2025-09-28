@@ -1,6 +1,6 @@
 'use server';
 
-import { SESSION_COOKIE_KEY } from '@/features/auth/constants';
+import { JWT_COOKIE_KEY, SESSION_COOKIE_KEY } from '@/features/auth/constants';
 import { OAuthSchemaType, SignInSchemaType } from '@/features/auth/schemas';
 import { createAdminClient, createSessionClient } from '@/lib/appwrite/server';
 import { ServerFunction } from '@/types/next';
@@ -69,4 +69,9 @@ export const getCurrentUserAction = async () => {
     const { account } = await createSessionClient();
     return await account.get();
   });
+};
+
+export const setJWTCookie = async (jwt: string) => {
+  const cookie = await cookies();
+  cookie.set(JWT_COOKIE_KEY, jwt);
 };

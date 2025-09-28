@@ -17,7 +17,9 @@ import { DataGridPagination } from '@/components/ui/data-grid-pagination';
 import { DataGridTable } from '@/components/ui/data-grid-table';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
+import InviteMemberDialog from '@/features/workspaces/components/InviteMemberDialog';
 import useWorkspaceQuery from '@/features/workspaces/hooks/useWorkspaceQuery';
+import useWorkspaceUserRoles from '@/features/workspaces/hooks/useWorkspaceUserRoles';
 import { NextPage } from '@/types/next';
 import {
   createColumnHelper,
@@ -35,6 +37,7 @@ const fallbackMemberships: Models.Membership[] = [];
 const WorkspaceMembersPage: NextPage<'workspace_id'> = ({ params }) => {
   const { workspace_id } = use(params);
   const workspace = useWorkspaceQuery(workspace_id);
+  const { isOwner } = useWorkspaceUserRoles(workspace_id);
 
   const columns = useMemo(() => {
     const columnHelper = createColumnHelper<Models.Membership>();
@@ -98,7 +101,8 @@ const WorkspaceMembersPage: NextPage<'workspace_id'> = ({ params }) => {
             column={column}
           />
         ),
-        cell: (props) => new Date(props.getValue()).toLocaleString(),
+        cell: (props) =>
+          props.getValue() ? new Date(props.getValue()).toLocaleString() : '-',
         meta: {
           skeleton: <Skeleton className="w-40 h-7" />,
         },
@@ -163,6 +167,12 @@ const WorkspaceMembersPage: NextPage<'workspace_id'> = ({ params }) => {
                 </Button>
               }
             />
+            {isOwner && workspace.isSuccess && (
+              <InviteMemberDialog
+                teamId={workspace.data?.teamId}
+                workspaceId={workspace_id}
+              />
+            )}
           </CardToolbar>
         </CardHeader>
         <CardTable>

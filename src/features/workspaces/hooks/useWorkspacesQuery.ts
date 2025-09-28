@@ -6,7 +6,7 @@ export const getWorkspacesQueryOptions = () => {
     queryKey: ['workspaces'],
     queryFn: async () => {
       const res = await getWorkspacesAction();
-      if (!res.success) throw new Error(res.error);
+      if (!res.success) throw new Error(res.error.message);
 
       const rowsWithImageUrl = res.data.rows.map((row) => ({
         ...row,

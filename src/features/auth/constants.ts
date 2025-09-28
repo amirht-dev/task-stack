@@ -7,6 +7,7 @@ import { ArrayValues } from 'type-fest';
 export const AUTHENTICATED_REDIRECT_PARAM_KEY = 'redirectTo';
 
 export const SESSION_COOKIE_KEY = `a_session_${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`;
+export const JWT_COOKIE_KEY = `a_jwt_${process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID}`;
 
 export const providers = [
   {

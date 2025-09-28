@@ -2,6 +2,7 @@ import {
   DiscriminatedResponse,
   DiscriminatedResponseWithData,
 } from '@/types/utils';
+import { AppwriteException } from 'node-appwrite';
 import 'server-only';
 import { Promisable } from 'type-fest';
 
@@ -25,12 +26,15 @@ export async function handleResponse(
 
     return {
       success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : typeof error === 'string'
-          ? error
-          : 'something wrong happened please try again later',
+      error: {
+        message:
+          error instanceof Error
+            ? error.message
+            : typeof error === 'string'
+            ? error
+            : 'something wrong happened please try again later',
+        type: error instanceof AppwriteException ? error.type : undefined,
+      },
     };
   }
 }

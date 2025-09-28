@@ -1,10 +1,11 @@
 'use server';
 
 import { DatabaseWorkspace } from '@/features/workspaces/types';
-import { createSessionClient } from '@/lib/appwrite/server';
+import { createAdminClient, createSessionClient } from '@/lib/appwrite/server';
 import { handleResponse } from '@/utils/server';
 import { ID, Models, Permission, Role } from 'node-appwrite';
 import {
+  InviteMemberFormSchema,
   WorkspaceImageFormUpdateSchema,
   WorkspaceNameFormUpdateSchema,
   WorkspaceSchema,
@@ -71,9 +72,9 @@ export async function getWorkspacesAction() {
           ]);
 
           if (!membersResponse.success)
-            return rej(new Error(membersResponse?.error));
+            return rej(new Error(membersResponse?.error.message));
           if (imageResponse && !imageResponse.success)
-            return rej(new Error(imageResponse.error));
+            return rej(new Error(imageResponse.error.message));
 
           res({
             ...workspace,
@@ -94,6 +95,7 @@ export async function getWorkspacesAction() {
 export async function getWorkspaceAction(workspaceId: string) {
   return handleResponse(async () => {
     const { database } = await createSessionClient();
+    const { users } = await createAdminClient();
 
     const workspace = await database.getRow<DatabaseWorkspace>({
       databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
@@ -101,18 +103,20 @@ export async function getWorkspaceAction(workspaceId: string) {
       rowId: workspaceId,
     });
 
-    const [membersRes, imageRes] = await Promise.all([
+    const [membersRes, imageRes, userRes] = await Promise.all([
       getWorkspaceMembersAction(workspace.teamId),
       workspace.imageId
         ? getWorkspaceImageAction(workspace.imageId)
         : undefined,
+      users.get({ userId: workspace.userId }),
     ]);
 
-    if (!membersRes.success) throw new Error(membersRes.error);
-    if (imageRes && !imageRes.success) throw new Error(imageRes.error);
+    if (!membersRes.success) throw new Error(membersRes.error.message);
+    if (imageRes && !imageRes.success) throw new Error(imageRes.error.message);
 
     return {
       ...workspace,
+      user: { name: userRes.name },
       imageBlob: imageRes?.data.image ?? null,
       members: membersRes.data,
     };
@@ -196,7 +200,8 @@ export async function updateWorkspaceImageAction(
 
     const workspaceResult = await getWorkspaceAction(workspaceId);
 
-    if (!workspaceResult.success) throw new Error(workspaceResult.error);
+    if (!workspaceResult.success)
+      throw new Error(workspaceResult.error.message);
 
     const { data: workspace } = workspaceResult;
 
@@ -246,7 +251,7 @@ export async function deleteWorkspaceAction(workspaceId: string) {
 
     const workspaceRes = await getWorkspaceAction(workspaceId);
 
-    if (!workspaceRes.success) throw new Error(workspaceRes.error);
+    if (!workspaceRes.success) throw new Error(workspaceRes.error.message);
 
     const { data: workspace } = workspaceRes;
 
@@ -272,5 +277,43 @@ export async function deleteWorkspaceAction(workspaceId: string) {
       deleteWorkspaceImagePromise,
       deleteWorkspaceTeamPromise,
     ]);
+  });
+}
+
+export async function inviteMemberAction({
+  workspaceId,
+  teamId,
+  email,
+}: InviteMemberFormSchema & { workspaceId: string; teamId?: string }) {
+  return handleResponse(async () => {
+    const { Teams } = await createSessionClient();
+
+    let membership: Models.Membership | null = null;
+
+    async function createMembership(teamId: string) {
+      const url = new URL(
+        `${process.env.NEXT_PUBLIC_ORIGIN_URL}/invite/callback`
+      );
+      url.searchParams.set('workspaceId', workspaceId);
+
+      return await Teams.createMembership({
+        teamId,
+        roles: ['member'],
+        email,
+        url: url.toString(),
+      });
+    }
+
+    if (teamId) {
+      membership = await createMembership(teamId);
+    } else {
+      const res = await getWorkspaceAction(workspaceId);
+      if (!res.success) throw new Error(res.error.message);
+      membership = await createMembership(res.data.teamId);
+    }
+
+    if (!membership) throw new Error('missing membership');
+
+    return membership;
   });
 }

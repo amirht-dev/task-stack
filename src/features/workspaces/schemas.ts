@@ -37,3 +37,21 @@ export const WorkspaceImageFormUpdateSchema = WorkspaceSchema.pick({
 export type WorkspaceImageFormUpdateSchema = z.infer<
   typeof WorkspaceImageFormUpdateSchema
 >;
+
+export const InviteMemberFormSchema = z.object({
+  email: z.email('invalid email address'),
+});
+
+export type InviteMemberFormSchema = z.infer<typeof InviteMemberFormSchema>;
+
+export const InviteMembershipParamsSchema = z.object({
+  membershipId: z.string().trim(),
+  userId: z.string().trim(),
+  secret: z.string().trim(),
+  teamId: z.string().trim(),
+  teamName: z.string().trim(),
+  workspaceId: z.string().trim(),
+});
+export type InviteMembershipParamsSchema = z.infer<
+  typeof InviteMembershipParamsSchema
+>;

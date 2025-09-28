@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { SESSION_COOKIE_KEY } from '@/features/auth/constants';
+import { JWT_COOKIE_KEY, SESSION_COOKIE_KEY } from '@/features/auth/constants';
 import { cookies } from 'next/headers';
 import {
   Account,
@@ -9,6 +9,7 @@ import {
   TablesDB,
   Teams,
   Tokens,
+  Users,
 } from 'node-appwrite';
 import { cache } from 'react';
 
@@ -17,12 +18,14 @@ export async function createSessionClient() {
     .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT)
     .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID);
 
-  const session = (await cookies()).get(SESSION_COOKIE_KEY);
-  if (!session || !session.value) {
-    throw new Error('No session');
-  }
+  const jwt = (await cookies()).get(JWT_COOKIE_KEY);
 
-  client.setSession(session.value);
+  if (jwt?.value) client.setJWT(jwt.value);
+  else {
+    const session = (await cookies()).get(SESSION_COOKIE_KEY);
+    if (!session || !session.value) throw new Error('No session');
+    client.setSession(session.value);
+  }
 
   return {
     get account() {
@@ -52,6 +55,9 @@ export async function createAdminClient() {
     },
     get tokens() {
       return new Tokens(client);
+    },
+    get users() {
+      return new Users(client);
     },
   };
 }

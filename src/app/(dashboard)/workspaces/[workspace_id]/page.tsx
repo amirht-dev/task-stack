@@ -36,7 +36,10 @@ import {
   WorkspaceImageFormUpdateSchema,
   WorkspaceNameFormUpdateSchema,
 } from '@/features/workspaces/schemas';
-import { formatMembersCount } from '@/features/workspaces/utils';
+import {
+  formatAvatarFallback,
+  formatMembersCount,
+} from '@/features/workspaces/utils';
 import { FileWithPreview } from '@/hooks/useFileUpload';
 import { NextPage } from '@/types/next';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -84,7 +87,35 @@ const WorkspacePreviewPage: NextPage<'workspace_id'> = ({ params }) => {
       </WorkspaceContext.Provider>
     );
 
-  return 'member overview';
+  if (workspace.isSuccess)
+    return (
+      <Card className="">
+        <CardContent>
+          <div className="flex items-center gap-8">
+            <Avatar className="size-30">
+              {workspace.data?.imageUrl && (
+                <AvatarImage
+                  src={workspace.data.imageUrl}
+                  alt={workspace.data.name}
+                />
+              )}
+              <AvatarFallback>
+                {formatAvatarFallback(workspace.data.name)}
+              </AvatarFallback>
+            </Avatar>
+
+            <div className="flex flex-col gap-2">
+              <span className="text-2xl font-normal">
+                {workspace.data.name}
+              </span>
+              <span className="text-muted-foreground text-sm">
+                created by {workspace.data.user.name}
+              </span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
 };
 
 function NameFormSectionCard() {
@@ -128,7 +159,7 @@ function NameFormSectionCard() {
     } else {
       toast.error(<strong>Failed to update workspace name</strong>, {
         id,
-        description: res.error,
+        description: res.error.message,
       });
     }
   });
@@ -201,7 +232,7 @@ function ImageFormSectionCard() {
     } else {
       toast.error(<strong>Failed to update workspace image</strong>, {
         id,
-        description: res.error,
+        description: res.error.message,
       });
     }
   });
@@ -320,12 +351,8 @@ function DeleteWorkspaceSectionCard() {
                     <AvatarImage src={workspace.data?.imageUrl} />
                   )}
                   <AvatarFallback>
-                    {workspace.data?.name
-                      .split(' ')
-                      .map((work) => work.at(0))
-                      .slice(0, 2)
-                      .join('')
-                      .toUpperCase()}
+                    {workspace.isSuccess &&
+                      formatAvatarFallback(workspace.data.name)}
                   </AvatarFallback>
                 </Avatar>
 

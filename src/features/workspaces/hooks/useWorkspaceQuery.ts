@@ -2,13 +2,13 @@ import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getWorkspaceAction } from '../actions';
 import { getWorkspacesQueryOptions } from './useWorkspacesQuery';
 
-function getWorkspaceQueryOptions(workspaceId: string) {
+export function getWorkspaceQueryOptions(workspaceId: string) {
   return queryOptions({
     queryKey: ['workspaces', workspaceId],
     queryFn: async () => {
       const res = await getWorkspaceAction(workspaceId);
 
-      if (!res.success) throw new Error(res.error);
+      if (!res.success) throw new Error(res.error.message);
       else
         return {
           ...res.data,

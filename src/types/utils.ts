@@ -48,8 +48,8 @@ export type UnSimplifiedMerge<Destination, Source> = SimpleMerge<
 
 export type DiscriminatedResponse =
   | { success: true }
-  | { success: false; error: string };
+  | { success: false; error: { message: string; type?: string } };
 
 export type DiscriminatedResponseWithData<TData> =
   | { success: true; data: TData }
-  | { success: false; error: string };
+  | { success: false; error: { message: string; type?: string } };

@@ -1,4 +1,4 @@
-import { Account, Client } from 'appwrite';
+import { Account, Client, Teams } from 'appwrite';
 import 'client-only';
 
 export function createClientSideClient() {
@@ -11,6 +11,9 @@ export function createClientSideClient() {
     client,
     get account() {
       return new Account(client);
+    },
+    get teams() {
+      return new Teams(client);
     },
   };
 }

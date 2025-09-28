@@ -5,7 +5,8 @@ import { redirect } from 'next/navigation';
 import { SESSION_COOKIE_KEY } from '../constants';
 
 export async function setSessionCookie(session: Models.Session) {
-  (await cookies()).set(SESSION_COOKIE_KEY, session.secret, {
+  const cookie = await cookies();
+  cookie.set(SESSION_COOKIE_KEY, session.secret, {
     httpOnly: true,
     sameSite: 'strict',
     path: '/',
