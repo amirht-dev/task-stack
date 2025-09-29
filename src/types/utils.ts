@@ -53,3 +53,10 @@ export type DiscriminatedResponse =
 export type DiscriminatedResponseWithData<TData> =
   | { success: true; data: TData }
   | { success: false; error: { message: string; type?: string } };
+
+export type UnwrapDiscriminatedResponseData<T> = T extends  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  | ((...args: any) => Promise<DiscriminatedResponseWithData<infer TData>>)
+  | Promise<DiscriminatedResponseWithData<infer TData>>
+  | DiscriminatedResponseWithData<infer TData>
+  ? TData
+  : never;

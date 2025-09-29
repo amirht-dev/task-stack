@@ -6,7 +6,7 @@ import { createAdminClient, createSessionClient } from '@/lib/appwrite/server';
 import { ServerFunction } from '@/types/next';
 import { handleResponse } from '@/utils/server';
 import { cookies, headers } from 'next/headers';
-import { ID, OAuthProvider, Permission, Role } from 'node-appwrite';
+import { ID, OAuthProvider, Permission, Query, Role } from 'node-appwrite';
 import {
   UpdateProfileEmailFormSchema,
   UpdateProfilePasswordFormSchema,
@@ -14,10 +14,29 @@ import {
 import { DatabaseProfile } from '../auth/types';
 import { setSessionCookie } from './utils/server';
 
+async function createProfileAction(userId: string) {
+  return handleResponse(async () => {
+    const { database } = await createAdminClient();
+    return await database.createRow<DatabaseProfile>({
+      databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+      tableId: process.env.NEXT_PUBLIC_APPWRITE_PROFILES_ID,
+      rowId: ID.unique(),
+      data: {
+        userId: userId,
+        avatarImageId: null,
+      },
+      permissions: [
+        Permission.write(Role.user(userId)),
+        Permission.read(Role.user(userId)),
+      ],
+    });
+  });
+}
+
 export const signupAction: ServerFunction<
   [credentials: { email: string; password: string }]
 > = async ({ email, password }) => {
-  const { account, database } = await createAdminClient();
+  const { account } = await createAdminClient();
 
   const user = await account.create({
     userId: ID.unique(),
@@ -25,20 +44,9 @@ export const signupAction: ServerFunction<
     password,
   });
 
-  const profile = await database.createRow<DatabaseProfile>({
-    databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
-    tableId: process.env.NEXT_PUBLIC_APPWRITE_PROFILES_ID,
-    rowId: ID.unique(),
-    data: {
-      userId: user.$id,
-      avatarImageId: null,
-    },
-    permissions: [
-      Permission.write(Role.user(user.$id)),
-      Permission.read(Role.user(user.$id)),
-    ],
-  });
-  console.log(profile);
+  const profileRes = await createProfileAction(user.$id);
+
+  if (!profileRes.success) throw new Error(profileRes.error.message);
 };
 
 export const emailPasswordSigninAction = async ({
@@ -82,14 +90,65 @@ export const oauthSigninAction = async (data: OAuthSchemaType) => {
   return handleResponse(async () => {
     const { account } = await createAdminClient();
     const session = await account.createSession(data);
+
+    const profileRes = await createProfileAction(data.userId);
+    if (!profileRes.success) throw new Error(profileRes.error.message);
+
     await setSessionCookie(session);
   });
 };
 
+async function getImageAction(imageId: string) {
+  const { storage } = await createSessionClient();
+
+  const [info, arrayBuffer] = await Promise.all([
+    storage.getFile({
+      bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
+      fileId: imageId,
+    }),
+    storage.getFileView({
+      bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
+      fileId: imageId,
+    }),
+  ]);
+
+  const blob = new Blob([arrayBuffer], { type: info.mimeType });
+
+  return { info, image: { blob, arrayBuffer } };
+}
+
 export const getCurrentUserAction = async () => {
   return handleResponse(async () => {
-    const { account } = await createSessionClient();
-    return await account.get();
+    const { account, database } = await createSessionClient();
+    const user = await account.get();
+
+    const profiles = await database.listRows<DatabaseProfile>({
+      databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+      tableId: process.env.NEXT_PUBLIC_APPWRITE_PROFILES_ID,
+      queries: [Query.equal('userId', user.$id)],
+    });
+
+    console.log(profiles);
+
+    const profile = profiles.rows[0];
+
+    let avatarImageBlob: Blob | null = null;
+
+    if (profile.avatarImageId) {
+      const {
+        image: { blob },
+      } = await getImageAction(profile.avatarImageId);
+
+      avatarImageBlob = blob;
+    }
+
+    return {
+      ...user,
+      profile: {
+        ...profiles.rows[0],
+        avatarImageBlob,
+      },
+    };
   });
 };
 

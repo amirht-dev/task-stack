@@ -1,12 +1,22 @@
 import { queryOptions, useQuery } from '@tanstack/react-query';
 import { getCurrentUserAction } from '../actions';
+import { User } from '../types';
 
 export function getAuthQueryOptions() {
   return queryOptions({
     queryKey: ['user'],
-    queryFn: async () => {
+    queryFn: async (): Promise<User> => {
       const res = await getCurrentUserAction();
-      if (res.success) return res.data;
+      if (res.success)
+        return {
+          ...res.data,
+          profile: {
+            ...res.data.profile,
+            avatarImageUrl: res.data.profile.avatarImageBlob
+              ? URL.createObjectURL(res.data.profile.avatarImageBlob)
+              : '/images/default_user_avatar.png',
+          },
+        };
       else throw new Error(res.error.message);
     },
   });

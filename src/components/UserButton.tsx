@@ -43,7 +43,7 @@ export default function UserButton({ triggerClassName }: UserButtonProps) {
         >
           {user ? (
             <Avatar className="shrink-0">
-              <AvatarImage src="https://i.pravatar.cc/300" alt={user?.name} />
+              <AvatarImage src={user.profile.avatarImageUrl} alt={user?.name} />
               <AvatarFallback>{avatarFallback}</AvatarFallback>
             </Avatar>
           ) : (
@@ -64,7 +64,7 @@ export default function UserButton({ triggerClassName }: UserButtonProps) {
       <PopoverContent align="end">
         <div className="flex flex-col items-center">
           <Avatar className="size-16">
-            <AvatarImage src="https://i.pravatar.cc/300" alt={user?.name} />
+            <AvatarImage src={user?.profile.avatarImageUrl} alt={user?.name} />
             <AvatarFallback>{avatarFallback}</AvatarFallback>
           </Avatar>
 

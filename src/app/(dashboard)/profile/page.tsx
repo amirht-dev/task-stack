@@ -74,7 +74,10 @@ const ProfilePage = () => {
           ) : (
             isAuthenticated && (
               <Avatar className="size-full ring-3 ring-background rounded-full">
-                <AvatarImage src="https://i.pravatar.cc/300" alt={user?.name} />
+                <AvatarImage
+                  src={user?.profile.avatarImageUrl}
+                  alt={user?.name}
+                />
                 <AvatarFallback className="text-4xl bg-background">
                   AT
                 </AvatarFallback>
