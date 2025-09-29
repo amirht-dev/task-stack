@@ -1,6 +1,7 @@
 'use client';
 
 import useWorkspacesQuery from '../hooks/useWorkspacesQuery';
+import AddWorkspaceCard from './AddWorkspaceCard';
 import WorkspaceCard from './WorkspaceCard';
 
 const WorkspacesList = () => {
@@ -15,6 +16,7 @@ const WorkspacesList = () => {
           <WorkspaceCard workspaceId={workspace.$id} />
         </li>
       ))}
+      <AddWorkspaceCard />
     </ul>
   );
 };
