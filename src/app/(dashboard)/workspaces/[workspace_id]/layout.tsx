@@ -58,13 +58,22 @@ const WorkspaceLayout: NextLayout<'workspace_id'> = ({ children, params }) => {
           </div>
 
           <div className="bg-secondary p-0.5 max-w-fit flex gap-1 rounded mt-10">
-            <WorkspaceNavLink href={`/workspaces/${workspace_id}`}>
+            <WorkspaceNavLink
+              href={`/workspaces/${workspace_id}`}
+              workspaceId={workspace_id}
+            >
               Overview
             </WorkspaceNavLink>
-            <WorkspaceNavLink href={`/workspaces/${workspace_id}/members`}>
+            <WorkspaceNavLink
+              href={`/workspaces/${workspace_id}/members`}
+              workspaceId={workspace_id}
+            >
               Members
             </WorkspaceNavLink>
-            <WorkspaceNavLink href={`/workspaces/${workspace_id}/projects`}>
+            <WorkspaceNavLink
+              href={`/workspaces/${workspace_id}/projects`}
+              workspaceId={workspace_id}
+            >
               Projects
             </WorkspaceNavLink>
           </div>
@@ -80,10 +89,15 @@ export default WorkspaceLayout;
 
 type WorkspaceNavLinkProps = PropsWithChildren<{
   href: string;
+  workspaceId: string;
 }>;
 
-function WorkspaceNavLink({ href, children }: WorkspaceNavLinkProps) {
-  const isActive = useIsActiveLink(href);
+function WorkspaceNavLink({
+  href,
+  workspaceId,
+  children,
+}: WorkspaceNavLinkProps) {
+  const isActive = useIsActiveLink(href, `/workspaces/${workspaceId}`);
 
   return (
     <Button
