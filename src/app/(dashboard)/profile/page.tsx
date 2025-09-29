@@ -3,6 +3,7 @@
 import {
   SectionCard,
   SectionCardContent,
+  SectionCardDescription,
   SectionCardFooter,
   SectionCardFormActionButton,
   SectionCardHeader,
@@ -360,6 +361,9 @@ function UpdatePasswordSection() {
           <SectionCardRow>
             <SectionCardHeader>
               <SectionCardTitle>{navItem.password.label}</SectionCardTitle>
+              <SectionCardDescription>
+                old password is optional if you signed in with providers
+              </SectionCardDescription>
             </SectionCardHeader>
 
             <SectionCardContent>
