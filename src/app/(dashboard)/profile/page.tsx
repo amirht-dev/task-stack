@@ -1,5 +1,6 @@
 'use client';
 
+import ImageInput from '@/components/ImageInput';
 import {
   SectionCard,
   SectionCardContent,
@@ -27,19 +28,22 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   sendEmailVerificationAction,
+  updateProfileAvatarAction,
   updateProfileEmailAction,
   updateProfileNameAction,
   updateProfilePasswordAction,
 } from '@/features/auth/actions';
 import useAuth, { getAuthQueryOptions } from '@/features/auth/hooks/useAuth';
 import {
+  UpdateProfileAvatarFormSchema,
   UpdateProfileEmailFormSchema,
   UpdateProfileNameFormSchema,
   UpdateProfilePasswordFormSchema,
 } from '@/features/auth/schemas';
+import { FileWithPreview } from '@/hooks/useFileUpload';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
@@ -414,33 +418,47 @@ function UpdatePasswordSection() {
 
 function UpdateAvatarSection() {
   const queryClient = useQueryClient();
-  const { isAuthenticating } = useAuth();
-  const form = useForm({
-    values: { oldPassword: '', password: '' },
-    resolver: zodResolver(UpdateProfilePasswordFormSchema),
+  const { isAuthenticating, isAuthenticated, user } = useAuth();
+  const [file, setFile] = useState<FileWithPreview>();
+  const form = useForm<UpdateProfileAvatarFormSchema>({
+    resolver: zodResolver(UpdateProfileAvatarFormSchema),
     disabled: isAuthenticating,
   });
 
-  const handleSubmit = form.handleSubmit(async (data) => {
-    const id = toast.loading('Updating password', {
-      id: 'update-password',
+  const handleSubmit = form.handleSubmit(async ({ image }) => {
+    const id = toast.loading('Updating avatar', {
+      id: 'update-avatar',
       description: undefined,
     });
-    const res = await updateProfilePasswordAction(data);
+    const res = await updateProfileAvatarAction(image);
 
     if (res.success) {
-      toast.success('Password is updated', { id, description: undefined });
+      toast.success('Avatar is updated', { id, description: undefined });
       queryClient.invalidateQueries({
         queryKey: getAuthQueryOptions().queryKey,
       });
       form.reset();
+      setFile(undefined);
     } else {
-      toast.error('Failed to update password', {
+      toast.error('Failed to update avatar', {
         id,
         description: res.error.message,
       });
     }
   });
+
+  useEffect(() => {
+    const { avatarImageBlob, avatarImageUrl } = user?.profile ?? {};
+    if (!user || file || !avatarImageBlob || !avatarImageUrl) return;
+
+    setFile({
+      file: new File([avatarImageBlob], 'avatar', {
+        type: avatarImageBlob.type,
+      }),
+      id: 'avatar',
+      preview: avatarImageUrl,
+    });
+  }, [isAuthenticated, file, user]);
 
   return (
     <SectionCard id={navItem.avatar.id} key={navItem.avatar.id}>
@@ -452,40 +470,37 @@ function UpdateAvatarSection() {
             </SectionCardHeader>
 
             <SectionCardContent>
-              <div className="flex flex-col gap-4">
-                <FormField
-                  control={form.control}
-                  name="oldPassword"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input
-                          type="password"
-                          {...field}
-                          placeholder="Old Password"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input
-                          type="password"
-                          {...field}
-                          placeholder="New Password"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="image"
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                render={({ field: { value, ...field } }) => (
+                  <FormItem>
+                    <FormControl>
+                      <ImageInput
+                        {...field}
+                        file={file}
+                        onFileChange={(file) => {
+                          setFile(file);
+
+                          if (!(file?.file instanceof File)) return;
+
+                          form.setValue('image', file.file, {
+                            shouldDirty: true,
+                            shouldValidate: true,
+                          });
+                        }}
+                        onError={(error) => {
+                          error.forEach((err) => {
+                            form.setError('image', { message: err });
+                          });
+                        }}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </SectionCardContent>
           </SectionCardRow>
           <SectionCardFooter>

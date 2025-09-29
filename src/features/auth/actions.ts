@@ -6,7 +6,7 @@ import { createAdminClient, createSessionClient } from '@/lib/appwrite/server';
 import { ServerFunction } from '@/types/next';
 import { handleResponse } from '@/utils/server';
 import { cookies, headers } from 'next/headers';
-import { ID, OAuthProvider, Permission, Query, Role } from 'node-appwrite';
+import { ID, OAuthProvider, Permission, Role } from 'node-appwrite';
 import {
   UpdateProfileEmailFormSchema,
   UpdateProfilePasswordFormSchema,
@@ -31,6 +31,17 @@ async function createProfileAction(userId: string) {
       ],
     });
   });
+}
+
+async function getProfileAction() {
+  const { database } = await createSessionClient();
+
+  const profiles = await database.listRows({
+    databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+    tableId: process.env.NEXT_PUBLIC_APPWRITE_PROFILES_ID,
+  });
+
+  return profiles.rows[0];
 }
 
 export const signupAction: ServerFunction<
@@ -119,18 +130,10 @@ async function getImageAction(imageId: string) {
 
 export const getCurrentUserAction = async () => {
   return handleResponse(async () => {
-    const { account, database } = await createSessionClient();
+    const { account } = await createSessionClient();
     const user = await account.get();
 
-    const profiles = await database.listRows<DatabaseProfile>({
-      databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
-      tableId: process.env.NEXT_PUBLIC_APPWRITE_PROFILES_ID,
-      queries: [Query.equal('userId', user.$id)],
-    });
-
-    console.log(profiles);
-
-    const profile = profiles.rows[0];
+    const profile = await getProfileAction();
 
     let avatarImageBlob: Blob | null = null;
 
@@ -145,7 +148,7 @@ export const getCurrentUserAction = async () => {
     return {
       ...user,
       profile: {
-        ...profiles.rows[0],
+        ...profile,
         avatarImageBlob,
       },
     };
@@ -198,5 +201,35 @@ export async function verifyEmailVerificationAction(
   return handleResponse(async () => {
     const { account } = await createSessionClient();
     account.updateVerification({ userId, secret });
+  });
+}
+
+export async function updateProfileAvatarAction(file: File) {
+  return handleResponse(async () => {
+    const { storage, account, database } = await createSessionClient();
+
+    const [user, profile] = await Promise.all([
+      account.get(),
+      getProfileAction(),
+    ]);
+
+    const avatar = await storage.createFile({
+      bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
+      file,
+      fileId: ID.unique(),
+      permissions: [
+        Permission.write(Role.user(user.$id)),
+        Permission.read(Role.user(user.$id)),
+      ],
+    });
+
+    return await database.updateRow<DatabaseProfile>({
+      databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+      tableId: process.env.NEXT_PUBLIC_APPWRITE_PROFILES_ID,
+      data: {
+        avatarImageId: avatar.$id,
+      } satisfies Partial<DatabaseProfile>,
+      rowId: profile.$id,
+    });
   });
 }

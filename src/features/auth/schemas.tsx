@@ -70,3 +70,16 @@ export const UpdateProfilePasswordFormSchema = z.object({
 export type UpdateProfilePasswordFormSchema = z.infer<
   typeof UpdateProfilePasswordFormSchema
 >;
+
+export const UpdateProfileAvatarFormSchema = z.object({
+  image: z
+    .file()
+    .min(500, 'maximum size of avatar must be 500kb')
+    .mime(
+      ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'],
+      'invalid image type'
+    ),
+});
+export type UpdateProfileAvatarFormSchema = z.infer<
+  typeof UpdateProfileAvatarFormSchema
+>;
