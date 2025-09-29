@@ -16,10 +16,18 @@ type NavLinkProps = OverrideProperties<
     style?: CallableWithContext<LinkProps['style']>;
     className?: CallableWithContext<LinkProps['className']>;
   }
->;
+> & {
+  basePath?: string;
+};
 
-function NavLink({ children, style, className, ...props }: NavLinkProps) {
-  const isActive = useIsActiveLink(props.href.toString());
+function NavLink({
+  children,
+  style,
+  className,
+  basePath = '/',
+  ...props
+}: NavLinkProps) {
+  const isActive = useIsActiveLink(props.href.toString(), basePath);
 
   const handleCallable = <T extends ReactNode | object>(
     prop: CallableWithContext<T>

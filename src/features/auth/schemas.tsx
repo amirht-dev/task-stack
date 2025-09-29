@@ -41,3 +41,32 @@ export const oauthSchema = z.object({
 });
 
 export type OAuthSchemaType = z.infer<typeof oauthSchema>;
+
+export const UpdateProfileNameFormSchema = z.object({
+  name: z.string().trim().min(1, 'name is required'),
+});
+export type UpdateProfileNameFormSchema = z.infer<
+  typeof UpdateProfileNameFormSchema
+>;
+
+export const UpdateProfileEmailFormSchema = z.object({
+  email: z.email('invalid email'),
+  password: z.string().min(1, 'password is required'),
+});
+export type UpdateProfileEmailFormSchema = z.infer<
+  typeof UpdateProfileEmailFormSchema
+>;
+
+export const UpdateProfilePasswordFormSchema = z.object({
+  oldPassword: z
+    .string()
+    .transform((value) => (!value ? undefined : value))
+    .optional(),
+  password: z
+    .string()
+    .refine((value) => value.length !== 0, 'password is required')
+    .min(8, 'password must be at least 8 characters'),
+});
+export type UpdateProfilePasswordFormSchema = z.infer<
+  typeof UpdateProfilePasswordFormSchema
+>;

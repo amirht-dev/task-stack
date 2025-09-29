@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { JWT_COOKIE_KEY, SESSION_COOKIE_KEY } from '@/features/auth/constants';
+import { SESSION_COOKIE_KEY } from '@/features/auth/constants';
 import { cookies } from 'next/headers';
 import {
   Account,
@@ -18,14 +18,10 @@ export async function createSessionClient() {
     .setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT)
     .setProject(process.env.NEXT_PUBLIC_APPWRITE_PROJECT_ID);
 
-  const jwt = (await cookies()).get(JWT_COOKIE_KEY);
+  const session = (await cookies()).get(SESSION_COOKIE_KEY);
 
-  if (jwt?.value) client.setJWT(jwt.value);
-  else {
-    const session = (await cookies()).get(SESSION_COOKIE_KEY);
-    if (!session || !session.value) throw new Error('No session');
-    client.setSession(session.value);
-  }
+  if (!session || !session.value) throw new Error('No session');
+  client.setSession(session.value);
 
   return {
     get account() {
@@ -58,6 +54,9 @@ export async function createAdminClient() {
     },
     get users() {
       return new Users(client);
+    },
+    get database() {
+      return new TablesDB(client);
     },
   };
 }

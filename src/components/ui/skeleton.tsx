@@ -23,7 +23,7 @@ function Skeleton({
     return (
       <div
         ref={(ref) => {
-          if (!ref) return;
+          if (!ref || size === 'box') return;
           const { lineHeight } = getComputedStyle(ref);
           ref.style.height = lineHeight;
         }}

@@ -6,19 +6,39 @@ import { createAdminClient, createSessionClient } from '@/lib/appwrite/server';
 import { ServerFunction } from '@/types/next';
 import { handleResponse } from '@/utils/server';
 import { cookies, headers } from 'next/headers';
-import { ID, OAuthProvider } from 'node-appwrite';
+import { ID, OAuthProvider, Permission, Role } from 'node-appwrite';
+import {
+  UpdateProfileEmailFormSchema,
+  UpdateProfilePasswordFormSchema,
+} from '../auth/schemas';
+import { DatabaseProfile } from '../auth/types';
 import { setSessionCookie } from './utils/server';
 
 export const signupAction: ServerFunction<
   [credentials: { email: string; password: string }]
 > = async ({ email, password }) => {
-  const { account } = await createAdminClient();
+  const { account, database } = await createAdminClient();
 
-  await account.create({
+  const user = await account.create({
     userId: ID.unique(),
     email,
     password,
   });
+
+  const profile = await database.createRow<DatabaseProfile>({
+    databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+    tableId: process.env.NEXT_PUBLIC_APPWRITE_PROFILES_ID,
+    rowId: ID.unique(),
+    data: {
+      userId: user.$id,
+      avatarImageId: null,
+    },
+    permissions: [
+      Permission.write(Role.user(user.$id)),
+      Permission.read(Role.user(user.$id)),
+    ],
+  });
+  console.log(profile);
 };
 
 export const emailPasswordSigninAction = async ({
@@ -77,3 +97,47 @@ export const setJWTCookieAction = async (jwt: string) => {
   const cookie = await cookies();
   cookie.set(JWT_COOKIE_KEY, jwt);
 };
+
+export async function updateProfileNameAction(name: string) {
+  return handleResponse(async () => {
+    const { account } = await createSessionClient();
+    return await account.updateName({ name });
+  });
+}
+
+export async function updateProfileEmailAction(
+  data: UpdateProfileEmailFormSchema
+) {
+  return handleResponse(async () => {
+    const { account } = await createSessionClient();
+    return await account.updateEmail(data);
+  });
+}
+
+export async function updateProfilePasswordAction(
+  data: UpdateProfilePasswordFormSchema
+) {
+  return handleResponse(async () => {
+    const { account } = await createSessionClient();
+    return await account.updatePassword(data);
+  });
+}
+
+export async function sendEmailVerificationAction() {
+  return handleResponse(async () => {
+    const { account } = await createSessionClient();
+    return await account.createVerification({
+      url: `${process.env.NEXT_PUBLIC_ORIGIN_URL}/verify-email/callback`,
+    });
+  });
+}
+
+export async function verifyEmailVerificationAction(
+  userId: string,
+  secret: string
+) {
+  return handleResponse(async () => {
+    const { account } = await createSessionClient();
+    account.updateVerification({ userId, secret });
+  });
+}

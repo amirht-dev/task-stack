@@ -16,6 +16,7 @@ import Logo from './Logo';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
+import { HiOutlineUser, HiUser } from 'react-icons/hi2';
 
 const WorkspaceFormDialog = dynamic(
   () => import('@/features/workspaces/components/WorkspaceFormDialog'),
@@ -32,6 +33,11 @@ const navigationItems = [
     label: 'Workspaces',
     href: '/workspaces',
     icon: { disactive: <MdOutlineWorkspaces />, active: <MdWorkspaces /> },
+  },
+  {
+    label: 'Profile',
+    href: '/profile',
+    icon: { disactive: <HiOutlineUser />, active: <HiUser /> },
   },
 ];
 

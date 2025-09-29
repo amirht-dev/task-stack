@@ -1,13 +1,14 @@
 'use client';
 
+import NavLink from '@/components/NavLink';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import useWorkspaceQuery from '@/features/workspaces/hooks/useWorkspaceQuery';
 import { formatMembersCount } from '@/features/workspaces/utils';
-import useIsActiveLink from '@/hooks/useIsActiveLink';
 import { NextLayout } from '@/types/next';
 import Link from 'next/link';
-import { PropsWithChildren, use } from 'react';
+import { use } from 'react';
 import { GoChevronLeft } from 'react-icons/go';
 
 const WorkspaceLayout: NextLayout<'workspace_id'> = ({ children, params }) => {
@@ -57,26 +58,34 @@ const WorkspaceLayout: NextLayout<'workspace_id'> = ({ children, params }) => {
             </div>
           </div>
 
-          <div className="bg-secondary p-0.5 max-w-fit flex gap-1 rounded mt-10">
-            <WorkspaceNavLink
-              href={`/workspaces/${workspace_id}`}
-              workspaceId={workspace_id}
-            >
-              Overview
-            </WorkspaceNavLink>
-            <WorkspaceNavLink
-              href={`/workspaces/${workspace_id}/members`}
-              workspaceId={workspace_id}
-            >
-              Members
-            </WorkspaceNavLink>
-            <WorkspaceNavLink
-              href={`/workspaces/${workspace_id}/projects`}
-              workspaceId={workspace_id}
-            >
-              Projects
-            </WorkspaceNavLink>
-          </div>
+          <Tabs className="max-w-fit mt-10">
+            <TabsList size="sm">
+              <TabsTrigger value="overview" asChild>
+                <NavLink
+                  href={`/workspaces/${workspace_id}`}
+                  basePath={`/workspaces/${workspace_id}`}
+                >
+                  Overview
+                </NavLink>
+              </TabsTrigger>
+              <TabsTrigger value="members" asChild>
+                <NavLink
+                  href={`/workspaces/${workspace_id}/members`}
+                  basePath={`/workspaces/${workspace_id}`}
+                >
+                  Members
+                </NavLink>
+              </TabsTrigger>
+              <TabsTrigger value="projects" asChild>
+                <NavLink
+                  href={`/workspaces/${workspace_id}/projects`}
+                  basePath={`/workspaces/${workspace_id}`}
+                >
+                  Projects
+                </NavLink>
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
       </div>
 
@@ -86,27 +95,3 @@ const WorkspaceLayout: NextLayout<'workspace_id'> = ({ children, params }) => {
 };
 
 export default WorkspaceLayout;
-
-type WorkspaceNavLinkProps = PropsWithChildren<{
-  href: string;
-  workspaceId: string;
-}>;
-
-function WorkspaceNavLink({
-  href,
-  workspaceId,
-  children,
-}: WorkspaceNavLinkProps) {
-  const isActive = useIsActiveLink(href, `/workspaces/${workspaceId}`);
-
-  return (
-    <Button
-      size="sm"
-      variant={isActive ? 'foreground' : 'dim'}
-      className={isActive ? 'bg-white' : 'bg-transparent'}
-      asChild
-    >
-      <Link href={href}>{children}</Link>
-    </Button>
-  );
-}
