@@ -292,7 +292,7 @@ export async function inviteMemberAction({
 
     async function createMembership(teamId: string) {
       const url = new URL(
-        `${process.env.NEXT_PUBLIC_ORIGIN_URL}/invite/callback`
+        `${process.env.NEXT_PUBLIC_ORIGIN_URL}/api/invite/callback`
       );
       url.searchParams.set('workspaceId', workspaceId);
 

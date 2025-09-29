@@ -1,5 +1,4 @@
 import { Account, Client, Teams } from 'appwrite';
-import 'client-only';
 
 export function createClientSideClient() {
   const client = new Client();

@@ -1,4 +1,3 @@
-import ClientProvider from '@/providers/ClientProvider';
 import GlobalStoreProvider from '@/providers/GlobalStoreProvider';
 import QueryClientProvider from '@/providers/QueryClientProvider';
 import type { Metadata } from 'next';
@@ -22,9 +21,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`text-base antialiased ${inter.className}`}>
         <QueryClientProvider>
-          <ClientProvider>
-            <GlobalStoreProvider>{children}</GlobalStoreProvider>
-          </ClientProvider>
+          <GlobalStoreProvider>{children}</GlobalStoreProvider>
         </QueryClientProvider>
         <Toaster richColors position="top-center" />
       </body>

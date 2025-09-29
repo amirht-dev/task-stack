@@ -70,7 +70,10 @@ const InviteMemberDialog = ({
         queryKey: getWorkspaceQueryOptions(workspaceId).queryKey,
       });
     } else {
-      toast.error('Failed to invite member', { id, description: res.error });
+      toast.error('Failed to invite member', {
+        id,
+        description: res.error.message,
+      });
     }
   });
 

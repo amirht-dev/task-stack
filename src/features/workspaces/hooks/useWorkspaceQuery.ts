@@ -32,6 +32,7 @@ function useWorkspaceQuery(workspaceId: string) {
       if (workspaceData)
         return {
           ...workspaceData,
+          user: { name: '' },
           members: { memberships: [], total: workspaceData.totalMembers },
         };
     },
