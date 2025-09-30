@@ -58,6 +58,9 @@ export async function createAdminClient() {
     get database() {
       return new TablesDB(client);
     },
+    get teams() {
+      return new Teams(client);
+    },
   };
 }
 

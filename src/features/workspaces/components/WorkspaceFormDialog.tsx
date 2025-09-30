@@ -74,7 +74,7 @@ const WorkspaceFormDialog = ({ trigger }: WorkspaceFormDialogProps) => {
       });
     } else {
       toast.error('Failed to create workspace', {
-        description: res.error,
+        description: res.error.message,
         id: toastId,
       });
     }

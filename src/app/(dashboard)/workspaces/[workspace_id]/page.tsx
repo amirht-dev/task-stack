@@ -315,18 +315,22 @@ function DeleteWorkspaceSectionCard() {
     startTransition(async () => {
       const id = toast.loading('Deleting workspace...', {
         id: 'delete-workspace',
+        description: undefined,
       });
 
       const res = await deleteWorkspaceAction(workspaceId);
 
       if (res.success) {
-        toast.success('Workspace deleted', { id });
+        toast.success('Workspace deleted', { id, description: undefined });
         queryClient.invalidateQueries({
           queryKey: getWorkspacesQueryOptions().queryKey,
         });
         router.replace('/workspaces');
       } else {
-        toast.error('Failed to delete workspace', { id });
+        toast.error('Failed to delete workspace', {
+          id,
+          description: res.error.message,
+        });
       }
     });
   };

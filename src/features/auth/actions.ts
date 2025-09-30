@@ -13,6 +13,7 @@ import {
 } from '../auth/schemas';
 import { DatabaseProfile } from '../auth/types';
 import { setSessionCookie } from './utils/server';
+import { getImageAction } from '@/actions';
 
 export async function createProfileAction(userId: string) {
   return handleResponse(async () => {
@@ -177,25 +178,6 @@ export const oauthSigninAction = async (data: OAuthSchemaType) => {
     if (session) await setSessionCookie(session);
   });
 };
-
-async function getImageAction(imageId: string) {
-  const { storage } = await createSessionClient();
-
-  const [info, arrayBuffer] = await Promise.all([
-    storage.getFile({
-      bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
-      fileId: imageId,
-    }),
-    storage.getFileView({
-      bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
-      fileId: imageId,
-    }),
-  ]);
-
-  const blob = new Blob([arrayBuffer], { type: info.mimeType });
-
-  return { info, image: { blob, arrayBuffer } };
-}
 
 export const getCurrentUserAction = async () => {
   return handleResponse(async () => {

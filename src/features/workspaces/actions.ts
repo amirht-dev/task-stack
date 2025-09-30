@@ -1,9 +1,11 @@
 'use server';
 
+import { getImageAction } from '@/actions';
 import { DatabaseWorkspace } from '@/features/workspaces/types';
 import { createAdminClient, createSessionClient } from '@/lib/appwrite/server';
-import { handleResponse } from '@/utils/server';
-import { ID, Models, Permission, Role } from 'node-appwrite';
+import { handleResponse, unwrapDiscriminatedResponse } from '@/utils/server';
+import { Transaction } from '@/utils/transaction';
+import { ID, Models, Permission, Query, Role } from 'node-appwrite';
 import {
   InviteMemberFormSchema,
   WorkspaceImageFormUpdateSchema,
@@ -43,9 +45,6 @@ export async function getWorkspaceMembersAction(teamId: string) {
     const list = await Teams.listMemberships({
       teamId: teamId,
     });
-    // list.memberships.map((member) => {
-    //   return new Promise((res) => {});
-    // });
     return list;
   });
 }
@@ -105,71 +104,92 @@ export async function getWorkspaceAction(workspaceId: string) {
 
     const [membersRes, imageRes, userRes] = await Promise.all([
       getWorkspaceMembersAction(workspace.teamId),
-      workspace.imageId
-        ? getWorkspaceImageAction(workspace.imageId)
-        : undefined,
+      workspace.imageId ? getImageAction(workspace.imageId) : undefined,
       users.get({ userId: workspace.userId }),
     ]);
 
-    if (!membersRes.success) throw new Error(membersRes.error.message);
-    if (imageRes && !imageRes.success) throw new Error(imageRes.error.message);
+    const members = unwrapDiscriminatedResponse(membersRes);
 
     return {
       ...workspace,
       user: { name: userRes.name },
-      imageBlob: imageRes?.data.image ?? null,
-      members: membersRes.data,
+      imageBlob: imageRes?.image.blob ?? null,
+      members,
     };
   });
 }
 
-export async function createWorkspaceAction(newWorkspace: unknown) {
+export async function createWorkspaceAction(newWorkspace: WorkspaceSchema) {
   return handleResponse(async () => {
-    const workspace = WorkspaceSchema.parse(newWorkspace);
+    const { name, image } = WorkspaceSchema.parse(newWorkspace);
     const { database, storage, account, Teams } = await createSessionClient();
     const user = await account.get();
 
-    let uploadedFile: Models.File | null = null;
+    const transaction = new Transaction();
 
-    if (workspace.image) {
-      uploadedFile = await storage.createFile({
-        bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
-        fileId: ID.unique(),
-        file: workspace.image,
-      });
-    }
+    const workspaceId = ID.unique();
 
-    try {
-      const workspaceId = ID.unique();
+    const uploadedImage = image
+      ? await transaction.operation({
+          name: 'upload workspace image',
+          fn: () =>
+            storage.createFile({
+              bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
+              fileId: ID.unique(),
+              file: image,
+            }),
+          rollbackFn: (file) =>
+            storage.deleteFile({
+              bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
+              fileId: file.$id,
+            }),
+        })()
+      : undefined;
 
-      const team = await Teams.create({
-        name: `workspace_${workspaceId}_members`,
-        teamId: ID.unique(),
-      });
+    const team = await transaction.operation({
+      name: 'create workspace team',
+      fn: () =>
+        Teams.create({
+          name,
+          teamId: ID.unique(),
+        }),
+      rollbackFn: (team) => Teams.delete({ teamId: team.$id }),
+    })();
 
-      return await database.createRow<DatabaseWorkspace>({
-        databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
-        tableId: process.env.NEXT_PUBLIC_APPWRITE_WORKSPACES_ID,
-        rowId: workspaceId,
-        data: {
-          imageId: uploadedFile?.$id ?? null,
-          name: workspace.name,
-          userId: user?.$id,
-          teamId: team.$id,
-        },
-        permissions: [
-          Permission.write(Role.user(user.$id)),
-          Permission.read(Role.team(team.$id)),
-        ],
-      });
-    } catch (error) {
-      if (uploadedFile)
-        await storage.deleteFile({
-          bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
-          fileId: uploadedFile.$id,
-        });
-      throw error;
-    }
+    const workspace = team
+      ? await transaction.operation({
+          name: 'create workspace',
+          fn: () => {
+            return database.createRow<DatabaseWorkspace>({
+              databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+              tableId: process.env.NEXT_PUBLIC_APPWRITE_WORKSPACES_ID,
+              rowId: workspaceId,
+              data: {
+                imageId: uploadedImage?.$id ?? null,
+                name,
+                userId: user?.$id,
+                teamId: team.$id,
+              },
+              permissions: [
+                Permission.write(Role.user(user.$id)),
+                Permission.read(Role.team(team.$id)),
+              ],
+            });
+          },
+          rollbackFn: (workspace) =>
+            database.deleteRow({
+              databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+              tableId: process.env.NEXT_PUBLIC_APPWRITE_WORKSPACES_ID,
+              rowId: workspace.$id,
+            }),
+        })()
+      : undefined;
+
+    transaction.handleThrowError();
+
+    if (!workspace) throw new Error('No workspace');
+
+    return workspace;
   });
 }
 
@@ -198,50 +218,79 @@ export async function updateWorkspaceImageAction(
   return handleResponse(async () => {
     const { database, storage } = await createSessionClient();
 
-    const workspaceResult = await getWorkspaceAction(workspaceId);
-
-    if (!workspaceResult.success)
-      throw new Error(workspaceResult.error.message);
-
-    const { data: workspace } = workspaceResult;
-
-    const deleteOldImagePromise = workspace.imageId
-      ? storage.deleteFile({
-          bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
-          fileId: workspace.imageId,
-        })
+    const currentWorkspace = unwrapDiscriminatedResponse(
+      await getWorkspaceAction(workspaceId)
+    );
+    const currentWorkspaceImage = currentWorkspace.imageId
+      ? await getImageAction(currentWorkspace.imageId)
       : undefined;
 
-    const uploadNewImagePromise = new Promise<Models.File>(async (res, rej) => {
-      try {
-        if (image) {
-          const result = await storage.createFile({
+    const transaction = new Transaction();
+
+    const uploadedImage = image
+      ? await transaction.operation({
+          name: 'upload new avatar',
+          fn: () =>
+            storage.createFile({
+              bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
+              fileId: ID.unique(),
+              file: image,
+            }),
+          rollbackFn: (file) =>
+            storage.deleteFile({
+              bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
+              fileId: file.$id,
+            }),
+        })()
+      : undefined;
+
+    if (uploadedImage)
+      await transaction.operation({
+        name: 'update workspace image id',
+        fn: () =>
+          database.updateRow<DatabaseWorkspace>({
+            databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+            tableId: process.env.NEXT_PUBLIC_APPWRITE_WORKSPACES_ID,
+            rowId: currentWorkspace.$id,
+            data: {
+              imageId: uploadedImage.$id,
+            },
+          }),
+        rollbackFn: () =>
+          database.updateRow<DatabaseWorkspace>({
+            databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+            tableId: process.env.NEXT_PUBLIC_APPWRITE_WORKSPACES_ID,
+            rowId: workspaceId,
+            data: {
+              imageId: currentWorkspace.imageId,
+            },
+          }),
+      })();
+
+    if (currentWorkspaceImage)
+      await transaction.operation({
+        name: 'delete old image',
+        fn: () =>
+          storage.deleteFile({
             bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
-            fileId: ID.unique(),
-            file: image,
+            fileId: currentWorkspaceImage.info.$id,
+          }),
+        rollbackFn: async () => {
+          if (!currentWorkspaceImage) return;
+
+          await storage.createFile({
+            bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
+            file: new File(
+              [currentWorkspaceImage.image.blob],
+              currentWorkspaceImage.info.name,
+              { type: currentWorkspaceImage.info.mimeType }
+            ),
+            fileId: currentWorkspaceImage.info.$id,
           });
-          res(result);
-        }
-      } catch (error) {
-        rej(error);
-      }
-    });
+        },
+      })();
 
-    const [, newImageResponse] = await Promise.all([
-      deleteOldImagePromise,
-      uploadNewImagePromise,
-    ]);
-
-    const updatedWorkspace = await database.updateRow<DatabaseWorkspace>({
-      databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
-      tableId: process.env.NEXT_PUBLIC_APPWRITE_WORKSPACES_ID,
-      rowId: workspaceId,
-      data: {
-        imageId: newImageResponse.$id,
-      },
-    });
-
-    return updatedWorkspace;
+    transaction.handleThrowError();
   });
 }
 
@@ -249,34 +298,83 @@ export async function deleteWorkspaceAction(workspaceId: string) {
   return handleResponse(async () => {
     const { database, storage, Teams } = await createSessionClient();
 
-    const workspaceRes = await getWorkspaceAction(workspaceId);
+    const workspace = unwrapDiscriminatedResponse(
+      await getWorkspaceAction(workspaceId)
+    );
 
-    if (!workspaceRes.success) throw new Error(workspaceRes.error.message);
-
-    const { data: workspace } = workspaceRes;
-
-    const deleteWorkspacePromise = database.deleteRow({
-      databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
-      tableId: process.env.NEXT_PUBLIC_APPWRITE_WORKSPACES_ID,
-      rowId: workspaceId,
-    });
-
-    const deleteWorkspaceImagePromise = workspace.imageId
-      ? storage.deleteFile({
-          bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
-          fileId: workspace.imageId,
-        })
+    const image = workspace.imageId
+      ? await getImageAction(workspace.imageId)
       : undefined;
 
-    const deleteWorkspaceTeamPromise = Teams.delete({
-      teamId: workspace.teamId,
-    });
+    const team = (
+      await Teams.list({ queries: [Query.equal('$id', workspace.teamId)] })
+    ).teams[0];
 
-    await Promise.all([
-      deleteWorkspacePromise,
-      deleteWorkspaceImagePromise,
-      deleteWorkspaceTeamPromise,
-    ]);
+    console.log({ team });
+
+    const transaction = new Transaction();
+
+    await transaction.operation({
+      name: 'delete workspace',
+      fn: () =>
+        database.deleteRow({
+          databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+          tableId: process.env.NEXT_PUBLIC_APPWRITE_WORKSPACES_ID,
+          rowId: workspaceId,
+        }),
+      rollbackFn: () =>
+        database.createRow<DatabaseWorkspace>({
+          databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+          tableId: process.env.NEXT_PUBLIC_APPWRITE_WORKSPACES_ID,
+          rowId: workspace.$id,
+          data: {
+            name: workspace.name,
+            imageId: workspace.imageId,
+            teamId: workspace.teamId,
+            userId: workspace.userId,
+            $createdAt: workspace.$createdAt,
+            $updatedAt: workspace.$updatedAt,
+            $permissions: workspace.$permissions,
+          },
+          permissions: workspace.$permissions,
+        }),
+    })();
+
+    if (image)
+      await transaction.operation({
+        name: 'delete workspace image',
+        fn: () =>
+          storage.deleteFile({
+            bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
+            fileId: image.info.$id,
+          }),
+        rollbackFn: () => {
+          storage.createFile({
+            bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
+            fileId: image.info.$id,
+            file: new File([image.image.blob], image.info.name, {
+              type: image.info.mimeType,
+            }),
+            permissions: image.info.$permissions,
+          });
+        },
+      })();
+
+    await transaction.operation({
+      name: 'delete team',
+      fn: () => Teams.delete({ teamId: workspace.teamId }),
+      rollbackFn: async () => {
+        const { teams } = await createAdminClient();
+        await teams.create({ name: team.name, teamId: team.$id });
+        Promise.all(
+          workspace.members.memberships.map((member) =>
+            teams.createMembership(member)
+          )
+        );
+      },
+    })();
+
+    transaction.handleThrowError();
   });
 }
 
@@ -307,9 +405,10 @@ export async function inviteMemberAction({
     if (teamId) {
       membership = await createMembership(teamId);
     } else {
-      const res = await getWorkspaceAction(workspaceId);
-      if (!res.success) throw new Error(res.error.message);
-      membership = await createMembership(res.data.teamId);
+      const workspace = unwrapDiscriminatedResponse(
+        await getWorkspaceAction(workspaceId)
+      );
+      membership = await createMembership(workspace.teamId);
     }
 
     if (!membership) throw new Error('missing membership');
