@@ -1,9 +1,10 @@
+import { createProfileAction } from '@/features/auth/actions';
 import { setSessionCookie } from '@/features/auth/utils/server';
 import { InviteMembershipParamsSchema } from '@/features/workspaces/schemas';
 import { createAdminClient } from '@/lib/appwrite/server';
 import { redirect } from 'next/navigation';
 import { NextRequest, NextResponse } from 'next/server';
-import { Client, Teams } from 'node-appwrite';
+import { Client, Query, Teams } from 'node-appwrite';
 
 export const GET = async (request: NextRequest) => {
   const parseResult = InviteMembershipParamsSchema.safeParse(
@@ -23,9 +24,20 @@ export const GET = async (request: NextRequest) => {
   const teams = new Teams(client);
 
   try {
-    await teams.updateMembershipStatus(parseResult.data);
+    const membership = await teams.updateMembershipStatus(parseResult.data);
 
-    const { users } = await createAdminClient();
+    const { users, database } = await createAdminClient();
+
+    const listProfiles = await database.listRows({
+      databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+      tableId: process.env.NEXT_PUBLIC_APPWRITE_PROFILES_ID,
+      queries: [Query.equal('userId', membership.userId)],
+    });
+
+    if (listProfiles.total === 0) {
+      const res = await createProfileAction(membership.userId);
+      if (!res.success) throw new Error(res.error.message);
+    }
 
     const session = await users.createSession({
       userId: parseResult.data.userId,

@@ -14,7 +14,7 @@ import {
 import { DatabaseProfile } from '../auth/types';
 import { setSessionCookie } from './utils/server';
 
-async function createProfileAction(userId: string) {
+export async function createProfileAction(userId: string) {
   return handleResponse(async () => {
     const { database } = await createAdminClient();
     return await database.createRow<DatabaseProfile>({
@@ -33,7 +33,7 @@ async function createProfileAction(userId: string) {
   });
 }
 
-async function getProfileAction() {
+export async function getProfileAction() {
   const { database } = await createSessionClient();
 
   const profiles = await database.listRows({
@@ -153,11 +153,6 @@ export const getCurrentUserAction = async () => {
       },
     };
   });
-};
-
-export const setJWTCookieAction = async (jwt: string) => {
-  const cookie = await cookies();
-  cookie.set(JWT_COOKIE_KEY, jwt);
 };
 
 export async function updateProfileNameAction(name: string) {
