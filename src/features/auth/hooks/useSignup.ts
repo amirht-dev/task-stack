@@ -18,23 +18,21 @@ function useSignup() {
   });
 
   const submitHandler = form.handleSubmit(async ({ email, password }) => {
-    const signupPromise = signupAction({ email, password });
-
-    toast.promise(signupPromise, {
-      loading: 'creating account',
-      success: () => {
-        router.push('/sign-in');
-        return {
-          message: 'Signup successfully',
-        };
-      },
-      error: (error) => ({
-        message:
-          error instanceof Error ? error.message : 'failed to create account',
-      }),
-      richColors: true,
-      position: 'top-center',
+    const id = toast.loading('Creating account', {
+      id: 'signup',
+      description: undefined,
     });
+    const res = await signupAction({ email, password });
+
+    if (res.success) {
+      toast.success('Signup successfully', { id, description: undefined });
+      router.push('/sign-in');
+    } else {
+      toast.error('Failed to create account', {
+        id,
+        description: res.error.message,
+      });
+    }
   });
 
   return { form, submitHandler };

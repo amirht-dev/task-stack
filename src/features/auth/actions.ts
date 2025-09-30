@@ -3,8 +3,8 @@
 import { JWT_COOKIE_KEY, SESSION_COOKIE_KEY } from '@/features/auth/constants';
 import { OAuthSchemaType, SignInSchemaType } from '@/features/auth/schemas';
 import { createAdminClient, createSessionClient } from '@/lib/appwrite/server';
-import { ServerFunction } from '@/types/next';
-import { handleResponse } from '@/utils/server';
+import { handleResponse, unwrapDiscriminatedResponse } from '@/utils/server';
+import { Transaction } from '@/utils/transaction';
 import { cookies, headers } from 'next/headers';
 import { ID, OAuthProvider, Permission, Role } from 'node-appwrite';
 import {
@@ -34,31 +34,82 @@ export async function createProfileAction(userId: string) {
 }
 
 export async function getProfileAction() {
-  const { database } = await createSessionClient();
+  return handleResponse(async () => {
+    const { database } = await createSessionClient();
 
-  const profiles = await database.listRows({
-    databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
-    tableId: process.env.NEXT_PUBLIC_APPWRITE_PROFILES_ID,
+    const profiles = await database.listRows<DatabaseProfile>({
+      databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+      tableId: process.env.NEXT_PUBLIC_APPWRITE_PROFILES_ID,
+    });
+
+    return profiles.rows[0];
   });
-
-  return profiles.rows[0];
 }
 
-export const signupAction: ServerFunction<
-  [credentials: { email: string; password: string }]
-> = async ({ email, password }) => {
-  const { account } = await createAdminClient();
+export async function deleteProfileAction() {
+  return handleResponse(async () => {
+    const { database } = await createSessionClient();
 
-  const user = await account.create({
-    userId: ID.unique(),
-    email,
-    password,
+    const profile = unwrapDiscriminatedResponse(await getProfileAction());
+
+    await database.deleteRow({
+      databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+      tableId: process.env.NEXT_PUBLIC_APPWRITE_PROFILES_ID,
+      rowId: profile.$id,
+    });
   });
+}
 
-  const profileRes = await createProfileAction(user.$id);
+export async function deleteProfileAsAdminAction(
+  profileId: DatabaseProfile['$id']
+) {
+  return handleResponse(async () => {
+    const { database } = await createAdminClient();
 
-  if (!profileRes.success) throw new Error(profileRes.error.message);
-};
+    await database.deleteRow({
+      databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+      tableId: process.env.NEXT_PUBLIC_APPWRITE_PROFILES_ID,
+      rowId: profileId,
+    });
+  });
+}
+
+export async function signupAction({
+  email,
+  password,
+}: {
+  email: string;
+  password: string;
+}) {
+  return handleResponse(async () => {
+    const { account, users } = await createAdminClient();
+
+    const transaction = new Transaction();
+
+    const user = await transaction.operation({
+      name: 'create user',
+      fn: () =>
+        account.create({
+          userId: ID.unique(),
+          email,
+          password,
+        }),
+      rollbackFn: (user) => users.delete({ userId: user.$id }),
+    })();
+
+    await transaction.operation({
+      name: 'create user profile',
+      fn: async () => {
+        if (!user) throw new Error('No user');
+
+        return unwrapDiscriminatedResponse(await createProfileAction(user.$id));
+      },
+      rollbackFn: async (profile) => deleteProfileAsAdminAction(profile.$id),
+    })();
+
+    transaction.handleThrowError();
+  });
+}
 
 export const emailPasswordSigninAction = async ({
   email,
@@ -87,25 +138,43 @@ export const signoutAction = async () => {
 export const oauthGetURLAction = async (provider: OAuthProvider) => {
   return handleResponse(async () => {
     const { account } = await createAdminClient();
+
     const origin = (await headers()).get('origin');
     if (!origin) throw new Error('No origin');
     const successURL = new URL('/oauth/callback', origin).toString();
-    return await account.createOAuth2Token({
+
+    const token = await account.createOAuth2Token({
       provider,
       success: successURL,
     });
+
+    return token;
   });
 };
 
 export const oauthSigninAction = async (data: OAuthSchemaType) => {
   return handleResponse(async () => {
-    const { account } = await createAdminClient();
-    const session = await account.createSession(data);
+    const { account, users } = await createAdminClient();
 
-    const profileRes = await createProfileAction(data.userId);
-    if (!profileRes.success) throw new Error(profileRes.error.message);
+    const transaction = new Transaction();
 
-    await setSessionCookie(session);
+    const session = await transaction.operation({
+      name: 'create session',
+      fn: () => account.createSession(data),
+      rollbackFn: (session) =>
+        users.deleteSession({ userId: session.userId, sessionId: session.$id }),
+    })();
+
+    await transaction.operation({
+      name: 'create user profile',
+      fn: async () =>
+        unwrapDiscriminatedResponse(await createProfileAction(data.userId)),
+      rollbackFn: (profile) => deleteProfileAsAdminAction(profile.$id),
+    })();
+
+    transaction.handleThrowError();
+
+    if (session) await setSessionCookie(session);
   });
 };
 
@@ -133,17 +202,11 @@ export const getCurrentUserAction = async () => {
     const { account } = await createSessionClient();
     const user = await account.get();
 
-    const profile = await getProfileAction();
+    const profile = unwrapDiscriminatedResponse(await getProfileAction());
 
-    let avatarImageBlob: Blob | null = null;
-
-    if (profile.avatarImageId) {
-      const {
-        image: { blob },
-      } = await getImageAction(profile.avatarImageId);
-
-      avatarImageBlob = blob;
-    }
+    const avatarImageBlob = profile.avatarImageId
+      ? (await getImageAction(profile.avatarImageId)).image.blob
+      : null;
 
     return {
       ...user,
@@ -203,28 +266,90 @@ export async function updateProfileAvatarAction(file: File) {
   return handleResponse(async () => {
     const { storage, account, database } = await createSessionClient();
 
-    const [user, profile] = await Promise.all([
+    const [user, profileRes] = await Promise.all([
       account.get(),
       getProfileAction(),
     ]);
 
-    const avatar = await storage.createFile({
-      bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
-      file,
-      fileId: ID.unique(),
-      permissions: [
-        Permission.write(Role.user(user.$id)),
-        Permission.read(Role.user(user.$id)),
-      ],
-    });
+    const profile = unwrapDiscriminatedResponse(profileRes);
 
-    return await database.updateRow<DatabaseProfile>({
-      databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
-      tableId: process.env.NEXT_PUBLIC_APPWRITE_PROFILES_ID,
-      data: {
-        avatarImageId: avatar.$id,
-      } satisfies Partial<DatabaseProfile>,
-      rowId: profile.$id,
-    });
+    const transaction = new Transaction();
+
+    const { avatarImageId } = unwrapDiscriminatedResponse(
+      await getProfileAction()
+    );
+
+    const currentAvatar = avatarImageId
+      ? await getImageAction(avatarImageId)
+      : null;
+
+    const newAvatar = await transaction.operation({
+      name: 'upload file',
+      fn: () =>
+        storage.createFile({
+          bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
+          file,
+          fileId: ID.unique(),
+          permissions: [
+            Permission.write(Role.user(user.$id)),
+            Permission.read(Role.user(user.$id)),
+          ],
+        }),
+      rollbackFn: (file) =>
+        storage.deleteFile({
+          bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
+          fileId: file.$id,
+        }),
+    })();
+
+    if (newAvatar)
+      await transaction.operation({
+        name: 'update profile',
+        fn: async () => {
+          return await database.updateRow<DatabaseProfile>({
+            databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+            tableId: process.env.NEXT_PUBLIC_APPWRITE_PROFILES_ID,
+            data: {
+              avatarImageId: newAvatar.$id,
+            } satisfies Partial<DatabaseProfile>,
+            rowId: profile.$id,
+          });
+        },
+        rollbackFn: (profile) =>
+          database.updateRow({
+            databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+            tableId: process.env.NEXT_PUBLIC_APPWRITE_PROFILES_ID,
+            rowId: profile.$id,
+            data: {
+              avatarImageId: currentAvatar?.info.$id ?? null,
+            } satisfies Partial<DatabaseProfile>,
+          }),
+      })();
+
+    if (currentAvatar) {
+      await transaction.operation({
+        name: 'delete old avatar',
+        fn: async () => {
+          await storage.deleteFile({
+            bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
+            fileId: currentAvatar.info.$id,
+          });
+        },
+        rollbackFn: () => {
+          storage.createFile({
+            bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
+            file: new File(
+              [currentAvatar.image.blob],
+              currentAvatar.info.name,
+              { type: currentAvatar.info.mimeType }
+            ),
+            fileId: currentAvatar.info.$id,
+            permissions: currentAvatar.info.$permissions,
+          });
+        },
+      })();
+
+      transaction.handleThrowError();
+    }
   });
 }

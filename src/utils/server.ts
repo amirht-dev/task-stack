@@ -38,3 +38,16 @@ export async function handleResponse(
     };
   }
 }
+
+export function unwrapDiscriminatedResponse<TData>(
+  response: DiscriminatedResponseWithData<TData>
+): TData;
+export function unwrapDiscriminatedResponse(
+  response: DiscriminatedResponse
+): void;
+export function unwrapDiscriminatedResponse(
+  response: DiscriminatedResponse | DiscriminatedResponseWithData<unknown>
+) {
+  if (!response.success) throw new Error(response.error.message);
+  return 'data' in response ? response.data : undefined;
+}
