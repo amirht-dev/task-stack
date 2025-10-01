@@ -71,11 +71,11 @@ const ProfilePage = () => {
       <div className="profile-cover h-[200px] shrink-0" />
 
       <div className="flex items-center gap-8 shrink-0 container">
-        <div className="size-40 -mt-10 bg-white rounded-full">
+        <div className="size-40 -mt-10 bg-background rounded-full">
           {isAuthenticating ? (
             <Skeleton
               size="box"
-              className="size-full rounded-full bg-neutral-200"
+              className="size-full rounded-full bg-neutral-200 dark:bg-neutral-800"
             />
           ) : (
             isAuthenticated && (
@@ -96,7 +96,7 @@ const ProfilePage = () => {
           <span className="text-3xl font-normal">
             <Skeleton
               loading={isAuthenticating}
-              className="w-60 bg-neutral-200"
+              className="w-60 bg-neutral-200 dark:bg-neutral-800"
               size="text"
             >
               {user?.name}
@@ -106,7 +106,7 @@ const ProfilePage = () => {
             <Skeleton
               loading={isAuthenticating}
               size="text"
-              className="w-50 bg-neutral-200"
+              className="w-50 bg-neutral-200 dark:bg-neutral-800"
             >
               {user?.email}
             </Skeleton>
