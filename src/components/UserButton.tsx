@@ -51,10 +51,10 @@ export default function UserButton({ triggerClassName }: UserButtonProps) {
           )}
 
           <div className="flex flex-col items-start flex-1 text-start min-w-0 gap-1">
-            <span className="font-semibold text-sm capitalize text-neutral-950 text-ellipsis text-nowrap w-full overflow-hidden">
+            <span className="font-semibold text-sm capitalize text-ellipsis text-nowrap w-full overflow-hidden">
               {user ? user.name : <Skeleton className="w-3/4 h-[1em]" />}
             </span>
-            <span className="text-xs text-neutral-600 text-ellipsis text-nowrap w-full overflow-hidden">
+            <span className="text-xs text-muted-foreground text-ellipsis text-nowrap w-full overflow-hidden">
               {user ? user.email : <Skeleton className="w-full h-[1em]" />}
             </span>
           </div>
@@ -68,10 +68,8 @@ export default function UserButton({ triggerClassName }: UserButtonProps) {
             <AvatarFallback>{avatarFallback}</AvatarFallback>
           </Avatar>
 
-          <span className="font-semibold text-neutral-950 capitalize mt-2">
-            {user?.name}
-          </span>
-          <span className="text-xs text-neutral-600">{user?.email}</span>
+          <span className="font-semibold capitalize mt-2">{user?.name}</span>
+          <span className="text-xs text-muted-foreground">{user?.email}</span>
         </div>
 
         <Separator className="my-4" />
