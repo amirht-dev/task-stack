@@ -65,7 +65,7 @@ const WorkspacePreviewPage: NextPage<'workspace_id'> = ({ params }) => {
   const { isOwner } = useWorkspaceUserRoles(workspace_id);
   const { isAuthenticating } = useAuth();
 
-  if (workspace.isLoading || isAuthenticating)
+  if (workspace.isLoading || isAuthenticating || isOwner === undefined)
     return (
       <div className="h-full flex items-center justify-center">
         <ProgressCircle
