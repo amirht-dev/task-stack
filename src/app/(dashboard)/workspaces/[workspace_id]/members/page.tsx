@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,
+  CardContent,
   CardFooter,
   CardHeader,
   CardTable,
@@ -26,7 +27,11 @@ import { DataGrid } from '@/components/ui/data-grid';
 import { DataGridColumnHeader } from '@/components/ui/data-grid-column-header';
 import { DataGridColumnVisibility } from '@/components/ui/data-grid-column-visibility';
 import { DataGridPagination } from '@/components/ui/data-grid-pagination';
-import { DataGridTable } from '@/components/ui/data-grid-table';
+import {
+  DataGridTable,
+  DataGridTableRowSelect,
+  DataGridTableRowSelectAll,
+} from '@/components/ui/data-grid-table';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,7 +43,7 @@ import {
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import useAuth from '@/features/auth/hooks/useAuth';
-import { removeMemberAction } from '@/features/workspaces/actions';
+import { removeMembersAction } from '@/features/workspaces/actions';
 import InviteMemberDialog from '@/features/workspaces/components/InviteMemberDialog';
 import useWorkspaceQuery, {
   getWorkspaceQueryOptions,
@@ -57,8 +62,9 @@ import {
 import { Models } from 'appwrite';
 import compact from 'lodash/compact';
 import { Columns3, Trash } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
 import { useParams } from 'next/navigation';
-import { startTransition, use, useMemo, useState } from 'react';
+import { ReactNode, startTransition, use, useMemo, useState } from 'react';
 import { BsThreeDots } from 'react-icons/bs';
 import { toast } from 'sonner';
 
@@ -73,6 +79,28 @@ const WorkspaceMembersPage: NextPage<'workspace_id'> = ({ params }) => {
     const columnHelper = createColumnHelper<Models.Membership>();
 
     const columns = [
+      isOwner
+        ? columnHelper.display({
+            id: 'select',
+            header: () => (
+              <span className="flex items-center justify-center">
+                <DataGridTableRowSelectAll />
+              </span>
+            ),
+            cell: ({ row }) =>
+              row.original.roles.includes('owner') ? null : (
+                <span className="flex items-center justify-center">
+                  <DataGridTableRowSelect row={row} />
+                </span>
+              ),
+            meta: {
+              headerClassName: 'w-[50px] p-0',
+              cellClassName: 'w-[50px] p-0',
+            },
+            enableSorting: false,
+            enableHiding: false,
+          })
+        : undefined,
       columnHelper.accessor('userName', {
         header: ({ column }) => (
           <DataGridColumnHeader
@@ -167,9 +195,14 @@ const WorkspaceMembersPage: NextPage<'workspace_id'> = ({ params }) => {
         ? columnHelper.display({
             header: '',
             id: 'actions',
-            cell: (props) => <MemberActions cell={props} />,
+            cell: (props) => (
+              <span className="flex items-center justify-center">
+                <MemberActions cell={props} />
+              </span>
+            ),
             meta: {
-              headerClassName: 'w-[60px]',
+              headerClassName: 'w-[60px] p-0',
+              cellClassName: 'w-[60px] p-0',
             },
             enableHiding: false,
           })
@@ -188,49 +221,93 @@ const WorkspaceMembersPage: NextPage<'workspace_id'> = ({ params }) => {
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    enableRowSelection: (row) => !row.original.roles.includes('owner'),
   });
 
+  const selectedMembers = table.getState().rowSelection;
+
+  const selectedMembersCount = Object.keys(selectedMembers).length;
+
   return (
-    <DataGrid
-      table={table}
-      recordCount={membershipList?.total || 0}
-      isLoading={workspace.isLoading}
-      tableLayout={{
-        cellBorder: true,
-        width: 'auto',
-      }}
-    >
-      <Card>
-        <CardHeader className="py-3.5">
-          <CardTitle>Members</CardTitle>
-          <CardToolbar>
-            <DataGridColumnVisibility
-              table={table}
-              trigger={
-                <Button variant="outline" size="icon">
-                  <Columns3 />
-                </Button>
-              }
-            />
-            {isOwner && workspace.isSuccess && (
-              <InviteMemberDialog
-                teamId={workspace.data?.teamId}
-                workspaceId={workspace_id}
+    <>
+      <AnimatePresence>
+        {!!selectedMembersCount && membershipList?.memberships && (
+          <motion.div
+            variants={{ hidden: { y: 200 }, visible: { y: 0 } }}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            className="fixed z-10 bottom-12 left-1/2 -translate-x-1/2"
+            transition={{ bounce: 0, duration: 0.18 }}
+          >
+            <Card>
+              <CardContent className="min-w-md flex items-center justify-between">
+                <CardTitle>
+                  {selectedMembersCount} members are selected
+                </CardTitle>
+                <CardToolbar>
+                  <Button
+                    variant="outline"
+                    onClick={() => table.resetRowSelection()}
+                  >
+                    Cancel
+                  </Button>
+                  <RemoveMemberDialog
+                    trigger={<Button variant="destructive">Remove</Button>}
+                    onRemove={() => table.resetRowSelection()}
+                    memberships={membershipList.memberships.filter(
+                      (membership) =>
+                        membership.$id in selectedMembers &&
+                        selectedMembers[membership.$id] === true
+                    )}
+                  />
+                </CardToolbar>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <DataGrid
+        table={table}
+        recordCount={membershipList?.total || 0}
+        isLoading={workspace.isLoading}
+        tableLayout={{
+          cellBorder: true,
+          width: 'auto',
+        }}
+      >
+        <Card>
+          <CardHeader className="py-3.5">
+            <CardTitle>Members</CardTitle>
+            <CardToolbar>
+              <DataGridColumnVisibility
+                table={table}
+                trigger={
+                  <Button variant="outline" size="icon">
+                    <Columns3 />
+                  </Button>
+                }
               />
-            )}
-          </CardToolbar>
-        </CardHeader>
-        <CardTable>
-          <ScrollArea>
-            <DataGridTable />
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
-        </CardTable>
-        <CardFooter>
-          <DataGridPagination />
-        </CardFooter>
-      </Card>
-    </DataGrid>
+              {isOwner && workspace.isSuccess && (
+                <InviteMemberDialog
+                  teamId={workspace.data?.teamId}
+                  workspaceId={workspace_id}
+                />
+              )}
+            </CardToolbar>
+          </CardHeader>
+          <CardTable>
+            <ScrollArea>
+              <DataGridTable />
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+          </CardTable>
+          <CardFooter>
+            <DataGridPagination />
+          </CardFooter>
+        </Card>
+      </DataGrid>
+    </>
   );
 };
 
@@ -266,7 +343,16 @@ function MemberActions({
         <DropdownMenuSeparator />
         {isUserIsOwner && !isMySelf && (
           <RemoveMemberDialog
-            membership={membership}
+            trigger={
+              <DropdownMenuItem
+                onSelect={(e) => e.preventDefault()}
+                variant="destructive"
+              >
+                <Trash />
+                remove
+              </DropdownMenuItem>
+            }
+            memberships={membership}
             onRemove={() => setOpen(false)}
           />
         )}
@@ -276,34 +362,57 @@ function MemberActions({
 }
 
 function RemoveMemberDialog({
+  trigger,
+  memberships,
   onRemove,
-  membership,
 }: {
-  onRemove: () => void;
-  membership: Models.Membership;
+  trigger: ReactNode;
+  memberships: Models.Membership | Models.Membership[];
+  onRemove?: () => void;
 }) {
   const queryClient = useQueryClient();
   const { workspace_id } = useParams<{ workspace_id: string }>();
+  const workspace = useWorkspaceQuery(workspace_id);
+  const teamId = workspace.data?.teamId;
 
   const handleRemoveMember = async () => {
-    onRemove();
+    if (!teamId) return;
+
+    onRemove?.();
     startTransition(async () => {
       const id = toast.custom(
         () => (
           <Toast
             variant="loading"
-            title={`Removing ${membership.userName}...`}
+            title={
+              Array.isArray(memberships)
+                ? `Removing ${memberships.length} members...`
+                : `Removing ${memberships.userName}...`
+            }
           />
         ),
-        { id: `remove-member-${membership.$id}`, duration: Infinity }
+        {
+          id: Array.isArray(memberships)
+            ? 'remove-members'
+            : `remove-member-${memberships.$id}`,
+        }
       );
-      const res = await removeMemberAction(membership.teamId, membership.$id);
+      const res = await removeMembersAction({
+        teamId,
+        membershipIds: Array.isArray(memberships)
+          ? memberships.map((member) => member.$id)
+          : memberships.$id,
+      });
       if (res.success) {
         toast.custom(
           () => (
             <Toast
               variant="success"
-              title={`${membership.userName} is removed`}
+              title={
+                Array.isArray(memberships)
+                  ? `All ${memberships.length} members removed`
+                  : `${memberships.userName} is removed`
+              }
             />
           ),
           {
@@ -318,7 +427,11 @@ function RemoveMemberDialog({
           () => (
             <Toast
               variant="destructive"
-              title={`failed to remove ${membership.userName}`}
+              title={
+                Array.isArray(memberships)
+                  ? `Failed to remove ${memberships.length} members`
+                  : `Failed to remove ${memberships.userName}`
+              }
               description={res.error.message}
             />
           ),
@@ -332,28 +445,27 @@ function RemoveMemberDialog({
 
   return (
     <AlertDialog>
-      <AlertDialogTrigger asChild>
-        <DropdownMenuItem
-          onSelect={(e) => e.preventDefault()}
-          variant="destructive"
-        >
-          <Trash />
-          remove
-        </DropdownMenuItem>
-      </AlertDialogTrigger>
+      <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
 
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>remove {membership.userName}?</AlertDialogTitle>
+          <AlertDialogTitle>
+            {Array.isArray(memberships)
+              ? `Remove all ${memberships.length} members?`
+              : `Remove ${memberships.userName}?`}
+          </AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to remove {membership.userName} from this
-            workspace?. after removing members they lose their roles.
+            Are you sure you want to remove{' '}
+            {Array.isArray(memberships)
+              ? `all ${memberships.length} members`
+              : memberships.userName}{' '}
+            from this workspace?. after removing members they lose their roles.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction variant="destructive" onClick={handleRemoveMember}>
-            Remove
+            {Array.isArray(memberships) ? 'Remove All' : 'Remove'}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

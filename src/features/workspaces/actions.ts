@@ -4,6 +4,7 @@ import { getImageAction } from '@/actions';
 import { DatabaseWorkspace } from '@/features/workspaces/types';
 import { createPublicClient } from '@/lib/appwrite/client';
 import { createAdminClient, createSessionClient } from '@/lib/appwrite/server';
+import { OneOrMore } from '@/types/utils';
 import { handleResponse, unwrapDiscriminatedResponse } from '@/utils/server';
 import { Transaction } from '@/utils/transaction';
 import { ID, Models, Permission, Query, Role } from 'node-appwrite';
@@ -474,9 +475,28 @@ export async function checkMemberInvitationAction(
   });
 }
 
-export async function removeMemberAction(teamId: string, membershipId: string) {
+export async function removeMembersAction({
+  teamId,
+  membershipIds,
+}: {
+  teamId: string;
+  membershipIds: OneOrMore<string>;
+}) {
   return handleResponse(async () => {
     const { Teams } = await createSessionClient();
-    await Teams.deleteMembership({ teamId, membershipId });
+    if (Array.isArray(membershipIds))
+      await Promise.all(
+        membershipIds.map((membershipId) =>
+          Teams.deleteMembership({
+            teamId,
+            membershipId,
+          })
+        )
+      );
+    else
+      await Teams.deleteMembership({
+        teamId,
+        membershipId: membershipIds,
+      });
   });
 }
