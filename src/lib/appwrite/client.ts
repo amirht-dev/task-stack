@@ -1,6 +1,6 @@
 import { Account, Client, Teams } from 'appwrite';
 
-export function createClientSideClient() {
+export function createPublicClient() {
   const client = new Client();
 
   client.setEndpoint(process.env.NEXT_PUBLIC_APPWRITE_ENDPOINT);
