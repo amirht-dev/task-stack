@@ -1,20 +1,22 @@
 'use client';
 
 import useAuth from '@/features/auth/hooks/useAuth';
+import useSignOut from '@/features/auth/hooks/useSignOut';
+import { useState } from 'react';
 import { GoSignOut } from 'react-icons/go';
-import SignoutButton from '../features/auth/components/SignoutButton';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from './ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
-import DialogContent, {
-  Dialog,
-  DialogBody,
-  DialogClose,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from './ui/dialog';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Separator } from './ui/separator';
 import { Skeleton } from './ui/skeleton';
@@ -75,42 +77,49 @@ export default function UserButton({ triggerClassName }: UserButtonProps) {
         <Separator className="my-4" />
 
         <div>
-          <SignoutDialog />
+          <SignoutAlertDialog />
         </div>
       </PopoverContent>
     </Popover>
   );
 }
 
-function SignoutDialog() {
+function SignoutAlertDialog() {
+  const { signOut, isSigningOut } = useSignOut();
+  const [open, setOpen] = useState(false);
+
+  const handleSignout = () => {
+    setOpen(false);
+    signOut();
+  };
+
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="dim" className="hover:text-destructive">
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogTrigger asChild>
+        <Button
+          variant="dim"
+          className="hover:text-destructive"
+          disabled={isSigningOut}
+        >
           <GoSignOut />
           <span>sign out</span>
         </Button>
-      </DialogTrigger>
+      </AlertDialogTrigger>
 
-      <DialogContent className="max-w-sm">
-        <DialogHeader>
-          <DialogTitle>Are you sure want sign out?</DialogTitle>
-        </DialogHeader>
-
-        <DialogBody>
-          <DialogDescription className="text-sm">
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you sure want sign out?</AlertDialogTitle>
+          <AlertDialogDescription>
             After logout you need to input your detail to get back this app
-          </DialogDescription>
-        </DialogBody>
-
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline">Cancel</Button>
-          </DialogClose>
-
-          <SignoutButton />
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleSignout} variant="destructive">
+            Signout
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
