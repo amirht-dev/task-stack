@@ -1,6 +1,7 @@
 import GlobalStoreProvider from '@/providers/GlobalStoreProvider';
 import QueryClientProvider from '@/providers/QueryClientProvider';
 import type { Metadata } from 'next';
+import { ThemeProvider } from 'next-themes';
 import { Inter } from 'next/font/google';
 import { Toaster } from 'sonner';
 import './globals.css';
@@ -18,10 +19,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body className={`text-base antialiased ${inter.className}`}>
         <QueryClientProvider>
-          <GlobalStoreProvider>{children}</GlobalStoreProvider>
+          <GlobalStoreProvider>
+            <ThemeProvider attribute="class">{children}</ThemeProvider>
+          </GlobalStoreProvider>
         </QueryClientProvider>
         <Toaster richColors position="top-center" />
       </body>

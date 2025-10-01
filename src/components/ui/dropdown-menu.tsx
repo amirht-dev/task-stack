@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { Check, ChevronRight, Circle } from 'lucide-react';
 import { DropdownMenu as DropdownMenuPrimitive } from 'radix-ui';
 import * as React from 'react';
+import { twJoin } from 'tailwind-merge';
 
 function DropdownMenu({
   ...props
@@ -161,23 +162,36 @@ function DropdownMenuCheckboxItem({
 function DropdownMenuRadioItem({
   className,
   children,
+  indicatorPosition = 'left',
   ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.RadioItem>) {
+}: React.ComponentProps<typeof DropdownMenuPrimitive.RadioItem> & {
+  indicatorPosition?: 'left' | 'right';
+}) {
+  const indicator = (
+    <span
+      className={twJoin(
+        'absolute  flex h-3.5 w-3.5 items-center justify-center',
+        indicatorPosition === 'left' ? 'start-1.5' : 'end-1.5'
+      )}
+    >
+      <DropdownMenuPrimitive.ItemIndicator>
+        <Circle className="h-1.5 w-1.5 fill-primary stroke-primary" />
+      </DropdownMenuPrimitive.ItemIndicator>
+    </span>
+  );
   return (
     <DropdownMenuPrimitive.RadioItem
       data-slot="dropdown-menu-radio-item"
       className={cn(
-        'relative flex cursor-default select-none items-center rounded-md py-1.5 ps-6 pe-2 text-sm outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50',
+        'relative flex cursor-default select-none items-center rounded-md py-1.5 pe-2 text-sm outline-hidden transition-colors focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50',
+        indicatorPosition === 'left' ? 'ps-6' : 'pe-6',
         className
       )}
       {...props}
     >
-      <span className="absolute start-1.5 flex h-3.5 w-3.5 items-center justify-center">
-        <DropdownMenuPrimitive.ItemIndicator>
-          <Circle className="h-1.5 w-1.5 fill-primary stroke-primary" />
-        </DropdownMenuPrimitive.ItemIndicator>
-      </span>
+      {indicatorPosition === 'left' && indicator}
       {children}
+      {indicatorPosition === 'right' && indicator}
     </DropdownMenuPrimitive.RadioItem>
   );
 }

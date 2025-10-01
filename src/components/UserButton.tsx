@@ -39,7 +39,7 @@ export default function UserButton({ triggerClassName }: UserButtonProps) {
         <Button
           variant="ghost"
           autoHeight
-          className="flex items-center gap-2 w-[160px] cursor-pointer hover:bg-neutral-100 py-1 px-2 transition-colors rounded-lg"
+          className="flex items-center gap-2 w-[160px] cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 py-1 px-2 transition-colors rounded-lg"
         >
           {user ? (
             <Avatar className="shrink-0">

@@ -17,7 +17,7 @@ const WorkspaceLayout: NextLayout<'workspace_id'> = ({ children, params }) => {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="bg-background shrink-0">
+      <div className="shrink-0 bg-secondary text-secondary-foreground">
         <div className="container py-8">
           <div className="flex items-start gap-2">
             <Button variant="dim" size="icon" asChild>

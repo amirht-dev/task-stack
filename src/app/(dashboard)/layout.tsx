@@ -7,10 +7,10 @@ const DashboardLayout: NextLayout = async ({ children }) => {
   await protect();
 
   return (
-    <div className="h-dvh flex">
+    <div className="h-dvh flex bg-background text-foreground">
       <Sidebar />
 
-      <div className="flex-1 flex flex-col bg-neutral-100 h-full">
+      <div className="flex-1 flex flex-col h-full">
         <Navbar />
         <div className="flex-1 overflow-y-auto">{children}</div>
       </div>

@@ -11,12 +11,12 @@ import Link from 'next/link';
 import { PropsWithChildren, ReactNode } from 'react';
 import { BsPlusCircleFill } from 'react-icons/bs';
 import { GoHome, GoHomeFill } from 'react-icons/go';
+import { HiOutlineUser, HiUser } from 'react-icons/hi2';
 import { MdOutlineWorkspaces, MdWorkspaces } from 'react-icons/md';
 import Logo from './Logo';
 import { Button } from './ui/button';
 import { Separator } from './ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
-import { HiOutlineUser, HiUser } from 'react-icons/hi2';
 
 const WorkspaceFormDialog = dynamic(
   () => import('@/features/workspaces/components/WorkspaceFormDialog'),
@@ -50,7 +50,7 @@ export default function Sidebar() {
   return (
     <aside
       className={cn(
-        'bg-white shrink-0 border-e border-neutral-200 transition-all',
+        'bg-secondary text-secondary-foreground shrink-0 border-e border-neutral-200 dark:border-neutral-700 transition-all',
         isExpanded ? 'w-[264px]' : 'w-[70px]'
       )}
     >
@@ -187,30 +187,51 @@ const SidebarNavLink = ({
 
   if (isExpanded)
     return (
-      <Link
-        href={href}
-        className={cn(
-          'flex items-center gap-1 font-semibold text-sm p-2 rounded-md transition-colors',
-          isActive
-            ? 'bg-neutral-200 text-neutral-950'
-            : 'text-neutral-600 hover:text-neutral-700 hover:bg-neutral-100'
-        )}
+      <Button
+        className="block justify-start"
+        variant={isActive ? 'primary' : 'secondary'}
+        asChild
       >
-        <Slot className="size-4 shrink-0">
-          {isActive ? activeIcon : disactiveIcon}
-        </Slot>
+        <Link
+          href={href}
+          className={cn(
+            'flex items-center font-semibold transition-colors'
+            // isActive
+            //   ? 'bg-neutral-200 dark:bg-neutral-600 dark:text-neutral-50 text-neutral-950'
+            //   : 'text-neutral-600 dark:text-neutral-400 dark:hover:bg-neutral-800 hover:text-neutral-700 hover:bg-neutral-100'
+          )}
+        >
+          <Slot className="size-4 shrink-0">
+            {isActive ? activeIcon : disactiveIcon}
+          </Slot>
 
-        {isExpanded && <span>{label}</span>}
-      </Link>
+          {isExpanded && <span>{label}</span>}
+        </Link>
+      </Button>
+
+      // <Link
+      //   href={href}
+      //   className={cn(
+      //     'flex items-center gap-1 font-semibold text-sm p-2 rounded-md transition-colors',
+      //     isActive
+      //       ? 'bg-neutral-200 dark:bg-neutral-600 dark:text-neutral-50 text-neutral-950'
+      //       : 'text-neutral-600 dark:text-neutral-400 dark:hover:bg-neutral-800 hover:text-neutral-700 hover:bg-neutral-100'
+      //   )}
+      // >
+      //   <Slot className="size-4 shrink-0">
+      //     {isActive ? activeIcon : disactiveIcon}
+      //   </Slot>
+
+      //   {isExpanded && <span>{label}</span>}
+      // </Link>
     );
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <Button
-          variant={isActive ? 'foreground' : 'ghost'}
+          variant={isActive ? 'primary' : 'secondary'}
           mode="icon"
-          className={isActive ? 'bg-neutral-200' : ''}
           asChild
         >
           <Link href={href}>
@@ -223,5 +244,23 @@ const SidebarNavLink = ({
 
       <TooltipContent side="right">{label}</TooltipContent>
     </Tooltip>
+    // <Tooltip>
+    //   <TooltipTrigger asChild>
+    //     <Button
+    //       variant={isActive ? 'foreground' : 'ghost'}
+    //       mode="icon"
+    //       className={isActive ? 'bg-neutral-200' : ''}
+    //       asChild
+    //     >
+    //       <Link href={href}>
+    //         <Slot className="size-4 shrink-0">
+    //           {isActive ? activeIcon : disactiveIcon}
+    //         </Slot>
+    //       </Link>
+    //     </Button>
+    //   </TooltipTrigger>
+
+    //   <TooltipContent side="right">{label}</TooltipContent>
+    // </Tooltip>
   );
 };
