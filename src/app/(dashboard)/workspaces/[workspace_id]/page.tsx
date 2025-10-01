@@ -11,6 +11,17 @@ import {
   SectionCardTitle,
 } from '@/components/SectionCard';
 import Toast from '@/components/Toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -328,10 +339,12 @@ function DeleteWorkspaceSectionCard() {
   const workspace = useWorkspaceQuery(workspaceId);
   const queryClient = useQueryClient();
   const router = useRouter();
+  const [open, setOpen] = useState(false);
 
   const [pending, startTransition] = useTransition();
 
   const handleDelete = async () => {
+    setOpen(false);
     startTransition(async () => {
       const id = toast.custom(
         () => <Toast variant="loading" title="Deleting workspace..." />,
@@ -408,9 +421,29 @@ function DeleteWorkspaceSectionCard() {
         </SectionCardContent>
       </SectionCardRow>
       <SectionCardFooter>
-        <Button variant="destructive" disabled={pending} onClick={handleDelete}>
-          Delete
-        </Button>
+        <AlertDialog open={open} onOpenChange={setOpen}>
+          <AlertDialogTrigger asChild>
+            <Button variant="outline" disabled={pending}>
+              Delete
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete workspace</AlertDialogTitle>
+              <AlertDialogDescription>
+                after deleting workspace you lose all data such as members and
+                projects.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction variant="destructive" onClick={handleDelete}>
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </SectionCardFooter>
     </SectionCard>
   );
