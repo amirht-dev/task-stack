@@ -7,6 +7,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import useWorkspaceQuery from '@/features/workspaces/hooks/useWorkspaceQuery';
 import { formatMembersCount } from '@/features/workspaces/utils';
 import { NextLayout } from '@/types/next';
+import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import Link from 'next/link';
 import { use } from 'react';
 import { GoChevronLeft } from 'react-icons/go';
@@ -41,18 +42,36 @@ const WorkspaceLayout: NextLayout<'workspace_id'> = ({ children, params }) => {
             </div>
 
             <div className="flex flex-col ms-auto gap-2 items-end">
-              <span className="text-muted-foreground text-sm">
+              <span
+                className="text-muted-foreground text-sm"
+                title={
+                  workspace?.$createdAt
+                    ? new Date(workspace?.$createdAt).toLocaleString()
+                    : undefined
+                }
+              >
                 <Skeleton size="text" className="w-60" loading={isLoading}>
-                  Created At:{' '}
+                  Created{' '}
                   {workspace?.$createdAt &&
-                    new Date(workspace.$createdAt).toLocaleString()}
+                    formatDistanceToNow(workspace.$createdAt, {
+                      addSuffix: true,
+                    })}
                 </Skeleton>
               </span>
-              <span className="text-muted-foreground text-sm">
+              <span
+                className="text-muted-foreground text-sm"
+                title={
+                  workspace?.$updatedAt
+                    ? new Date(workspace?.$updatedAt).toLocaleString()
+                    : undefined
+                }
+              >
                 <Skeleton size="text" className="w-60" loading={isLoading}>
-                  Updated At:{' '}
+                  Updated{' '}
                   {workspace?.$updatedAt &&
-                    new Date(workspace.$updatedAt).toLocaleString()}
+                    formatDistanceToNow(workspace.$updatedAt, {
+                      addSuffix: true,
+                    })}
                 </Skeleton>
               </span>
             </div>
