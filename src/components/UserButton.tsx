@@ -2,8 +2,12 @@
 
 import useAuth from '@/features/auth/hooks/useAuth';
 import useSignOut from '@/features/auth/hooks/useSignOut';
-import { useState } from 'react';
+import { cn } from '@/lib/utils';
+import Link from 'next/link';
+import { ReactNode, useState } from 'react';
 import { GoSignOut } from 'react-icons/go';
+import { HiOutlineUser } from 'react-icons/hi';
+import ThemeSwitcher from './ThemeSwitcher';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,8 +21,13 @@ import {
 } from './ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { Separator } from './ui/separator';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
 import { Skeleton } from './ui/skeleton';
 
 type UserButtonProps = {
@@ -36,12 +45,15 @@ export default function UserButton({ triggerClassName }: UserButtonProps) {
   if (isUnauthenticated) return null;
 
   return (
-    <Popover modal={false}>
-      <PopoverTrigger className={triggerClassName} disabled={!user} asChild>
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
           autoHeight
-          className="flex items-center gap-2 w-[160px] cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 py-1 px-2 transition-colors rounded-lg"
+          className={cn(
+            'flex items-center gap-2 w-[160px] cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800 py-1 px-2 transition-colors rounded-lg',
+            triggerClassName
+          )}
         >
           {user ? (
             <Avatar className="shrink-0">
@@ -61,30 +73,48 @@ export default function UserButton({ triggerClassName }: UserButtonProps) {
             </span>
           </div>
         </Button>
-      </PopoverTrigger>
+      </DropdownMenuTrigger>
 
-      <PopoverContent align="end">
-        <div className="flex flex-col items-center">
+      <DropdownMenuContent align="end" className="w-xs">
+        <div className="flex items-center gap-4">
           <Avatar className="size-16">
             <AvatarImage src={user?.profile.avatarImageUrl} alt={user?.name} />
             <AvatarFallback>{avatarFallback}</AvatarFallback>
           </Avatar>
 
-          <span className="font-semibold capitalize mt-2">{user?.name}</span>
-          <span className="text-xs text-muted-foreground">{user?.email}</span>
+          <div className="flex flex-col gap-0.5">
+            <span className="font-semibold capitalize line-clamp-1">
+              {user?.name}
+            </span>
+            <span className="text-xs text-muted-foreground line-clamp-1">
+              {user?.email}
+            </span>
+          </div>
         </div>
 
-        <Separator className="my-4" />
-
-        <div>
-          <SignoutAlertDialog />
-        </div>
-      </PopoverContent>
-    </Popover>
+        <DropdownMenuSeparator />
+        <ThemeSwitcher />
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link href="/profile">
+            <HiOutlineUser />
+            <span>profile</span>
+          </Link>
+        </DropdownMenuItem>
+        <SignoutAlertDialog
+          trigger={
+            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+              <GoSignOut />
+              <span>sign out</span>
+            </DropdownMenuItem>
+          }
+        />
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
-function SignoutAlertDialog() {
+function SignoutAlertDialog({ trigger }: { trigger: ReactNode }) {
   const { signOut, isSigningOut } = useSignOut();
   const [open, setOpen] = useState(false);
 
@@ -95,15 +125,8 @@ function SignoutAlertDialog() {
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger asChild>
-        <Button
-          variant="dim"
-          className="hover:text-destructive"
-          disabled={isSigningOut}
-        >
-          <GoSignOut />
-          <span>sign out</span>
-        </Button>
+      <AlertDialogTrigger asChild disabled={isSigningOut}>
+        {trigger}
       </AlertDialogTrigger>
 
       <AlertDialogContent>

@@ -14,9 +14,6 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import { Separator } from './ui/separator';
-import dynamic from 'next/dynamic';
-
-const ThemeSwitcher = dynamic(() => import('./ThemeSwitcher'), { ssr: false });
 
 const Navbar = () => {
   const sidebarState = useGlobalStore((store) => store.sidebarState);
@@ -33,7 +30,6 @@ const Navbar = () => {
           <WorkspaceSwitcher classname="ms-4 max-w-[250px]" />
         )}
         <div className="ms-auto flex gap-2 items-center">
-          <ThemeSwitcher />
           <AddNewDropdownMenu />
           <Separator orientation="vertical" className="h-10" />
           <UserButton />
