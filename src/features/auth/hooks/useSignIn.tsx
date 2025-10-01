@@ -1,3 +1,4 @@
+import Toast from '@/components/Toast';
 import { requestPopupData } from '@/utils/client';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { OAuthProvider } from 'appwrite';
@@ -51,27 +52,40 @@ function useSignIn() {
       }
     },
     onMutate() {
-      const toastId = toast.loading('Signing in...', {
-        id: 'signin',
-        description: undefined,
-      });
+      const toastId = toast.custom(
+        () => <Toast variant="loading" title="Signing in..." />,
+        {
+          id: 'signin',
+        }
+      );
       return { toastId };
     },
     onSuccess(_, __, onMutateResult) {
-      toast.success('Signed in successfully', {
-        id: onMutateResult?.toastId,
-        description: undefined,
-      });
+      toast.custom(
+        () => <Toast variant="success" title="Signed in successfully" />,
+        {
+          id: onMutateResult?.toastId,
+        }
+      );
 
       queryClient.invalidateQueries({
         queryKey: getAuthQueryOptions().queryKey,
       });
     },
     onError(error, _, onMutateResult) {
-      toast.error('Failed to sign in', {
-        id: onMutateResult?.toastId,
-        description: error.message,
-      });
+      toast.custom(
+        () => (
+          <Toast
+            variant="destructive"
+            title="Failed to sign in"
+            description={error.message}
+          />
+        ),
+        {
+          id: onMutateResult?.toastId,
+          description: error.message,
+        }
+      );
     },
   });
 

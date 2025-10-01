@@ -1,3 +1,4 @@
+import Toast from '@/components/Toast';
 import { signupAction } from '@/features/auth/actions';
 import { signUpSchema, SignUpSchemaType } from '@/features/auth/schemas';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,20 +19,33 @@ function useSignup() {
   });
 
   const submitHandler = form.handleSubmit(async ({ email, password }) => {
-    const id = toast.loading('Creating account', {
-      id: 'signup',
-      description: undefined,
-    });
+    const id = toast.custom(
+      () => <Toast variant="loading" title="Creating account" />,
+      {
+        id: 'signup',
+      }
+    );
     const res = await signupAction({ email, password });
 
     if (res.success) {
-      toast.success('Signup successfully', { id, description: undefined });
+      toast.custom(
+        () => <Toast variant="success" title="Signup successfully" />,
+        { id }
+      );
       router.push('/sign-in');
     } else {
-      toast.error('Failed to create account', {
-        id,
-        description: res.error.message,
-      });
+      toast.custom(
+        () => (
+          <Toast
+            variant="destructive"
+            title="Failed to create account"
+            description={res.error.message}
+          />
+        ),
+        {
+          id,
+        }
+      );
     }
   });
 

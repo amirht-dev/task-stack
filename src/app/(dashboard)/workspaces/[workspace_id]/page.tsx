@@ -10,6 +10,7 @@ import {
   SectionCardRow,
   SectionCardTitle,
 } from '@/components/SectionCard';
+import Toast from '@/components/Toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -133,23 +134,22 @@ function NameFormSectionCard() {
   const handleSubmit = form.handleSubmit(async (data) => {
     if (workspace.data?.name === data.name) return;
 
-    const id = toast.loading('updating workspace name...', {
-      description: '',
-      id: 'update-workspace-name',
-    });
+    const id = toast.custom(
+      () => <Toast variant="loading" title="Updating workspace name..." />,
+      {
+        id: 'update-workspace-name',
+      }
+    );
 
     const res = await updateWorkspaceNameAction(workspaceId, data);
 
     if (res.success) {
-      toast.success(<strong>Workspace name updated</strong>, {
-        id,
-        description: (
-          <>
-            name of <strong>{workspace.data?.name}</strong> workspace updated to{' '}
-            <strong>{res.data.name}</strong>
-          </>
-        ),
-      });
+      toast.custom(
+        () => <Toast variant="success" title="Workspace name updated" />,
+        {
+          id,
+        }
+      );
       queryClient.invalidateQueries({
         queryKey: ['workspaces'],
       });
@@ -157,10 +157,18 @@ function NameFormSectionCard() {
         name: res.data.name,
       });
     } else {
-      toast.error(<strong>Failed to update workspace name</strong>, {
-        id,
-        description: res.error.message,
-      });
+      toast.custom(
+        () => (
+          <Toast
+            variant="destructive"
+            title="Failed to update workspace name"
+            description={res.error.message}
+          />
+        ),
+        {
+          id,
+        }
+      );
     }
   });
 
@@ -214,26 +222,38 @@ function ImageFormSectionCard() {
   });
 
   const handleSubmit = form.handleSubmit(async (data) => {
-    const id = toast.loading('updating workspace image...', {
-      description: '',
-      id: 'update-workspace-image',
-    });
+    const id = toast.custom(
+      () => <Toast variant="loading" title="Updating workspace image..." />,
+      {
+        id: 'update-workspace-image',
+      }
+    );
 
     const res = await updateWorkspaceImageAction(workspaceId, data);
 
     if (res.success) {
-      toast.success(<strong>Workspace image updated</strong>, {
-        id,
-        description: '',
-      });
+      toast.custom(
+        () => <Toast variant="success" title="Workspace image updated" />,
+        {
+          id,
+        }
+      );
       queryClient.invalidateQueries({
         queryKey: getWorkspacesQueryOptions().queryKey,
       });
     } else {
-      toast.error(<strong>Failed to update workspace image</strong>, {
-        id,
-        description: res.error.message,
-      });
+      toast.error(
+        () => (
+          <Toast
+            variant="destructive"
+            title="Failed to update workspace image"
+            description={res.error.message}
+          />
+        ),
+        {
+          id,
+        }
+      );
     }
   });
 
@@ -313,24 +333,37 @@ function DeleteWorkspaceSectionCard() {
 
   const handleDelete = async () => {
     startTransition(async () => {
-      const id = toast.loading('Deleting workspace...', {
-        id: 'delete-workspace',
-        description: undefined,
-      });
+      const id = toast.custom(
+        () => <Toast variant="loading" title="Deleting workspace..." />,
+        {
+          id: 'delete-workspace',
+        }
+      );
 
       const res = await deleteWorkspaceAction(workspaceId);
 
       if (res.success) {
-        toast.success('Workspace deleted', { id, description: undefined });
+        toast.custom(
+          () => <Toast variant="success" title="Workspace deleted" />,
+          { id }
+        );
         queryClient.invalidateQueries({
           queryKey: getWorkspacesQueryOptions().queryKey,
         });
         router.replace('/workspaces');
       } else {
-        toast.error('Failed to delete workspace', {
-          id,
-          description: res.error.message,
-        });
+        toast.custom(
+          () => (
+            <Toast
+              variant="destructive"
+              title="Failed to delete workspace"
+              description={res.error.message}
+            />
+          ),
+          {
+            id,
+          }
+        );
       }
     });
   };

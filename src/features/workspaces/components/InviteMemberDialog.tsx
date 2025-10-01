@@ -1,3 +1,4 @@
+import Toast from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import DialogContent, {
   Dialog,
@@ -49,31 +50,49 @@ const InviteMemberDialog = ({
   const { isSubmitting } = form.formState;
 
   const handleSubmit = form.handleSubmit(async ({ email }) => {
-    const id = toast.loading('Inviting member...', {
-      id: 'invite-member',
-      description: '',
-    });
+    const id = toast.custom(
+      () => <Toast variant="loading" title="Inviting member..." />,
+      {
+        id: 'invite-member',
+      }
+    );
     const res = await inviteMemberAction({ email, teamId, workspaceId });
 
     if (res.success) {
-      toast.success('Member invited', {
-        id,
-        description: (
-          <>
-            invitation email has sent to <strong>{res.data.userEmail}</strong>{' '}
-            email address
-          </>
+      toast.custom(
+        () => (
+          <Toast
+            variant="success"
+            title="Member invited"
+            description={
+              <>
+                invitation email has sent to{' '}
+                <strong>{res.data.userEmail}</strong> email address
+              </>
+            }
+          />
         ),
-      });
+        {
+          id,
+        }
+      );
       setOpen(false);
       queryClient.invalidateQueries({
         queryKey: getWorkspaceQueryOptions(workspaceId).queryKey,
       });
     } else {
-      toast.error('Failed to invite member', {
-        id,
-        description: res.error.message,
-      });
+      toast.custom(
+        () => (
+          <Toast
+            variant="destructive"
+            title="Failed to invite member"
+            description={res.error.message}
+          />
+        ),
+        {
+          id,
+        }
+      );
     }
   });
 

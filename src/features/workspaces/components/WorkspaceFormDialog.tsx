@@ -1,4 +1,5 @@
 import ImageInput from '@/components/ImageInput';
+import Toast from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import DialogContent, {
   Dialog,
@@ -51,32 +52,40 @@ const WorkspaceFormDialog = ({ trigger }: WorkspaceFormDialogProps) => {
   const handleSubmit = form.handleSubmit(async (data) => {
     if (isSubmitting) return;
 
-    const toastId = toast.loading('creating workspace...', {
-      id: 'create-workspace-toast',
-      description: '',
-    });
+    const toastId = toast.custom(
+      () => <Toast variant="loading" title="Creating workspace..." />,
+      {
+        id: 'create-workspace-toast',
+      }
+    );
 
     const res = await createWorkspaceAction(data);
 
     if (res.success) {
       setOpen(false);
-      toast.success('Workspace created', {
-        description: (
-          <>
-            <strong>{res.data.name}</strong> workspace is created successfully
-          </>
-        ),
-        id: toastId,
-      });
+      toast.custom(
+        () => <Toast variant="success" title="Workspace created" />,
+        {
+          id: toastId,
+        }
+      );
       form.reset();
       queryClient.invalidateQueries({
         queryKey: getWorkspacesQueryOptions().queryKey,
       });
     } else {
-      toast.error('Failed to create workspace', {
-        description: res.error.message,
-        id: toastId,
-      });
+      toast.custom(
+        () => (
+          <Toast
+            variant="destructive"
+            title="Failed to create workspace"
+            description={res.error.message}
+          />
+        ),
+        {
+          id: toastId,
+        }
+      );
     }
   });
 

@@ -1,3 +1,4 @@
+import Toast from '@/components/Toast';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { signoutAction } from '../actions';
@@ -18,28 +19,40 @@ function useSignOut() {
       if (!res.success) throw new Error(res.error.message);
     },
     onMutate() {
-      const toastId = toast.loading('Signing out...', {
-        id: 'signout',
-        description: undefined,
-      });
+      const toastId = toast.custom(
+        () => <Toast variant="loading" title="Signing out..." />,
+        {
+          id: 'signout',
+        }
+      );
 
       return { toastId };
     },
     onSuccess(_, __, onMutateResult, context) {
-      toast.success('Signed out successfully', {
-        id: onMutateResult?.toastId,
-        description: undefined,
-      });
+      toast.custom(
+        () => <Toast variant="success" title="Signed out successfully" />,
+        {
+          id: onMutateResult?.toastId,
+        }
+      );
 
       context.client.invalidateQueries({
         queryKey: getAuthQueryOptions().queryKey,
       });
     },
     onError(error, _, onMutateResult) {
-      toast.error('Failed to signout', {
-        id: onMutateResult?.toastId,
-        description: error.message,
-      });
+      toast.custom(
+        () => (
+          <Toast
+            variant="destructive"
+            title="Failed to signout"
+            description={error.message}
+          />
+        ),
+        {
+          id: onMutateResult?.toastId,
+        }
+      );
     },
   });
 

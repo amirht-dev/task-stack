@@ -26,7 +26,7 @@ export default function RootLayout({
             <ThemeProvider attribute="class">{children}</ThemeProvider>
           </GlobalStoreProvider>
         </QueryClientProvider>
-        <Toaster richColors position="top-center" />
+        <Toaster position="top-center" />
       </body>
     </html>
   );

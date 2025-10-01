@@ -1,5 +1,6 @@
 'use client';
 
+import Toast from '@/components/Toast';
 import { verifyEmailVerificationAction } from '@/features/auth/actions';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -17,19 +18,32 @@ const VerifyEmail = () => {
     if (!userId || !secret) return;
 
     const verifyEmail = async () => {
-      const id = toast.loading('Verifying email address', {
-        id: 'verify-email',
-        description: undefined,
-      });
+      const id = toast.custom(
+        () => <Toast variant="loading" title="Verifying email address..." />,
+        {
+          id: 'verify-email',
+        }
+      );
       const res = await verifyEmailVerificationAction(userId, secret);
       if (res.success) {
-        toast.success('Email address verified', { id, description: undefined });
+        toast.custom(
+          () => <Toast variant="success" title="Email address verified" />,
+          { id }
+        );
         router.replace('/profile#email-address');
       } else {
-        toast.error('Failed to verify email address', {
-          id,
-          description: res.error.message,
-        });
+        toast.custom(
+          () => (
+            <Toast
+              variant="destructive"
+              title="Failed to verify email address"
+              description={res.error.message}
+            />
+          ),
+          {
+            id,
+          }
+        );
       }
     };
 

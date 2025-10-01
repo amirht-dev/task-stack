@@ -11,6 +11,7 @@ import {
   SectionCardRow,
   SectionCardTitle,
 } from '@/components/SectionCard';
+import Toast from '@/components/Toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -160,22 +161,33 @@ function UpdateNameSection() {
   });
 
   const handleSubmit = form.handleSubmit(async ({ name }) => {
-    const id = toast.loading('Updating name', {
-      id: 'update-name',
-      description: undefined,
-    });
+    const id = toast.custom(
+      () => <Toast variant="loading" title="Updating name..." />,
+      {
+        id: 'update-name',
+      }
+    );
     const res = await updateProfileNameAction(name);
 
     if (res.success) {
-      toast.success('Name is updated', { id, description: undefined });
+      toast.custom(() => <Toast variant="success" title="Name updated" />, {
+        id,
+        description: undefined,
+      });
       queryClient.invalidateQueries({
         queryKey: getAuthQueryOptions().queryKey,
       });
     } else {
-      toast.error('Failed to update name', {
-        id,
-        description: res.error.message,
-      });
+      toast.custom(
+        () => (
+          <Toast
+            variant="destructive"
+            title="Failed to update name"
+            description={res.error.message}
+          />
+        ),
+        { id }
+      );
     }
   });
 
@@ -222,22 +234,34 @@ function UpdateEmailSection() {
   });
 
   const handleSubmit = form.handleSubmit(async (data) => {
-    const id = toast.loading('Updating email', {
-      id: 'update-email',
-      description: undefined,
-    });
+    const id = toast.custom(
+      () => <Toast variant="loading" title="Updating email..." />,
+      {
+        id: 'update-email',
+      }
+    );
     const res = await updateProfileEmailAction(data);
 
     if (res.success) {
-      toast.success('Email is updated', { id, description: undefined });
+      toast.custom(() => <Toast variant="success" title="Email is updated" />, {
+        id,
+      });
       queryClient.invalidateQueries({
         queryKey: getAuthQueryOptions().queryKey,
       });
     } else {
-      toast.error('Failed to update Email', {
-        id,
-        description: res.error.message,
-      });
+      toast.custom(
+        () => (
+          <Toast
+            variant="destructive"
+            title="Failed to update Email"
+            description={res.error.message}
+          />
+        ),
+        {
+          id,
+        }
+      );
     }
   });
 
@@ -338,23 +362,36 @@ function UpdatePasswordSection() {
   });
 
   const handleSubmit = form.handleSubmit(async (data) => {
-    const id = toast.loading('Updating password', {
-      id: 'update-password',
-      description: undefined,
-    });
+    const id = toast.custom(
+      () => <Toast variant="loading" title="Updating password..." />,
+      {
+        id: 'update-password',
+      }
+    );
     const res = await updateProfilePasswordAction(data);
 
     if (res.success) {
-      toast.success('Password is updated', { id, description: undefined });
+      toast.custom(
+        () => <Toast variant="success" title="Password is updated" />,
+        { id }
+      );
       queryClient.invalidateQueries({
         queryKey: getAuthQueryOptions().queryKey,
       });
       form.reset();
     } else {
-      toast.error('Failed to update password', {
-        id,
-        description: res.error.message,
-      });
+      toast.custom(
+        () => (
+          <Toast
+            variant="destructive"
+            title="Failed to update password"
+            description={res.error.message}
+          />
+        ),
+        {
+          id,
+        }
+      );
     }
   });
 
@@ -426,24 +463,37 @@ function UpdateAvatarSection() {
   });
 
   const handleSubmit = form.handleSubmit(async ({ image }) => {
-    const id = toast.loading('Updating avatar', {
-      id: 'update-avatar',
-      description: undefined,
-    });
+    const id = toast.custom(
+      () => <Toast variant="loading" title="Updating avatar..." />,
+      {
+        id: 'update-avatar',
+      }
+    );
     const res = await updateProfileAvatarAction(image);
 
     if (res.success) {
-      toast.success('Avatar is updated', { id, description: undefined });
+      toast.custom(
+        () => <Toast variant="success" title="Avatar is updated" />,
+        { id }
+      );
       queryClient.invalidateQueries({
         queryKey: getAuthQueryOptions().queryKey,
       });
       form.reset();
       setFile(undefined);
     } else {
-      toast.error('Failed to update avatar', {
-        id,
-        description: res.error.message,
-      });
+      toast.custom(
+        () => (
+          <Toast
+            variant="destructive"
+            title="Failed to update avatar"
+            description={res.error.message}
+          />
+        ),
+        {
+          id,
+        }
+      );
     }
   });
 
