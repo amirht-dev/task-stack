@@ -1,3 +1,4 @@
+import { NotFoundException } from '@/utils/exceptions';
 import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getWorkspaceAction } from '../actions';
 import { getWorkspacesQueryOptions } from './useWorkspacesQuery';
@@ -8,14 +9,21 @@ export function getWorkspaceQueryOptions(workspaceId: string) {
     queryFn: async () => {
       const res = await getWorkspaceAction(workspaceId);
 
-      if (!res.success) throw new Error(res.error.message);
-      else
+      if (!res.success) {
+        if (res.error.type === 'row_not_found')
+          throw new NotFoundException(res.error.message);
+        throw new Error(res.error.message);
+      } else
         return {
           ...res.data,
           imageUrl: res.data.imageBlob
             ? URL.createObjectURL(res.data.imageBlob)
             : null,
         };
+    },
+    retry(failureCount, error) {
+      if (error instanceof NotFoundException) return false;
+      return failureCount < 3;
     },
   });
 }

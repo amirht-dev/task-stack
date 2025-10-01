@@ -7,14 +7,23 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import useWorkspaceQuery from '@/features/workspaces/hooks/useWorkspaceQuery';
 import { formatMembersCount } from '@/features/workspaces/utils';
 import { NextLayout } from '@/types/next';
+import { NotFoundException } from '@/utils/exceptions';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
 import { use } from 'react';
 import { GoChevronLeft } from 'react-icons/go';
 
 const WorkspaceLayout: NextLayout<'workspace_id'> = ({ children, params }) => {
   const { workspace_id } = use(params);
-  const { isLoading, data: workspace } = useWorkspaceQuery(workspace_id);
+  const {
+    isLoading,
+    data: workspace,
+    isError,
+    error,
+  } = useWorkspaceQuery(workspace_id);
+
+  if (isError && error instanceof NotFoundException) return notFound();
 
   return (
     <div className="flex flex-col h-full">
