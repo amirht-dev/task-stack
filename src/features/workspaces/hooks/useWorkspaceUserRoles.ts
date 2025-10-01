@@ -12,6 +12,7 @@ function useWorkspaceUserRoles(workspaceId: string) {
   return {
     roles,
     isOwner: roles?.includes('owner'),
+    isMember: roles?.includes('member'),
   };
 }
 

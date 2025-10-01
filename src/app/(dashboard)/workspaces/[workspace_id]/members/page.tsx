@@ -1,5 +1,17 @@
 'use client';
 
+import Toast from '@/components/Toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -15,13 +27,27 @@ import { DataGridColumnHeader } from '@/components/ui/data-grid-column-header';
 import { DataGridColumnVisibility } from '@/components/ui/data-grid-column-visibility';
 import { DataGridPagination } from '@/components/ui/data-grid-pagination';
 import { DataGridTable } from '@/components/ui/data-grid-table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
+import useAuth from '@/features/auth/hooks/useAuth';
+import { removeMemberAction } from '@/features/workspaces/actions';
 import InviteMemberDialog from '@/features/workspaces/components/InviteMemberDialog';
-import useWorkspaceQuery from '@/features/workspaces/hooks/useWorkspaceQuery';
+import useWorkspaceQuery, {
+  getWorkspaceQueryOptions,
+} from '@/features/workspaces/hooks/useWorkspaceQuery';
 import useWorkspaceUserRoles from '@/features/workspaces/hooks/useWorkspaceUserRoles';
 import { NextPage } from '@/types/next';
+import { useQueryClient } from '@tanstack/react-query';
 import {
+  CellContext,
   createColumnHelper,
   getCoreRowModel,
   getPaginationRowModel,
@@ -29,8 +55,12 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { Models } from 'appwrite';
-import { Columns3 } from 'lucide-react';
-import { use, useMemo } from 'react';
+import compact from 'lodash/compact';
+import { Columns3, Trash } from 'lucide-react';
+import { useParams } from 'next/navigation';
+import { startTransition, use, useMemo, useState } from 'react';
+import { BsThreeDots } from 'react-icons/bs';
+import { toast } from 'sonner';
 
 const fallbackMemberships: Models.Membership[] = [];
 
@@ -42,7 +72,7 @@ const WorkspaceMembersPage: NextPage<'workspace_id'> = ({ params }) => {
   const columns = useMemo(() => {
     const columnHelper = createColumnHelper<Models.Membership>();
 
-    return [
+    const columns = [
       columnHelper.accessor('userName', {
         header: ({ column }) => (
           <DataGridColumnHeader
@@ -58,6 +88,7 @@ const WorkspaceMembersPage: NextPage<'workspace_id'> = ({ params }) => {
         },
       }),
       columnHelper.accessor('userEmail', {
+        id: 'email',
         header: ({ column }) => (
           <DataGridColumnHeader
             title="Email"
@@ -108,6 +139,7 @@ const WorkspaceMembersPage: NextPage<'workspace_id'> = ({ params }) => {
         },
       }),
       columnHelper.accessor('confirm', {
+        id: 'status',
         header: ({ column }) => (
           <DataGridColumnHeader
             title="Status"
@@ -131,8 +163,21 @@ const WorkspaceMembersPage: NextPage<'workspace_id'> = ({ params }) => {
           skeleton: <Skeleton className="w-16 h-7" />,
         },
       }),
+      isOwner
+        ? columnHelper.display({
+            header: '',
+            id: 'actions',
+            cell: (props) => <MemberActions cell={props} />,
+            meta: {
+              headerClassName: 'w-[60px]',
+            },
+            enableHiding: false,
+          })
+        : undefined,
     ];
-  }, []);
+
+    return compact(columns);
+  }, [isOwner]);
 
   const membershipList = workspace.data?.members;
 
@@ -188,5 +233,132 @@ const WorkspaceMembersPage: NextPage<'workspace_id'> = ({ params }) => {
     </DataGrid>
   );
 };
+
+function MemberActions({
+  cell,
+}: {
+  cell: CellContext<Models.Membership, unknown>;
+}) {
+  const [open, setOpen] = useState(false);
+  const { workspace_id } = useParams<{ workspace_id: string }>();
+  const { user, isAuthenticating, isUnauthenticated } = useAuth();
+  const { isOwner: isUserIsOwner } = useWorkspaceUserRoles(workspace_id);
+
+  const membership = cell.row.original;
+
+  const isMySelf = user?.$id === membership.userId;
+
+  const isOwner = membership.roles.includes('owner');
+
+  if (isAuthenticating) return <Skeleton size="box" className="size-8" />;
+
+  if (isUnauthenticated || isMySelf || !isUserIsOwner || isOwner) return null;
+
+  return (
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <BsThreeDots className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {isUserIsOwner && !isMySelf && (
+          <RemoveMemberDialog
+            membership={membership}
+            onRemove={() => setOpen(false)}
+          />
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function RemoveMemberDialog({
+  onRemove,
+  membership,
+}: {
+  onRemove: () => void;
+  membership: Models.Membership;
+}) {
+  const queryClient = useQueryClient();
+  const { workspace_id } = useParams<{ workspace_id: string }>();
+
+  const handleRemoveMember = async () => {
+    onRemove();
+    startTransition(async () => {
+      const id = toast.custom(
+        () => (
+          <Toast
+            variant="loading"
+            title={`Removing ${membership.userName}...`}
+          />
+        ),
+        { id: `remove-member-${membership.$id}`, duration: Infinity }
+      );
+      const res = await removeMemberAction(membership.teamId, membership.$id);
+      if (res.success) {
+        toast.custom(
+          () => (
+            <Toast
+              variant="success"
+              title={`${membership.userName} is removed`}
+            />
+          ),
+          {
+            id,
+          }
+        );
+        await queryClient.invalidateQueries({
+          queryKey: getWorkspaceQueryOptions(workspace_id).queryKey,
+        });
+      } else {
+        toast.custom(
+          () => (
+            <Toast
+              variant="destructive"
+              title={`failed to remove ${membership.userName}`}
+              description={res.error.message}
+            />
+          ),
+          {
+            id,
+          }
+        );
+      }
+    });
+  };
+
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <DropdownMenuItem
+          onSelect={(e) => e.preventDefault()}
+          variant="destructive"
+        >
+          <Trash />
+          remove
+        </DropdownMenuItem>
+      </AlertDialogTrigger>
+
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>remove {membership.userName}?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Are you sure you want to remove {membership.userName} from this
+            workspace?. after removing members they lose their roles.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction variant="destructive" onClick={handleRemoveMember}>
+            Remove
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
 
 export default WorkspaceMembersPage;

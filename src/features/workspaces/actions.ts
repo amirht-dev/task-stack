@@ -473,3 +473,10 @@ export async function checkMemberInvitationAction(
     await setSessionCookie(session);
   });
 }
+
+export async function removeMemberAction(teamId: string, membershipId: string) {
+  return handleResponse(async () => {
+    const { Teams } = await createSessionClient();
+    await Teams.deleteMembership({ teamId, membershipId });
+  });
+}
