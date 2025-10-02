@@ -351,3 +351,24 @@ export async function deleteWorkspaceAction(workspaceId: string) {
     transaction.handleThrowError();
   });
 }
+
+export async function leaveWorkspaceAction({
+  teamId,
+  membershipId,
+}: {
+  teamId: string;
+  membershipId: string;
+}) {
+  return handleResponse(async () => {
+    const { Teams } = await createSessionClient();
+
+    const membership = await Teams.getMembership({ teamId, membershipId });
+
+    if (membership.roles.includes('owner'))
+      throw new Error(
+        'you are owner of this workspace and you can not leave but can delete workspace.'
+      );
+
+    await Teams.deleteMembership({ teamId, membershipId });
+  });
+}

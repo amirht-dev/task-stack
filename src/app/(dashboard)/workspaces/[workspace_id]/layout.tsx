@@ -4,6 +4,7 @@ import NavLink from '@/components/NavLink';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import LeaveWorkspaceDialog from '@/features/workspaces/components/LeaveWorkspaceDialog';
 import useWorkspaceQuery from '@/features/workspaces/hooks/useWorkspaceQuery';
 import { formatMembersCount } from '@/features/workspaces/utils';
 import { NotFoundException } from '@/utils/exceptions';
@@ -87,34 +88,38 @@ const WorkspaceLayout = ({
             </div>
           </div>
 
-          <Tabs className="max-w-fit mt-10">
-            <TabsList size="sm">
-              <TabsTrigger value="overview" asChild>
-                <NavLink
-                  href={`/workspaces/${workspace_id}`}
-                  basePath={`/workspaces/${workspace_id}`}
-                >
-                  Overview
-                </NavLink>
-              </TabsTrigger>
-              <TabsTrigger value="members" asChild>
-                <NavLink
-                  href={`/workspaces/${workspace_id}/members`}
-                  basePath={`/workspaces/${workspace_id}`}
-                >
-                  Members
-                </NavLink>
-              </TabsTrigger>
-              <TabsTrigger value="projects" asChild>
-                <NavLink
-                  href={`/workspaces/${workspace_id}/projects`}
-                  basePath={`/workspaces/${workspace_id}`}
-                >
-                  Projects
-                </NavLink>
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="flex items-center justify-between  mt-10">
+            <Tabs className="max-w-fit">
+              <TabsList size="sm">
+                <TabsTrigger value="overview" asChild>
+                  <NavLink
+                    href={`/workspaces/${workspace_id}`}
+                    basePath={`/workspaces/${workspace_id}`}
+                  >
+                    Overview
+                  </NavLink>
+                </TabsTrigger>
+                <TabsTrigger value="members" asChild>
+                  <NavLink
+                    href={`/workspaces/${workspace_id}/members`}
+                    basePath={`/workspaces/${workspace_id}`}
+                  >
+                    Members
+                  </NavLink>
+                </TabsTrigger>
+                <TabsTrigger value="projects" asChild>
+                  <NavLink
+                    href={`/workspaces/${workspace_id}/projects`}
+                    basePath={`/workspaces/${workspace_id}`}
+                  >
+                    Projects
+                  </NavLink>
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            <LeaveWorkspaceDialog />
+          </div>
         </div>
       </div>
 
