@@ -9,7 +9,7 @@ function useSelectWorkspace() {
   const selectWorkspace = (workspaceId: string) => {
     if (isSuccess)
       setWorkspace(
-        data.rows.find((workspace) => workspace.$id === workspaceId) ?? null
+        data.find((workspace) => workspace.$id === workspaceId) ?? null
       );
   };
 

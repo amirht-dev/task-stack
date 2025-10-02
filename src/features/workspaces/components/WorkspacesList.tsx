@@ -2,21 +2,28 @@
 
 import useWorkspacesQuery from '../hooks/useWorkspacesQuery';
 import AddWorkspaceCard from './AddWorkspaceCard';
-import WorkspaceCard from './WorkspaceCard';
+import WorkspaceCard, { WorkspaceCardSkeleton } from './WorkspaceCard';
 
 const WorkspacesList = () => {
-  const { isSuccess, data } = useWorkspacesQuery();
-
-  if (!isSuccess) return;
+  const { isSuccess, isLoading, data } = useWorkspacesQuery();
 
   return (
     <ul className="grid grid-cols-5 gap-4">
-      {data.rows.map((workspace) => (
-        <li key={workspace.$id}>
-          <WorkspaceCard workspaceId={workspace.$id} />
-        </li>
-      ))}
-      <AddWorkspaceCard />
+      {isLoading &&
+        Array.from({ length: 6 }, (_, idx) => (
+          <li key={idx}>
+            <WorkspaceCardSkeleton />
+          </li>
+        ))}
+
+      {isSuccess &&
+        data.map((workspace) => (
+          <li key={workspace.$id}>
+            <WorkspaceCard workspace={workspace} />
+          </li>
+        ))}
+
+      {isSuccess && <AddWorkspaceCard />}
     </ul>
   );
 };

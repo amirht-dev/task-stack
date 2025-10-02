@@ -22,7 +22,7 @@ const WorkspaceSwitcher = ({ classname }: WorkspaceSwitcherProps) => {
     useWorkspacesQuery();
   const { selectedWorkspace, selectWorkspace } = useSelectWorkspace();
 
-  if (isError || (isSuccess && data.total === 0)) return null;
+  if (isError || (isSuccess && data.length === 0)) return null;
 
   return (
     <Select
@@ -44,13 +44,13 @@ const WorkspaceSwitcher = ({ classname }: WorkspaceSwitcherProps) => {
       </SelectTrigger>
 
       <SelectContent>
-        {data?.rows.map((workspace) => (
+        {data?.map((workspace) => (
           <SelectItem key={workspace.$id} value={workspace.$id}>
             <span className="flex items-center gap-2">
-              {workspace.imageUrl && (
+              {workspace.image && (
                 <div className="relative size-4 rounded overflow-hidden">
                   <Image
-                    src={workspace.imageUrl}
+                    src={workspace.image.url}
                     alt={workspace.name}
                     className="object-cover object-center absolute"
                     fill

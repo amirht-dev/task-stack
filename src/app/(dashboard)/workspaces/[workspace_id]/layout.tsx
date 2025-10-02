@@ -46,8 +46,7 @@ const WorkspaceLayout = ({
               </h3>
               <small className="text-xs text-muted-foreground">
                 <Skeleton size="text" className="w-20" loading={isLoading}>
-                  {workspace?.members &&
-                    formatMembersCount(workspace?.members.total)}
+                  {workspace && formatMembersCount(workspace.totalMembers)}
                 </Skeleton>
               </small>
             </div>

@@ -42,8 +42,6 @@ import {
 } from '@/features/workspaces/actions';
 import WorkspaceImageInput from '@/features/workspaces/components/WorkspaceImageInput';
 import useWorkspaceQuery from '@/features/workspaces/hooks/useWorkspaceQuery';
-import { getWorkspacesQueryOptions } from '@/features/workspaces/hooks/useWorkspacesQuery';
-import useWorkspaceUserRoles from '@/features/workspaces/hooks/useWorkspaceUserRoles';
 import {
   WorkspaceImageFormUpdateSchema,
   WorkspaceNameFormUpdateSchema,
@@ -55,15 +53,8 @@ import {
 import { FileWithPreview } from '@/hooks/useFileUpload';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
-import {
-  createContext,
-  use,
-  useContext,
-  useEffect,
-  useState,
-  useTransition,
-} from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { createContext, use, useEffect, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
@@ -74,8 +65,8 @@ const WorkspaceOverviewPage = ({
 }: PageProps<'/workspaces/[workspace_id]'>) => {
   const { workspace_id } = use(params);
   const workspace = useWorkspaceQuery(workspace_id);
-  const { isOwner } = useWorkspaceUserRoles(workspace_id);
   const { isAuthenticating } = useAuth();
+  const isOwner = workspace.data?.user.roles.includes('owner');
 
   if (workspace.isLoading || isAuthenticating || isOwner === undefined)
     return (
@@ -106,9 +97,9 @@ const WorkspaceOverviewPage = ({
         <CardContent>
           <div className="flex items-center gap-8">
             <Avatar className="size-30">
-              {workspace.data?.imageUrl && (
+              {workspace.data?.image && (
                 <AvatarImage
-                  src={workspace.data.imageUrl}
+                  src={workspace.data.image.url}
                   alt={workspace.data.name}
                 />
               )}
@@ -122,7 +113,7 @@ const WorkspaceOverviewPage = ({
                 {workspace.data.name}
               </span>
               <span className="text-muted-foreground text-sm">
-                created by {workspace.data.user.name}
+                created by {workspace.data.owner.name}
               </span>
             </div>
           </div>
@@ -132,9 +123,9 @@ const WorkspaceOverviewPage = ({
 };
 
 function NameFormSectionCard() {
-  const { workspaceId } = useContext(WorkspaceContext)!;
+  const { workspace_id } = useParams<{ workspace_id: string }>();
   const queryClient = useQueryClient();
-  const workspace = useWorkspaceQuery(workspaceId);
+  const workspace = useWorkspaceQuery(workspace_id);
   const form = useForm({
     values: { name: workspace.data?.name ?? '' },
     resolver: zodResolver(
@@ -153,7 +144,7 @@ function NameFormSectionCard() {
       }
     );
 
-    const res = await updateWorkspaceNameAction(workspaceId, data);
+    const res = await updateWorkspaceNameAction(workspace_id, data);
 
     if (res.success) {
       toast.custom(
@@ -222,8 +213,8 @@ function NameFormSectionCard() {
 }
 
 function ImageFormSectionCard() {
-  const { workspaceId } = useContext(WorkspaceContext)!;
-  const workspace = useWorkspaceQuery(workspaceId);
+  const { workspace_id } = useParams<{ workspace_id: string }>();
+  const workspace = useWorkspaceQuery(workspace_id);
   const queryClient = useQueryClient();
   const [file, setFile] = useState<FileWithPreview>();
   const form = useForm({
@@ -241,7 +232,7 @@ function ImageFormSectionCard() {
       }
     );
 
-    const res = await updateWorkspaceImageAction(workspaceId, data);
+    const res = await updateWorkspaceImageAction(workspace_id, data);
 
     if (res.success) {
       toast.custom(
@@ -251,7 +242,7 @@ function ImageFormSectionCard() {
         }
       );
       queryClient.invalidateQueries({
-        queryKey: getWorkspacesQueryOptions().queryKey,
+        queryKey: ['workspaces'],
       });
     } else {
       toast.error(
@@ -270,17 +261,11 @@ function ImageFormSectionCard() {
   });
 
   useEffect(() => {
-    if (
-      !file &&
-      workspace.isSuccess &&
-      workspace.data &&
-      workspace.data.imageBlob &&
-      workspace.data.imageUrl
-    )
+    if (!file && workspace.isSuccess && workspace.data.image)
       setFile({
-        file: new File([workspace.data.imageBlob], ''),
+        file: new File([workspace.data.image.blob], ''),
         id: '',
-        preview: workspace.data.imageUrl,
+        preview: workspace.data.image.url,
       });
   }, [workspace, file]);
 
@@ -336,8 +321,8 @@ function ImageFormSectionCard() {
 }
 
 function DeleteWorkspaceSectionCard() {
-  const { workspaceId } = useContext(WorkspaceContext)!;
-  const workspace = useWorkspaceQuery(workspaceId);
+  const { workspace_id } = useParams<{ workspace_id: string }>();
+  const workspace = useWorkspaceQuery(workspace_id);
   const queryClient = useQueryClient();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -354,7 +339,7 @@ function DeleteWorkspaceSectionCard() {
         }
       );
 
-      const res = await deleteWorkspaceAction(workspaceId);
+      const res = await deleteWorkspaceAction(workspace_id);
 
       if (res.success) {
         toast.custom(
@@ -362,7 +347,7 @@ function DeleteWorkspaceSectionCard() {
           { id }
         );
         queryClient.invalidateQueries({
-          queryKey: getWorkspacesQueryOptions().queryKey,
+          queryKey: ['workspaces'],
         });
         router.replace('/workspaces');
       } else {
@@ -398,8 +383,8 @@ function DeleteWorkspaceSectionCard() {
             <CardContent className="p-3">
               <div className="flex gap-3 items-center">
                 <Avatar>
-                  {workspace.data?.imageUrl && (
-                    <AvatarImage src={workspace.data?.imageUrl} />
+                  {workspace.data?.image && (
+                    <AvatarImage src={workspace.data.image.url} />
                   )}
                   <AvatarFallback>
                     {workspace.isSuccess &&
@@ -412,8 +397,8 @@ function DeleteWorkspaceSectionCard() {
                     {workspace.data?.name}
                   </span>
                   <small className="text-xs text-muted-foreground">
-                    {workspace.data?.members &&
-                      formatMembersCount(workspace.data.members.total)}
+                    {workspace.isSuccess &&
+                      formatMembersCount(workspace.data.totalMembers)}
                   </small>
                 </div>
               </div>

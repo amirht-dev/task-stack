@@ -2,6 +2,7 @@ import { cn } from '@/lib/utils';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { Slot as SlotPrimitive } from 'radix-ui';
 import * as React from 'react';
+import { Skeleton } from './skeleton';
 
 export interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,
@@ -239,4 +240,33 @@ function BadgeDot({ className, ...props }: React.ComponentProps<'span'>) {
   );
 }
 
-export { Badge, BadgeButton, BadgeDot, badgeVariants };
+const badgeSkeletonVariants = cva('', {
+  variants: {
+    size: {
+      lg: 'rounded-md h-7 min-w-7',
+      md: 'rounded-md h-6 min-w-6',
+      sm: 'rounded-sm h-5 min-w-5',
+      xs: 'rounded-sm h-4 min-w-4',
+    },
+  },
+  defaultVariants: {
+    size: 'md',
+  },
+});
+
+function BadgeSkeleton({
+  size,
+  className,
+  ...props
+}: React.ComponentProps<typeof Skeleton> &
+  VariantProps<typeof badgeSkeletonVariants>) {
+  return (
+    <Skeleton
+      {...props}
+      size="box"
+      className={cn(badgeSkeletonVariants({ size, className }))}
+    />
+  );
+}
+
+export { Badge, BadgeButton, BadgeDot, BadgeSkeleton, badgeVariants };

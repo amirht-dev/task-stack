@@ -1,7 +1,6 @@
 import { NotFoundException } from '@/utils/exceptions';
-import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useQuery } from '@tanstack/react-query';
 import { getWorkspaceAction } from '../actions';
-import { getWorkspacesQueryOptions } from './useWorkspacesQuery';
 
 export function getWorkspaceQueryOptions(workspaceId: string) {
   return queryOptions({
@@ -16,8 +15,11 @@ export function getWorkspaceQueryOptions(workspaceId: string) {
       } else
         return {
           ...res.data,
-          imageUrl: res.data.imageBlob
-            ? URL.createObjectURL(res.data.imageBlob)
+          image: res.data.image
+            ? {
+                ...res.data.image,
+                url: URL.createObjectURL(res.data.image.blob),
+              }
             : null,
         };
     },
@@ -29,21 +31,21 @@ export function getWorkspaceQueryOptions(workspaceId: string) {
 }
 
 function useWorkspaceQuery(workspaceId: string) {
-  const queryClient = useQueryClient();
+  // const queryClient = useQueryClient();
+
   return useQuery({
     ...getWorkspaceQueryOptions(workspaceId),
-    placeholderData: () => {
-      const workspaceData = queryClient
-        .getQueryData(getWorkspacesQueryOptions().queryKey)
-        ?.rows.find((workspace) => workspace.$id === workspaceId);
+    // placeholderData: () => {
+    //   const workspaceData = queryClient
+    //     .getQueryData(getWorkspacesQueryOptions().queryKey)
+    //     ?.find((workspace) => workspace.$id === workspaceId);
 
-      if (workspaceData)
-        return {
-          ...workspaceData,
-          user: { name: '' },
-          members: { memberships: [], total: workspaceData.totalMembers },
-        };
-    },
+    //   if (workspaceData)
+    //     return {
+    //       ...workspaceData,
+    //       user: { name: '' },
+    //     };
+    // },
   });
 }
 

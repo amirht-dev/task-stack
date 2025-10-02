@@ -1,13 +1,18 @@
 'use server';
 
 import { getImageAction } from '@/actions';
-import { DatabaseWorkspace } from '@/features/workspaces/types';
+import {
+  DatabaseWorkspace,
+  ResponseWorkspace,
+  ResponseWorkspaces,
+} from '@/features/workspaces/types';
 import { createPublicClient } from '@/lib/appwrite/client';
 import { createAdminClient, createSessionClient } from '@/lib/appwrite/server';
 import { OneOrMore } from '@/types/utils';
 import { handleResponse, unwrapDiscriminatedResponse } from '@/utils/server';
 import { Transaction } from '@/utils/transaction';
 import { ID, Models, Permission, Query, Role } from 'node-appwrite';
+import { ArrayValues } from 'type-fest';
 import {
   createProfileAction,
   deleteProfileAsAdminAction,
@@ -59,50 +64,54 @@ export async function getWorkspaceMembersAction(teamId: string) {
 
 export async function getWorkspacesAction() {
   return handleResponse(async () => {
-    const { database } = await createSessionClient();
+    const { database, account } = await createSessionClient();
+    const user = await account.get();
 
     const workspacesListRows = await database.listRows<DatabaseWorkspace>({
       databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
       tableId: process.env.NEXT_PUBLIC_APPWRITE_WORKSPACES_ID,
     });
 
-    const rowsWithImageBlob = await Promise.all(
+    return await Promise.all(
       workspacesListRows.rows.map((workspace) => {
-        return new Promise<
-          DatabaseWorkspace & { imageBlob: Blob | null; totalMembers: number }
-        >(async (res, rej) => {
-          const [membersResponse, imageResponse] = await Promise.all([
-            getWorkspaceMembersAction(workspace.teamId),
-            workspace.imageId
-              ? getWorkspaceImageAction(workspace.imageId)
-              : undefined,
-          ]);
+        return new Promise<ArrayValues<ResponseWorkspaces>>(
+          async (res, rej) => {
+            const [membersResponse, imageResponse] = await Promise.all([
+              getWorkspaceMembersAction(workspace.teamId),
+              workspace.imageId ? getImageAction(workspace.imageId) : undefined,
+            ]);
 
-          if (!membersResponse.success)
-            return rej(new Error(membersResponse?.error.message));
-          if (imageResponse && !imageResponse.success)
-            return rej(new Error(imageResponse.error.message));
+            if (!membersResponse.success)
+              return rej(new Error(membersResponse?.error.message));
 
-          res({
-            ...workspace,
-            imageBlob: imageResponse?.data.image ?? null,
-            totalMembers: membersResponse.data.total,
-          });
-        });
+            res({
+              $id: workspace.$id,
+              teamId: workspace.teamId,
+              imageId: workspace.imageId,
+              name: workspace.name,
+              image: imageResponse
+                ? { id: imageResponse.info.$id, blob: imageResponse.image.blob }
+                : null,
+              totalMembers: membersResponse.data.total,
+              user: {
+                roles: membersResponse.data.memberships.find(
+                  (member) => member.userId === user.$id
+                )!.roles,
+              },
+            });
+          }
+        );
       })
     );
-
-    return {
-      ...workspacesListRows,
-      rows: rowsWithImageBlob,
-    };
   });
 }
 
 export async function getWorkspaceAction(workspaceId: string) {
   return handleResponse(async () => {
-    const { database } = await createSessionClient();
+    const { database, account } = await createSessionClient();
     const { users } = await createAdminClient();
+
+    const user = await account.get();
 
     const workspace = await database.getRow<DatabaseWorkspace>({
       databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
@@ -118,11 +127,20 @@ export async function getWorkspaceAction(workspaceId: string) {
 
     const members = unwrapDiscriminatedResponse(membersRes);
 
-    return {
+    return <ResponseWorkspace>{
       ...workspace,
-      user: { name: userRes.name },
-      imageBlob: imageRes?.image.blob ?? null,
-      members,
+      totalMembers: members.total,
+      image: imageRes
+        ? {
+            id: imageRes.info.$id,
+            blob: imageRes.image.blob,
+          }
+        : null,
+      user: {
+        roles: members.memberships.find((member) => member.userId === user.$id)!
+          .roles,
+      },
+      owner: { name: userRes.name, id: workspace.userId },
     };
   });
 }
@@ -371,15 +389,7 @@ export async function deleteWorkspaceAction(workspaceId: string) {
     await transaction.operation({
       name: 'delete team',
       fn: () => Teams.delete({ teamId: workspace.teamId }),
-      rollbackFn: async () => {
-        const { teams } = await createAdminClient();
-        await teams.create({ name: team.name, teamId: team.$id });
-        Promise.all(
-          workspace.members.memberships.map((member) =>
-            teams.createMembership(member)
-          )
-        );
-      },
+      rollbackFn: () => {},
     })();
 
     transaction.handleThrowError();

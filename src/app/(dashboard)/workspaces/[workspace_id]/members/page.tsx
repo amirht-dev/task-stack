@@ -45,10 +45,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import useAuth from '@/features/auth/hooks/useAuth';
 import { removeMembersAction } from '@/features/workspaces/actions';
 import InviteMemberDialog from '@/features/workspaces/components/InviteMemberDialog';
-import useWorkspaceQuery, {
-  getWorkspaceQueryOptions,
-} from '@/features/workspaces/hooks/useWorkspaceQuery';
-import useWorkspaceUserRoles from '@/features/workspaces/hooks/useWorkspaceUserRoles';
+import useMembersQuery from '@/features/workspaces/hooks/useMembersQuery';
+import useWorkspaceQuery from '@/features/workspaces/hooks/useWorkspaceQuery';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   CellContext,
@@ -74,7 +72,12 @@ const WorkspaceMembersPage = ({
 }: PageProps<'/workspaces/[workspace_id]/members'>) => {
   const { workspace_id } = use(params);
   const workspace = useWorkspaceQuery(workspace_id);
-  const { isOwner } = useWorkspaceUserRoles(workspace_id);
+  const members = useMembersQuery({
+    workspaceId: workspace_id,
+    teamId: workspace.data?.teamId,
+  });
+
+  const isOwner = workspace.data?.user.roles.includes('owner');
 
   const columns = useMemo(() => {
     const columnHelper = createColumnHelper<Models.Membership>();
@@ -213,11 +216,9 @@ const WorkspaceMembersPage = ({
     return compact(columns);
   }, [isOwner]);
 
-  const membershipList = workspace.data?.members;
-
   const table = useReactTable({
     columns,
-    data: membershipList?.memberships ?? fallbackMemberships,
+    data: members.data?.memberships ?? fallbackMemberships,
     getRowId: (member) => member.$id,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
@@ -232,7 +233,7 @@ const WorkspaceMembersPage = ({
   return (
     <>
       <AnimatePresence>
-        {!!selectedMembersCount && membershipList?.memberships && (
+        {!!selectedMembersCount && members.isSuccess && (
           <motion.div
             variants={{ hidden: { y: 200 }, visible: { y: 0 } }}
             initial="hidden"
@@ -256,7 +257,7 @@ const WorkspaceMembersPage = ({
                   <RemoveMemberDialog
                     trigger={<Button variant="destructive">Remove</Button>}
                     onRemove={() => table.resetRowSelection()}
-                    memberships={membershipList.memberships.filter(
+                    memberships={members.data.memberships.filter(
                       (membership) =>
                         membership.$id in selectedMembers &&
                         selectedMembers[membership.$id] === true
@@ -270,7 +271,7 @@ const WorkspaceMembersPage = ({
       </AnimatePresence>
       <DataGrid
         table={table}
-        recordCount={membershipList?.total || 0}
+        recordCount={members.data?.total || 0}
         isLoading={workspace.isLoading}
         tableLayout={{
           cellBorder: true,
@@ -320,9 +321,11 @@ function MemberActions({
   const [open, setOpen] = useState(false);
   const { workspace_id } = useParams<{ workspace_id: string }>();
   const { user, isAuthenticating, isUnauthenticated } = useAuth();
-  const { isOwner: isUserIsOwner } = useWorkspaceUserRoles(workspace_id);
+  const workspace = useWorkspaceQuery(workspace_id);
 
   const membership = cell.row.original;
+
+  const isUserIsOwner = workspace.data?.user.roles.includes('owner');
 
   const isMySelf = user?.$id === membership.userId;
 
@@ -421,7 +424,7 @@ function RemoveMemberDialog({
           }
         );
         await queryClient.invalidateQueries({
-          queryKey: getWorkspaceQueryOptions(workspace_id).queryKey,
+          queryKey: ['workspaces'],
         });
       } else {
         toast.custom(

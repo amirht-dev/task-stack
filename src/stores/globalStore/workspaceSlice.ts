@@ -1,13 +1,13 @@
-import { Workspace } from '@/features/workspaces/types';
-import { Simplify } from 'type-fest';
+import { Workspaces } from '@/features/workspaces/types';
+import { ArrayValues, Simplify } from 'type-fest';
 import { StateCreator } from 'zustand';
 
 export type WorkspaceGlobalStoreState = {
-  workspace: Workspace | null;
+  workspace: ArrayValues<Workspaces['rows']> | null;
 };
 
 export type WorkspaceGlobalStoreAction = {
-  setWorkspace: (workspace: Workspace | null) => void;
+  setWorkspace: (workspace: ArrayValues<Workspaces['rows']> | null) => void;
 };
 
 export type WorkspaceGlobalStoreType = Simplify<

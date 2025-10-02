@@ -8,24 +8,23 @@ export const getWorkspacesQueryOptions = () => {
       const res = await getWorkspacesAction();
       if (!res.success) throw new Error(res.error.message);
 
-      const rowsWithImageUrl = res.data.rows.map((row) => ({
+      return res.data.map((row) => ({
         ...row,
-        imageUrl: row.imageBlob ? URL.createObjectURL(row.imageBlob) : null,
+        image: row.image
+          ? {
+              id: row.image.id,
+              url: URL.createObjectURL(row.image.blob),
+              blob: row.image.blob,
+            }
+          : null,
       }));
-
-      return {
-        ...res.data,
-        rows: rowsWithImageUrl,
-      };
     },
     staleTime: Infinity,
   });
 };
 
-function useWorkspacesQuery() {
-  const query = useQuery(getWorkspacesQueryOptions());
-
-  return query;
-}
+const useWorkspacesQuery = () => {
+  return useQuery(getWorkspacesQueryOptions());
+};
 
 export default useWorkspacesQuery;
