@@ -82,11 +82,17 @@ export default function UserButton({ triggerClassName }: UserButtonProps) {
             <AvatarFallback>{avatarFallback}</AvatarFallback>
           </Avatar>
 
-          <div className="flex flex-col gap-0.5">
-            <span className="font-semibold capitalize line-clamp-1">
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <span
+              className="font-semibold capitalize line-clamp-1 text-ellipsis"
+              title={user?.name}
+            >
               {user?.name}
             </span>
-            <span className="text-xs text-muted-foreground line-clamp-1">
+            <span
+              className="text-xs text-muted-foreground line-clamp-1 text-ellipsis"
+              title={user?.email}
+            >
               {user?.email}
             </span>
           </div>
