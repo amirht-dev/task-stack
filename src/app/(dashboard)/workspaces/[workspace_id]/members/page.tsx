@@ -49,7 +49,6 @@ import useWorkspaceQuery, {
   getWorkspaceQueryOptions,
 } from '@/features/workspaces/hooks/useWorkspaceQuery';
 import useWorkspaceUserRoles from '@/features/workspaces/hooks/useWorkspaceUserRoles';
-import { NextPage } from '@/types/next';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   CellContext,
@@ -70,7 +69,9 @@ import { toast } from 'sonner';
 
 const fallbackMemberships: Models.Membership[] = [];
 
-const WorkspaceMembersPage: NextPage<'workspace_id'> = ({ params }) => {
+const WorkspaceMembersPage = ({
+  params,
+}: PageProps<'/workspaces/[workspace_id]/members'>) => {
   const { workspace_id } = use(params);
   const workspace = useWorkspaceQuery(workspace_id);
   const { isOwner } = useWorkspaceUserRoles(workspace_id);

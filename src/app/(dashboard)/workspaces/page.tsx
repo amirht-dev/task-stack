@@ -1,7 +1,6 @@
 import WorkspacesList from '@/features/workspaces/components/WorkspacesList';
-import { NextPage } from '@/types/next';
 
-const WorkspacesPage: NextPage = () => {
+const WorkspacesPage = () => {
   return (
     <div className="py-8 container">
       <WorkspacesList />

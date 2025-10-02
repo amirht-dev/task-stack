@@ -1,6 +1,4 @@
-import { NextLayout } from '@/types/next';
-
-const Layout: NextLayout = ({ children }) => {
+const Layout = ({ children }: LayoutProps<'/'>) => {
   return (
     <div className="flex items-center justify-center min-h-dvh bg-background">
       {children}

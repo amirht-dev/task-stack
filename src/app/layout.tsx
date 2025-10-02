@@ -15,9 +15,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: LayoutProps<'/'>) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body className={`text-base antialiased ${inter.className}`}>

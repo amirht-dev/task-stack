@@ -53,7 +53,6 @@ import {
   formatMembersCount,
 } from '@/features/workspaces/utils';
 import { FileWithPreview } from '@/hooks/useFileUpload';
-import { NextPage } from '@/types/next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
@@ -70,7 +69,9 @@ import { toast } from 'sonner';
 
 const WorkspaceContext = createContext<{ workspaceId: string } | null>(null);
 
-const WorkspacePreviewPage: NextPage<'workspace_id'> = ({ params }) => {
+const WorkspaceOverviewPage = ({
+  params,
+}: PageProps<'/workspaces/[workspace_id]'>) => {
   const { workspace_id } = use(params);
   const workspace = useWorkspaceQuery(workspace_id);
   const { isOwner } = useWorkspaceUserRoles(workspace_id);
@@ -449,4 +450,4 @@ function DeleteWorkspaceSectionCard() {
   );
 }
 
-export default WorkspacePreviewPage;
+export default WorkspaceOverviewPage;
