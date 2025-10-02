@@ -23,6 +23,7 @@ import { FileWithPreview } from '@/hooks/useFileUpload';
 import { generateRandomColorImageFile } from '@/utils/client';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import { ReactNode, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { FaArrowsRotate } from 'react-icons/fa6';
@@ -46,6 +47,7 @@ const WorkspaceFormDialog = ({ trigger }: WorkspaceFormDialogProps) => {
     },
     resolver: zodResolver(WorkspaceSchema),
   });
+  const router = useRouter();
 
   const { isSubmitting } = form.formState;
 
@@ -73,6 +75,7 @@ const WorkspaceFormDialog = ({ trigger }: WorkspaceFormDialogProps) => {
       queryClient.invalidateQueries({
         queryKey: getWorkspacesQueryOptions().queryKey,
       });
+      router.push(`/workspaces/${res.data.$id}`);
     } else {
       toast.custom(
         () => (
