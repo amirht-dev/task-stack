@@ -3,11 +3,11 @@ import { ArrayValues, Simplify } from 'type-fest';
 import { StateCreator } from 'zustand';
 
 export type WorkspaceGlobalStoreState = {
-  workspace: ArrayValues<Workspaces['rows']> | null;
+  workspace: ArrayValues<Workspaces> | null;
 };
 
 export type WorkspaceGlobalStoreAction = {
-  setWorkspace: (workspace: ArrayValues<Workspaces['rows']> | null) => void;
+  setWorkspace: (workspace: ArrayValues<Workspaces> | null) => void;
 };
 
 export type WorkspaceGlobalStoreType = Simplify<

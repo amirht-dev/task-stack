@@ -1,7 +1,7 @@
 'use client';
 
 import Toast from '@/components/Toast';
-import { checkMemberInvitationAction } from '@/features/workspaces/actions';
+import { checkMemberInvitationAction } from '@/features/members/actions';
 import { InviteMembershipParamsSchema } from '@/features/workspaces/schemas';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';

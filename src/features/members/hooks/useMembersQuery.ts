@@ -1,6 +1,7 @@
 import { queryOptions, useQuery } from '@tanstack/react-query';
-import { getWorkspaceAction, getWorkspaceMembersAction } from '../actions';
-import { getWorkspaceQueryOptions } from './useWorkspaceQuery';
+import { getWorkspaceAction } from '../../workspaces/actions';
+import { getWorkspaceQueryOptions } from '../../workspaces/hooks/useWorkspaceQuery';
+import { getMembersAction } from '../actions';
 
 export const getMembersQueryOptions = ({
   workspaceId,
@@ -27,7 +28,7 @@ export const getMembersQueryOptions = ({
       }
       if (!_teamId) throw new Error('missing teamId');
 
-      const res = await getWorkspaceMembersAction(_teamId);
+      const res = await getMembersAction(_teamId);
 
       if (!res.success) throw new Error(res.error.message);
 

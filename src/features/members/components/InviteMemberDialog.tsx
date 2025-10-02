@@ -25,9 +25,9 @@ import { UserRoundPlus } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+import { getWorkspaceQueryOptions } from '../../workspaces/hooks/useWorkspaceQuery';
+import { InviteMemberFormSchema } from '../../workspaces/schemas';
 import { inviteMemberAction } from '../actions';
-import { getWorkspaceQueryOptions } from '../hooks/useWorkspaceQuery';
-import { InviteMemberFormSchema } from '../schemas';
 
 type InviteMemberDialogProps = {
   teamId: string;

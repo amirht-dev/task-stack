@@ -1,17 +1,21 @@
 'use client';
 
-import { useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { use, useEffect } from 'react';
 
-const OAuthCallback = () => {
-  const searchParams = useSearchParams();
+const OAuthCallback = ({ searchParams }: PageProps<'/oauth/callback'>) => {
+  const { userId, secret } = use(searchParams);
 
   useEffect(() => {
-    const userId = searchParams.get('userId');
-    const secret = searchParams.get('secret');
+    if (!userId || !secret) return;
 
-    (window.opener as Window)?.postMessage({ userId, secret }, location.origin);
-  }, [searchParams]);
+    (window.opener as Window)?.postMessage(
+      {
+        userId: Array.isArray(userId) ? userId[0] : userId,
+        secret: Array.isArray(secret) ? secret[0] : secret,
+      },
+      location.origin
+    );
+  }, [userId, secret]);
 
   return 'loading...';
 };
