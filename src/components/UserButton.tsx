@@ -1,5 +1,6 @@
 'use client';
 
+import SetPasswordAlertDialog from '@/features/auth/components/SetPasswordAlertDialog';
 import useAuth from '@/features/auth/hooks/useAuth';
 import useSignOut from '@/features/auth/hooks/useSignOut';
 import { cn } from '@/lib/utils';
@@ -130,25 +131,28 @@ function SignoutAlertDialog({ trigger }: { trigger: ReactNode }) {
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger asChild disabled={isSigningOut}>
-        {trigger}
-      </AlertDialogTrigger>
+    <>
+      {open && <SetPasswordAlertDialog onAccept={() => setOpen(false)} />}
+      <AlertDialog open={open} onOpenChange={setOpen}>
+        <AlertDialogTrigger asChild disabled={isSigningOut}>
+          {trigger}
+        </AlertDialogTrigger>
 
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Are you sure want sign out?</AlertDialogTitle>
-          <AlertDialogDescription>
-            After logout you need to input your detail to get back this app
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={handleSignout} variant="destructive">
-            Signout
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure want sign out?</AlertDialogTitle>
+            <AlertDialogDescription>
+              After logout you need to input your detail to get back this app
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSignout} variant="destructive">
+              Signout
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
