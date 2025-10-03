@@ -94,7 +94,7 @@ const SignUpCard = () => {
             control={form.control}
             name="termAndConditions"
             render={({ field: { value, onChange, ...fields } }) => (
-              <FormItem>
+              <FormItem className="mt-2">
                 <FormControl>
                   <Label className="flex items-center gap-2 mt-4">
                     <Checkbox
@@ -102,7 +102,7 @@ const SignUpCard = () => {
                       onCheckedChange={onChange}
                       {...fields}
                     />
-                    <span className="text-sm">
+                    <span>
                       By registering you agree with our Terms & Conditions
                     </span>
                   </Label>

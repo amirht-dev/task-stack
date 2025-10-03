@@ -42,6 +42,7 @@ import {
   UpdateProfilePasswordFormSchema,
 } from '@/features/auth/schemas';
 import { FileWithPreview } from '@/hooks/useFileUpload';
+import useIsTablet from '@/hooks/useIsTablet';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
@@ -65,13 +66,14 @@ const ProfilePage = () => {
   const { user, isAuthenticating, isAuthenticated } = useAuth();
   const parentRef = useRef<HTMLDivElement>(null);
   const [id, setId] = useState<string>();
+  const isTablet = useIsTablet();
 
   return (
     <div className="h-full flex flex-col">
-      <div className="profile-cover h-[200px] shrink-0" />
+      <div className="profile-cover h-[120px] lg:h-[200px] shrink-0" />
 
-      <div className="flex items-center gap-8 shrink-0 container">
-        <div className="size-40 -mt-10 bg-background rounded-full">
+      <div className="flex flex-col items-start sm:items-center sm:flex-row gap-4 sm:gap-8 shrink-0 container">
+        <div className="size-25 sm:size-30 lg:size-40 -mt-10 bg-background rounded-full">
           {isAuthenticating ? (
             <Skeleton
               size="box"
@@ -84,7 +86,7 @@ const ProfilePage = () => {
                   src={user?.profile.avatarImageUrl}
                   alt={user?.name}
                 />
-                <AvatarFallback className="text-4xl bg-background">
+                <AvatarFallback className="text-xl sm:text-2xl lg:text-4xl bg-background">
                   AT
                 </AvatarFallback>
               </Avatar>
@@ -92,8 +94,8 @@ const ProfilePage = () => {
           )}
         </div>
 
-        <div className="flex flex-col gap-2">
-          <span className="text-3xl font-normal">
+        <div className="flex flex-col gap-1 lg:gap-2">
+          <span className="text-2xl lg:text-3xl font-normal">
             <Skeleton
               loading={isAuthenticating}
               className="w-60 bg-neutral-200 dark:bg-neutral-800"
@@ -102,7 +104,7 @@ const ProfilePage = () => {
               {user?.name}
             </Skeleton>
           </span>
-          <span className="text-lg font-normal text-muted-foreground">
+          <span className="text-base lg:text-lg font-normal text-muted-foreground">
             <Skeleton
               loading={isAuthenticating}
               size="text"
@@ -120,7 +122,7 @@ const ProfilePage = () => {
           value={id}
           onValueChange={setId}
         >
-          <TabsList size="sm">
+          <TabsList size={isTablet ? 'md' : 'sm'}>
             <Scrollspy targetRef={parentRef} offset={5} onUpdate={setId}>
               {Object.values(navItem).map((item) => (
                 <TabsTrigger

@@ -71,8 +71,8 @@ const MembersDataGrid = ({ workspaceId }: { workspaceId: string }) => {
                 </span>
               ),
             meta: {
-              headerClassName: 'w-[50px] p-0',
-              cellClassName: 'w-[50px] p-0',
+              headerClassName: 'min-w-[50px] w-[50px] p-0',
+              cellClassName: 'min-w-[50px] w-[50px] p-0',
             },
             enableSorting: false,
             enableHiding: false,
@@ -141,6 +141,7 @@ const MembersDataGrid = ({ workspaceId }: { workspaceId: string }) => {
           props.getValue() ? new Date(props.getValue()).toLocaleString() : '-',
         meta: {
           skeleton: <Skeleton className="w-40 h-7" />,
+          cellClassName: 'text-nowrap',
         },
       }),
       columnHelper.accessor('confirm', {
@@ -178,8 +179,8 @@ const MembersDataGrid = ({ workspaceId }: { workspaceId: string }) => {
               </span>
             ),
             meta: {
-              headerClassName: 'w-[60px] p-0',
-              cellClassName: 'w-[60px] p-0',
+              headerClassName: 'min-w-[60px] w-[60px] p-0',
+              cellClassName: 'min-w-[60px] w-[60px] p-0',
             },
             enableHiding: false,
           })
@@ -270,12 +271,15 @@ function MultipleMembersRemoveCard({
           initial="hidden"
           animate="visible"
           exit="hidden"
-          className="fixed z-10 bottom-12 left-1/2 -translate-x-1/2"
+          className="fixed z-10 bottom-12 left-1/2 -translate-x-1/2 min-w-xs"
           transition={{ bounce: 0, duration: 0.18 }}
         >
           <Card>
-            <CardContent className="min-w-md flex items-center justify-between">
-              <CardTitle>{selectedMembersCount} members are selected</CardTitle>
+            <CardContent className="flex items-center justify-between gap-4">
+              <CardTitle className="leading-none">
+                {selectedMembersCount}
+                <span className="hidden md:inline">members are </span> selected
+              </CardTitle>
               <CardToolbar>
                 <Button
                   variant="outline"

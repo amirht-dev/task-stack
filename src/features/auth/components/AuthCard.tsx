@@ -40,14 +40,18 @@ const AuthCard = ({ title, description, children, footer }: AuthCardProps) => {
         </span>
         <CardHeader className="flex flex-col border-none relative">
           <Logo variant="icon" className="w-14" />
-          <CardTitle className="text-2xl leading-none mt-2">{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
+          <CardTitle className="text-xl sm:text-2xl leading-none mt-2">
+            {title}
+          </CardTitle>
+          <CardDescription className="text-center">
+            {description}
+          </CardDescription>
         </CardHeader>
 
         <CardContent className="mt-6 p-0">{children}</CardContent>
 
         <CardFooter>
-          <p className="mx-auto text-sm">{footer}</p>
+          <p className="mx-auto text-xs sm:text-sm">{footer}</p>
         </CardFooter>
       </div>
     </Card>

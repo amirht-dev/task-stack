@@ -19,7 +19,13 @@ export const SectionCard = (props: ComponentProps<typeof Card>) => {
 
 export function SectionCardRow(props: ComponentProps<'div'>) {
   return (
-    <div {...props} className={cn('flex items-start gap-6', props.className)} />
+    <div
+      {...props}
+      className={cn(
+        'flex flex-col md:flex-row lg:items-start gap-5 lg:gap-6',
+        props.className
+      )}
+    />
   );
 }
 
@@ -28,7 +34,7 @@ export function SectionCardHeader(props: ComponentProps<typeof CardHeader>) {
     <CardHeader
       {...props}
       className={cn(
-        'border-none max-w-lg w-full flex flex-col p-0 items-start',
+        'border-none md:max-w-sm xl:max-w-lg w-full flex flex-col gap-1 lg:gap-2 p-0 items-start min-h-0',
         props.className
       )}
     />
@@ -39,7 +45,7 @@ export function SectionCardTitle(props: ComponentProps<typeof CardTitle>) {
   return (
     <CardTitle
       {...props}
-      className={cn('text-xl font-normal', props.className)}
+      className={cn('text-lg lg:text-xl font-normal', props.className)}
     />
   );
 }

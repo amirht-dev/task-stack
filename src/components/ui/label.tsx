@@ -6,7 +6,7 @@ import { Label as LabelPrimitive } from 'radix-ui';
 import * as React from 'react';
 
 const labelVariants = cva(
-  'text-sm leading-none text-foreground peer-disabled:cursor-not-allowed peer-disabled:opacity-50',
+  'text-xs sm:text-sm leading-none text-foreground peer-disabled:cursor-not-allowed peer-disabled:opacity-50',
   {
     variants: {
       variant: {

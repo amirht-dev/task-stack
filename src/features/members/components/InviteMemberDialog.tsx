@@ -19,6 +19,7 @@ import {
   FormMessage,
 } from '@/components/ui/Form';
 import { Input } from '@/components/ui/input';
+import useIsDesktop from '@/hooks/useIsDesktop';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { UserRoundPlus } from 'lucide-react';
@@ -46,6 +47,7 @@ const InviteMemberDialog = ({
     },
     resolver: zodResolver(InviteMemberFormSchema),
   });
+  const isDesktop = useIsDesktop();
 
   const { isSubmitting } = form.formState;
 
@@ -99,9 +101,9 @@ const InviteMemberDialog = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button size={isDesktop ? 'md' : 'icon'}>
           <UserRoundPlus />
-          Invite member
+          <span className="hidden lg:inline">Invite member</span>
         </Button>
       </DialogTrigger>
 

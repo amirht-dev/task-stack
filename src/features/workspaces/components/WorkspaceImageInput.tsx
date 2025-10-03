@@ -54,7 +54,7 @@ function WorkspaceImageInput({
         }}
       >
         <FaArrowsRotate />
-        <span>generate random color</span>
+        <span>random color</span>
       </Button>
     </div>
   );

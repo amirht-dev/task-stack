@@ -88,7 +88,7 @@ const SignInCard = () => {
           />
 
           <div className="mt-4 flex items-center justify-between">
-            <Label className="flex items-center gap-2">
+            <Label className="flex items-center gap-2" variant="secondary">
               <Checkbox />
               <span>Remember me</span>
             </Label>

@@ -1,5 +1,5 @@
+import { CollapsableSidebar } from '@/components/layout/Sidebar';
 import Navbar from '@/components/Navbar';
-import Sidebar from '@/components/Sidebar';
 import SetPasswordAlertDialog from '@/features/auth/components/SetPasswordAlertDialog';
 import { protect } from '@/features/auth/utils/server';
 
@@ -10,7 +10,7 @@ const DashboardLayout = async ({ children }: LayoutProps<'/'>) => {
     <>
       <SetPasswordAlertDialog />
       <div className="h-dvh flex bg-background text-foreground">
-        <Sidebar />
+        <CollapsableSidebar />
 
         <div className="flex-1 flex flex-col h-full">
           <Navbar />

@@ -8,7 +8,7 @@ const WorkspacesList = () => {
   const { isSuccess, isLoading, data } = useWorkspacesQuery();
 
   return (
-    <ul className="grid grid-cols-5 gap-4">
+    <ul className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
       {isLoading &&
         Array.from({ length: 6 }, (_, idx) => (
           <li key={idx}>

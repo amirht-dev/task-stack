@@ -32,36 +32,38 @@ const WorkspaceLayout = ({
     <div className="flex flex-col h-full">
       <div className="shrink-0 bg-secondary text-secondary-foreground">
         <div className="container py-8">
-          <div className="flex items-start gap-2">
-            <Button variant="dim" size="icon" asChild>
-              <Link href="/workspaces">
-                <GoChevronLeft />
-              </Link>
-            </Button>
+          <div className="flex flex-col sm:flex-row sm:justify-between gap-6">
+            <div className="flex items-start gap-2">
+              <Button variant="dim" size="icon" asChild>
+                <Link href="/workspaces">
+                  <GoChevronLeft />
+                </Link>
+              </Button>
 
-            <div className="flex flex-col gap-2">
-              <h3 className="text-2xl">
-                <Skeleton size="text" className="w-50" loading={isLoading}>
-                  {workspace?.name}
-                </Skeleton>
-              </h3>
-              <small className="text-xs text-muted-foreground">
-                <Skeleton size="text" className="w-20" loading={isLoading}>
-                  {workspace && formatMembersCount(workspace.totalMembers)}
-                </Skeleton>
-              </small>
+              <div className="flex flex-col gap-2">
+                <h3 className="text-2xl">
+                  <Skeleton size="text" className="w-50" loading={isLoading}>
+                    {workspace?.name}
+                  </Skeleton>
+                </h3>
+                <small className="text-xs text-muted-foreground">
+                  <Skeleton size="text" className="w-20" loading={isLoading}>
+                    {workspace && formatMembersCount(workspace.totalMembers)}
+                  </Skeleton>
+                </small>
+              </div>
             </div>
 
-            <div className="flex flex-col ms-auto gap-2 items-end">
+            <div className="flex flex-col gap-2">
               <span
-                className="text-muted-foreground text-sm"
+                className="text-muted-foreground text-xs lg:text-sm"
                 title={
                   workspace?.$createdAt
                     ? new Date(workspace?.$createdAt).toLocaleString()
                     : undefined
                 }
               >
-                <Skeleton size="text" className="w-60" loading={isLoading}>
+                <Skeleton size="text" className="w-40" loading={isLoading}>
                   Created{' '}
                   {workspace?.$createdAt &&
                     formatDistanceToNow(workspace.$createdAt, {
@@ -70,14 +72,14 @@ const WorkspaceLayout = ({
                 </Skeleton>
               </span>
               <span
-                className="text-muted-foreground text-sm"
+                className="text-muted-foreground text-xs lg:text-sm"
                 title={
                   workspace?.$updatedAt
                     ? new Date(workspace?.$updatedAt).toLocaleString()
                     : undefined
                 }
               >
-                <Skeleton size="text" className="w-60" loading={isLoading}>
+                <Skeleton size="text" className="w-40" loading={isLoading}>
                   Updated{' '}
                   {workspace?.$updatedAt &&
                     formatDistanceToNow(workspace.$updatedAt, {
@@ -88,7 +90,7 @@ const WorkspaceLayout = ({
             </div>
           </div>
 
-          <div className="flex items-center justify-between  mt-10">
+          <div className="flex items-center justify-between mt-10">
             <Tabs className="max-w-fit">
               <TabsList size="sm">
                 <TabsTrigger value="overview" asChild>

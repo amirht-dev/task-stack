@@ -1,15 +1,15 @@
 import ImageInput from '@/components/ImageInput';
+import {
+  ResponsibleModal,
+  ResponsibleModalClose,
+  ResponsibleModalContent,
+  ResponsibleModalFooter,
+  ResponsibleModalHeader,
+  ResponsibleModalTitle,
+  ResponsibleModalTrigger,
+} from '@/components/ResponsibleModal';
 import Toast from '@/components/Toast';
 import { Button } from '@/components/ui/button';
-import DialogContent, {
-  Dialog,
-  DialogBody,
-  DialogClose,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -93,104 +93,103 @@ const WorkspaceFormDialog = ({ trigger }: WorkspaceFormDialogProps) => {
   });
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{trigger}</DialogTrigger>
+    <ResponsibleModal open={open} onOpenChange={setOpen}>
+      <ResponsibleModalTrigger asChild>{trigger}</ResponsibleModalTrigger>
+      <ResponsibleModalContent className="container">
+        <ResponsibleModalHeader>
+          <ResponsibleModalTitle className="capitalize">
+            Add New Workspace
+          </ResponsibleModalTitle>
+        </ResponsibleModalHeader>
 
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="capitalize">Add New Workspace</DialogTitle>
-        </DialogHeader>
         <Form {...form}>
-          <DialogBody>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Workspace Name:</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter workspace name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="image"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Workspace image:</FormLabel>
-                    <div className="flex justify-between">
-                      <ImageInput
-                        name={field.name}
-                        ref={field.ref}
-                        onChange={field.onChange}
-                        onBlur={field.onBlur}
-                        disabled={field.disabled}
-                        file={file}
-                        onFileChange={(file) => {
-                          setFile(file);
-                          form.setValue(
-                            'image',
-                            file?.file instanceof File ? file.file : null
-                          );
-                        }}
-                        onError={(errors) =>
-                          errors.forEach((err) =>
-                            form.setError('image', { message: err })
-                          )
-                        }
-                      />
-                      <Button
-                        variant="dim"
-                        type="button"
-                        onClick={async () => {
-                          const file = await generateRandomColorImageFile();
-                          setFile((prev) => {
-                            if (prev?.preview)
-                              URL.revokeObjectURL(prev.preview);
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Workspace Name:</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter workspace name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="image"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Workspace image:</FormLabel>
+                  <div className="flex justify-between">
+                    <ImageInput
+                      name={field.name}
+                      ref={field.ref}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      disabled={field.disabled}
+                      file={file}
+                      onFileChange={(file) => {
+                        setFile(file);
+                        form.setValue(
+                          'image',
+                          file?.file instanceof File ? file.file : null
+                        );
+                      }}
+                      onError={(errors) =>
+                        errors.forEach((err) =>
+                          form.setError('image', { message: err })
+                        )
+                      }
+                    />
+                    <Button
+                      variant="dim"
+                      type="button"
+                      onClick={async () => {
+                        const file = await generateRandomColorImageFile();
+                        setFile((prev) => {
+                          if (prev?.preview) URL.revokeObjectURL(prev.preview);
 
-                            return {
-                              file,
-                              id: 'random-color',
-                              preview: URL.createObjectURL(file),
-                            };
-                          });
-                          form.setValue('image', file);
-                        }}
-                      >
-                        <FaArrowsRotate />
-                        <span>generate random color</span>
-                      </Button>
-                    </div>
+                          return {
+                            file,
+                            id: 'random-color',
+                            preview: URL.createObjectURL(file),
+                          };
+                        });
+                        form.setValue('image', file);
+                      }}
+                    >
+                      <FaArrowsRotate />
+                      <span>random color</span>
+                    </Button>
+                  </div>
 
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <DialogFooter>
-                <DialogClose
-                  onClick={() => form.reset()}
-                  disabled={isSubmitting}
-                  asChild
-                >
-                  <Button variant="outline" type="button">
-                    Cancel
-                  </Button>
-                </DialogClose>
-
-                <Button type="submit" disabled={isSubmitting}>
-                  Add Workspace
+            <ResponsibleModalFooter>
+              <ResponsibleModalClose
+                onClick={() => form.reset()}
+                disabled={isSubmitting}
+                asChild
+              >
+                <Button variant="outline" type="button">
+                  Cancel
                 </Button>
-              </DialogFooter>
-            </form>
-          </DialogBody>
+              </ResponsibleModalClose>
+
+              <Button type="submit" disabled={isSubmitting}>
+                Add Workspace
+              </Button>
+            </ResponsibleModalFooter>
+          </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </ResponsibleModalContent>
+    </ResponsibleModal>
   );
 };
 
