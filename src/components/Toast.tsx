@@ -38,7 +38,7 @@ const Toast = ({ variant, title, description }: ToastProps) => {
     <Alert
       variant={variant === 'loading' ? undefined : variant}
       appearance="light"
-      className="min-w-2xs max-w-md"
+      className="w-full flex sm:min-w-[364px]"
     >
       {variant && <AlertIcon>{toastIcon[variant]}</AlertIcon>}
       <AlertContent>
