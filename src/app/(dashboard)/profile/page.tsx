@@ -47,7 +47,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 
 const navItem = {
   name: { id: 'name', label: 'Name' },
@@ -266,19 +265,31 @@ function UpdateEmailSection() {
   });
 
   const handleVerify = async () => {
+    const id = sonner.loading({
+      title: 'Sending Email verification...',
+      description: undefined,
+      toastData: {
+        id: 'email-verify',
+      },
+    });
+
     const res = await sendEmailVerificationAction();
 
-    const id = 'email-verify';
-
     if (res.success)
-      toast.success('Verification email has sent to your email address', {
-        id,
+      sonner.success({
+        title: 'Verification email has sent to your email address',
         description: undefined,
+        toastData: {
+          id,
+        },
       });
     else
-      toast.error('Failed to send verification email', {
-        id,
+      sonner.error({
+        title: 'Failed to send verification email',
         description: res.error.message,
+        toastData: {
+          id,
+        },
       });
   };
 
