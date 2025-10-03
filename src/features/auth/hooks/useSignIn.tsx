@@ -1,8 +1,7 @@
-import Toast from '@/components/Toast';
 import { requestPopupData } from '@/utils/client';
+import sonner from '@/utils/toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { OAuthProvider } from 'appwrite';
-import { toast } from 'sonner';
 import {
   emailPasswordSigninAction,
   oauthGetURLAction,
@@ -52,40 +51,34 @@ function useSignIn() {
       }
     },
     onMutate() {
-      const toastId = toast.custom(
-        () => <Toast variant="loading" title="Signing in..." />,
-        {
+      const toastId = sonner.loading({
+        title: 'Signing in...',
+        toastData: {
           id: 'signin',
-        }
-      );
+        },
+      });
       return { toastId };
     },
     onSuccess(_, __, onMutateResult) {
-      toast.custom(
-        () => <Toast variant="success" title="Signed in successfully" />,
-        {
+      sonner.success({
+        title: 'Signed in successfully',
+        toastData: {
           id: onMutateResult?.toastId,
-        }
-      );
+        },
+      });
 
       queryClient.invalidateQueries({
         queryKey: getAuthQueryOptions().queryKey,
       });
     },
     onError(error, _, onMutateResult) {
-      toast.custom(
-        () => (
-          <Toast
-            variant="destructive"
-            title="Failed to sign in"
-            description={error.message}
-          />
-        ),
-        {
+      sonner.error({
+        title: 'Failed to sign in',
+        description: error.message,
+        toastData: {
           id: onMutateResult?.toastId,
-          description: error.message,
-        }
-      );
+        },
+      });
     },
   });
 

@@ -1,4 +1,3 @@
-import Toast from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import DialogContent, {
   Dialog,
@@ -20,12 +19,12 @@ import {
 } from '@/components/ui/Form';
 import { Input } from '@/components/ui/input';
 import useIsDesktop from '@/hooks/useIsDesktop';
+import sonner from '@/utils/toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { UserRoundPlus } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 import { getWorkspaceQueryOptions } from '../../workspaces/hooks/useWorkspaceQuery';
 import { InviteMemberFormSchema } from '../../workspaces/schemas';
 import { inviteMemberAction } from '../actions';
@@ -52,49 +51,39 @@ const InviteMemberDialog = ({
   const { isSubmitting } = form.formState;
 
   const handleSubmit = form.handleSubmit(async ({ email }) => {
-    const id = toast.custom(
-      () => <Toast variant="loading" title="Inviting member..." />,
-      {
+    const id = sonner.loading({
+      title: 'Inviting member...',
+      toastData: {
         id: 'invite-member',
-      }
-    );
+      },
+    });
     const res = await inviteMemberAction({ email, teamId, workspaceId });
 
     if (res.success) {
-      toast.custom(
-        () => (
-          <Toast
-            variant="success"
-            title="Member invited"
-            description={
-              <>
-                invitation email has sent to{' '}
-                <strong>{res.data.userEmail}</strong> email address
-              </>
-            }
-          />
+      sonner.success({
+        title: 'Member invited',
+        description: (
+          <>
+            invitation email has sent to <strong>{res.data.userEmail}</strong>{' '}
+            email address
+          </>
         ),
-        {
+        toastData: {
           id,
-        }
-      );
+        },
+      });
       setOpen(false);
       queryClient.invalidateQueries({
         queryKey: getWorkspaceQueryOptions(workspaceId).queryKey,
       });
     } else {
-      toast.custom(
-        () => (
-          <Toast
-            variant="destructive"
-            title="Failed to invite member"
-            description={res.error.message}
-          />
-        ),
-        {
+      sonner.error({
+        title: 'Failed to invite member',
+        description: res.error.message,
+        toastData: {
           id,
-        }
-      );
+        },
+      });
     }
   });
 

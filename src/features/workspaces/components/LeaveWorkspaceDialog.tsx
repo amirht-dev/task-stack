@@ -1,6 +1,5 @@
 'use client';
 
-import Toast from '@/components/Toast';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,14 +12,14 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import sonner from '@/utils/toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { startTransition, useState } from 'react';
-import { toast } from 'sonner';
 import { leaveWorkspaceAction } from '../actions';
 import useUserWorkspaceStatus from '../hooks/useUserWorkspaceStatus';
 import useWorkspace from '../hooks/useWorkspace';
-import { Skeleton } from '@/components/ui/skeleton';
 
 const LeaveWorkspaceDialog = () => {
   const [open, setOpen] = useState(false);
@@ -38,33 +37,34 @@ const LeaveWorkspaceDialog = () => {
       if (!membership) return;
 
       setOpen(false);
-      toast.custom(
-        () => <Toast variant="loading" title="Leaving workspace..." />,
-        { id: 'leave-workspace' }
-      );
+      const id = sonner.loading({
+        title: 'Leaving workspace...',
+        toastData: {
+          id: 'leave-workspace',
+        },
+      });
       const res = await leaveWorkspaceAction({
         teamId: workspace.data.teamId,
         membershipId: membership.$id,
       });
 
       if (res.success) {
+        sonner.success({
+          title: 'You left workspace',
+          toastData: {
+            id,
+          },
+        });
         queryClient.invalidateQueries({ queryKey: ['workspaces'] });
-        toast.custom(
-          () => <Toast variant="success" title="You left workspace" />,
-          { id: 'leave-workspace' }
-        );
         router.replace('/workspaces');
       } else {
-        toast.custom(
-          () => (
-            <Toast
-              variant="destructive"
-              title="Failed to leave workspace"
-              description={res.error.message}
-            />
-          ),
-          { id: 'leave-workspace' }
-        );
+        sonner.error({
+          title: 'Failed to leave workspace',
+          description: res.error.message,
+          toastData: {
+            id,
+          },
+        });
       }
     });
   };

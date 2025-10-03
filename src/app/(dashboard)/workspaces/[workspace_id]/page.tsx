@@ -10,7 +10,6 @@ import {
   SectionCardRow,
   SectionCardTitle,
 } from '@/components/SectionCard';
-import Toast from '@/components/Toast';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,12 +50,12 @@ import {
   formatMembersCount,
 } from '@/features/workspaces/utils';
 import { FileWithPreview } from '@/hooks/useFileUpload';
+import sonner from '@/utils/toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { useParams, useRouter } from 'next/navigation';
 import { createContext, use, useEffect, useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 
 const WorkspaceContext = createContext<{ workspaceId: string } | null>(null);
 
@@ -137,22 +136,22 @@ function NameFormSectionCard() {
   const handleSubmit = form.handleSubmit(async (data) => {
     if (workspace.data?.name === data.name) return;
 
-    const id = toast.custom(
-      () => <Toast variant="loading" title="Updating workspace name..." />,
-      {
+    const id = sonner.loading({
+      title: 'Updating workspace name...',
+      toastData: {
         id: 'update-workspace-name',
-      }
-    );
+      },
+    });
 
     const res = await updateWorkspaceNameAction(workspace_id, data);
 
     if (res.success) {
-      toast.custom(
-        () => <Toast variant="success" title="Workspace name updated" />,
-        {
+      sonner.success({
+        title: 'Workspace name updated',
+        toastData: {
           id,
-        }
-      );
+        },
+      });
       queryClient.invalidateQueries({
         queryKey: ['workspaces'],
       });
@@ -160,18 +159,13 @@ function NameFormSectionCard() {
         name: res.data.name,
       });
     } else {
-      toast.custom(
-        () => (
-          <Toast
-            variant="destructive"
-            title="Failed to update workspace name"
-            description={res.error.message}
-          />
-        ),
-        {
+      sonner.error({
+        title: 'Failed to update workspace name',
+        description: res.error.message,
+        toastData: {
           id,
-        }
-      );
+        },
+      });
     }
   });
 
@@ -225,38 +219,32 @@ function ImageFormSectionCard() {
   });
 
   const handleSubmit = form.handleSubmit(async (data) => {
-    const id = toast.custom(
-      () => <Toast variant="loading" title="Updating workspace image..." />,
-      {
+    const id = sonner.loading({
+      title: 'Updating workspace image...',
+      toastData: {
         id: 'update-workspace-image',
-      }
-    );
+      },
+    });
 
     const res = await updateWorkspaceImageAction(workspace_id, data);
 
     if (res.success) {
-      toast.custom(
-        () => <Toast variant="success" title="Workspace image updated" />,
-        {
+      sonner.success({
+        title: 'Workspace image updated',
+        toastData: {
           id,
-        }
-      );
+        },
+      });
       queryClient.invalidateQueries({
         queryKey: ['workspaces'],
       });
     } else {
-      toast.error(
-        () => (
-          <Toast
-            variant="destructive"
-            title="Failed to update workspace image"
-            description={res.error.message}
-          />
-        ),
-        {
+      sonner.error({
+        title: 'Failed to update workspace image',
+        toastData: {
           id,
-        }
-      );
+        },
+      });
     }
   });
 
@@ -332,37 +320,34 @@ function DeleteWorkspaceSectionCard() {
   const handleDelete = async () => {
     setOpen(false);
     startTransition(async () => {
-      const id = toast.custom(
-        () => <Toast variant="loading" title="Deleting workspace..." />,
-        {
+      const id = sonner.loading({
+        title: 'Deleting workspace...',
+        toastData: {
           id: 'delete-workspace',
-        }
-      );
+        },
+      });
 
       const res = await deleteWorkspaceAction(workspace_id);
 
       if (res.success) {
-        toast.custom(
-          () => <Toast variant="success" title="Workspace deleted" />,
-          { id }
-        );
+        sonner.success({
+          title: 'Workspace deleted',
+          toastData: {
+            id,
+          },
+        });
         queryClient.invalidateQueries({
           queryKey: ['workspaces'],
         });
         router.replace('/workspaces');
       } else {
-        toast.custom(
-          () => (
-            <Toast
-              variant="destructive"
-              title="Failed to delete workspace"
-              description={res.error.message}
-            />
-          ),
-          {
+        sonner.error({
+          title: 'Failed to delete workspace',
+          description: res.error.message,
+          toastData: {
             id,
-          }
-        );
+          },
+        });
       }
     });
   };

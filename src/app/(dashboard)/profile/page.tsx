@@ -11,7 +11,6 @@ import {
   SectionCardRow,
   SectionCardTitle,
 } from '@/components/SectionCard';
-import Toast from '@/components/Toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -43,6 +42,7 @@ import {
 } from '@/features/auth/schemas';
 import { FileWithPreview } from '@/hooks/useFileUpload';
 import useIsTablet from '@/hooks/useIsTablet';
+import sonner from '@/utils/toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
@@ -163,33 +163,33 @@ function UpdateNameSection() {
   });
 
   const handleSubmit = form.handleSubmit(async ({ name }) => {
-    const id = toast.custom(
-      () => <Toast variant="loading" title="Updating name..." />,
-      {
+    const id = sonner.loading({
+      title: 'Updating name...',
+      toastData: {
         id: 'update-name',
-      }
-    );
+      },
+    });
     const res = await updateProfileNameAction(name);
 
     if (res.success) {
-      toast.custom(() => <Toast variant="success" title="Name updated" />, {
-        id,
-        description: undefined,
+      sonner.success({
+        title: 'Name updated',
+        toastData: {
+          id,
+          description: undefined,
+        },
       });
       queryClient.invalidateQueries({
         queryKey: getAuthQueryOptions().queryKey,
       });
     } else {
-      toast.custom(
-        () => (
-          <Toast
-            variant="destructive"
-            title="Failed to update name"
-            description={res.error.message}
-          />
-        ),
-        { id }
-      );
+      sonner.error({
+        title: 'Failed to update name',
+        toastData: {
+          id,
+          description: res.error.message,
+        },
+      });
     }
   });
 
@@ -236,34 +236,32 @@ function UpdateEmailSection() {
   });
 
   const handleSubmit = form.handleSubmit(async (data) => {
-    const id = toast.custom(
-      () => <Toast variant="loading" title="Updating email..." />,
-      {
+    const id = sonner.loading({
+      title: 'Updating email...',
+      toastData: {
         id: 'update-email',
-      }
-    );
-    const res = await updateProfileEmailAction(data);
+      },
+    });
 
-    if (res.success) {
-      toast.custom(() => <Toast variant="success" title="Email is updated" />, {
+    const res = await updateProfileEmailAction(data);
+    sonner.success({
+      title: 'Email is updated',
+      toastData: {
         id,
-      });
+      },
+    });
+    if (res.success) {
       queryClient.invalidateQueries({
         queryKey: getAuthQueryOptions().queryKey,
       });
     } else {
-      toast.custom(
-        () => (
-          <Toast
-            variant="destructive"
-            title="Failed to update Email"
-            description={res.error.message}
-          />
-        ),
-        {
+      sonner.error({
+        title: 'Failed to update Email',
+        description: res.error.message,
+        toastData: {
           id,
-        }
-      );
+        },
+      });
     }
   });
 
@@ -364,36 +362,33 @@ function UpdatePasswordSection() {
   });
 
   const handleSubmit = form.handleSubmit(async (data) => {
-    const id = toast.custom(
-      () => <Toast variant="loading" title="Updating password..." />,
-      {
+    const id = sonner.loading({
+      title: 'Updating password...',
+      toastData: {
         id: 'update-password',
-      }
-    );
+      },
+    });
     const res = await updateProfilePasswordAction(data);
 
     if (res.success) {
-      toast.custom(
-        () => <Toast variant="success" title="Password is updated" />,
-        { id }
-      );
+      sonner.success({
+        title: 'Password is updated',
+        toastData: {
+          id,
+        },
+      });
       queryClient.invalidateQueries({
         queryKey: getAuthQueryOptions().queryKey,
       });
       form.reset();
     } else {
-      toast.custom(
-        () => (
-          <Toast
-            variant="destructive"
-            title="Failed to update password"
-            description={res.error.message}
-          />
-        ),
-        {
+      sonner.error({
+        title: 'Failed to update password',
+        description: res.error.message,
+        toastData: {
           id,
-        }
-      );
+        },
+      });
     }
   });
 
@@ -465,37 +460,34 @@ function UpdateAvatarSection() {
   });
 
   const handleSubmit = form.handleSubmit(async ({ image }) => {
-    const id = toast.custom(
-      () => <Toast variant="loading" title="Updating avatar..." />,
-      {
+    const id = sonner.loading({
+      title: 'Updating avatar...',
+      toastData: {
         id: 'update-avatar',
-      }
-    );
+      },
+    });
     const res = await updateProfileAvatarAction(image);
 
     if (res.success) {
-      toast.custom(
-        () => <Toast variant="success" title="Avatar is updated" />,
-        { id }
-      );
+      sonner.success({
+        title: 'Avatar is updated',
+        toastData: {
+          id,
+        },
+      });
       queryClient.invalidateQueries({
         queryKey: getAuthQueryOptions().queryKey,
       });
       form.reset();
       setFile(undefined);
     } else {
-      toast.custom(
-        () => (
-          <Toast
-            variant="destructive"
-            title="Failed to update avatar"
-            description={res.error.message}
-          />
-        ),
-        {
+      sonner.error({
+        title: 'Failed to update avatar',
+        description: res.error.message,
+        toastData: {
           id,
-        }
-      );
+        },
+      });
     }
   });
 

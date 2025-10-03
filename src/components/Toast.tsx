@@ -1,3 +1,4 @@
+import { CircleCheck, TriangleAlert } from 'lucide-react';
 import { ComponentProps, ReactNode } from 'react';
 import {
   Alert,
@@ -7,7 +8,6 @@ import {
   AlertTitle,
 } from './ui/alert';
 import { ProgressCircle } from './ui/progress';
-import { CircleCheck, TriangleAlert } from 'lucide-react';
 
 type ToastProps = {
   variant?:
@@ -38,7 +38,7 @@ const Toast = ({ variant, title, description }: ToastProps) => {
     <Alert
       variant={variant === 'loading' ? undefined : variant}
       appearance="light"
-      className="min-w-2xs mx-auto"
+      className="min-w-2xs max-w-md"
     >
       {variant && <AlertIcon>{toastIcon[variant]}</AlertIcon>}
       <AlertContent>

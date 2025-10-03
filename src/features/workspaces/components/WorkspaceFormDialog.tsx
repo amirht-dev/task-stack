@@ -8,7 +8,6 @@ import {
   ResponsibleModalTitle,
   ResponsibleModalTrigger,
 } from '@/components/ResponsibleModal';
-import Toast from '@/components/Toast';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -21,13 +20,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { FileWithPreview } from '@/hooks/useFileUpload';
 import { generateRandomColorImageFile } from '@/utils/client';
+import sonner from '@/utils/toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { ReactNode, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { FaArrowsRotate } from 'react-icons/fa6';
-import { toast } from 'sonner';
 import { createWorkspaceAction } from '../actions';
 import { getWorkspacesQueryOptions } from '../hooks/useWorkspacesQuery';
 import { WorkspaceSchema } from '../schemas';
@@ -54,41 +53,36 @@ const WorkspaceFormDialog = ({ trigger }: WorkspaceFormDialogProps) => {
   const handleSubmit = form.handleSubmit(async (data) => {
     if (isSubmitting) return;
 
-    const toastId = toast.custom(
-      () => <Toast variant="loading" title="Creating workspace..." />,
-      {
+    const id = sonner.loading({
+      title: 'Creating workspace...',
+      toastData: {
         id: 'create-workspace-toast',
-      }
-    );
+      },
+    });
 
     const res = await createWorkspaceAction(data);
 
     if (res.success) {
       setOpen(false);
-      toast.custom(
-        () => <Toast variant="success" title="Workspace created" />,
-        {
-          id: toastId,
-        }
-      );
+      sonner.success({
+        title: 'Workspace created',
+        toastData: {
+          id,
+        },
+      });
       form.reset();
       queryClient.invalidateQueries({
         queryKey: getWorkspacesQueryOptions().queryKey,
       });
       router.push(`/workspaces/${res.data.$id}`);
     } else {
-      toast.custom(
-        () => (
-          <Toast
-            variant="destructive"
-            title="Failed to create workspace"
-            description={res.error.message}
-          />
-        ),
-        {
-          id: toastId,
-        }
-      );
+      sonner.error({
+        title: 'Failed to create workspace',
+        description: res.error.message,
+        toastData: {
+          id,
+        },
+      });
     }
   });
 

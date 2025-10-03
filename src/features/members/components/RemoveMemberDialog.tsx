@@ -1,6 +1,5 @@
 'use client';
 
-import Toast from '@/components/Toast';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,11 +12,11 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import useWorkspaceQuery from '@/features/workspaces/hooks/useWorkspaceQuery';
+import sonner from '@/utils/toast';
 import { useQueryClient } from '@tanstack/react-query';
 import { Models } from 'appwrite';
 import { useParams } from 'next/navigation';
 import { ReactNode, startTransition } from 'react';
-import { toast } from 'sonner';
 import { removeMembersAction } from '../actions';
 
 function RemoveMemberDialog({
@@ -39,23 +38,16 @@ function RemoveMemberDialog({
 
     onRemove?.();
     startTransition(async () => {
-      const id = toast.custom(
-        () => (
-          <Toast
-            variant="loading"
-            title={
-              Array.isArray(memberships)
-                ? `Removing ${memberships.length} members...`
-                : `Removing ${memberships.userName}...`
-            }
-          />
-        ),
-        {
+      const id = sonner.loading({
+        title: Array.isArray(memberships)
+          ? `Removing ${memberships.length} members...`
+          : `Removing ${memberships.userName}...`,
+        toastData: {
           id: Array.isArray(memberships)
             ? 'remove-members'
             : `remove-member-${memberships.$id}`,
-        }
-      );
+        },
+      });
       const res = await removeMembersAction({
         teamId,
         membershipIds: Array.isArray(memberships)
@@ -63,41 +55,27 @@ function RemoveMemberDialog({
           : memberships.$id,
       });
       if (res.success) {
-        toast.custom(
-          () => (
-            <Toast
-              variant="success"
-              title={
-                Array.isArray(memberships)
-                  ? `All ${memberships.length} members removed`
-                  : `${memberships.userName} is removed`
-              }
-            />
-          ),
-          {
+        sonner.success({
+          title: Array.isArray(memberships)
+            ? `All ${memberships.length} members removed`
+            : `${memberships.userName} is removed`,
+          toastData: {
             id,
-          }
-        );
+          },
+        });
         await queryClient.invalidateQueries({
           queryKey: ['workspaces'],
         });
       } else {
-        toast.custom(
-          () => (
-            <Toast
-              variant="destructive"
-              title={
-                Array.isArray(memberships)
-                  ? `Failed to remove ${memberships.length} members`
-                  : `Failed to remove ${memberships.userName}`
-              }
-              description={res.error.message}
-            />
-          ),
-          {
+        sonner.error({
+          title: Array.isArray(memberships)
+            ? `Failed to remove ${memberships.length} members`
+            : `Failed to remove ${memberships.userName}`,
+          description: res.error.message,
+          toastData: {
             id,
-          }
-        );
+          },
+        });
       }
     });
   };

@@ -1,10 +1,9 @@
-import Toast from '@/components/Toast';
 import { signupAction } from '@/features/auth/actions';
 import { signUpSchema, SignUpSchemaType } from '@/features/auth/schemas';
+import sonner from '@/utils/toast';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
 
 function useSignup() {
   const router = useRouter();
@@ -19,33 +18,31 @@ function useSignup() {
   });
 
   const submitHandler = form.handleSubmit(async ({ email, password }) => {
-    const id = toast.custom(
-      () => <Toast variant="loading" title="Creating account" />,
-      {
+    const id = sonner.loading({
+      title: 'Creating account',
+      toastData: {
         id: 'signup',
-      }
-    );
+      },
+    });
+
     const res = await signupAction({ email, password });
 
     if (res.success) {
-      toast.custom(
-        () => <Toast variant="success" title="Signup successfully" />,
-        { id }
-      );
+      sonner.success({
+        title: 'Signup successfully',
+        toastData: {
+          id,
+        },
+      });
       router.push('/sign-in');
     } else {
-      toast.custom(
-        () => (
-          <Toast
-            variant="destructive"
-            title="Failed to create account"
-            description={res.error.message}
-          />
-        ),
-        {
+      sonner.error({
+        title: 'Failed to create account',
+        description: res.error.message,
+        toastData: {
           id,
-        }
-      );
+        },
+      });
     }
   });
 

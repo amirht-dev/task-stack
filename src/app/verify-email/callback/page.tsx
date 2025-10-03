@@ -1,10 +1,9 @@
 'use client';
 
-import Toast from '@/components/Toast';
 import { verifyEmailVerificationAction } from '@/features/auth/actions';
+import sonner from '@/utils/toast';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { toast } from 'sonner';
 
 const VerifyEmail = () => {
   const router = useRouter();
@@ -18,32 +17,30 @@ const VerifyEmail = () => {
     if (!userId || !secret) return;
 
     const verifyEmail = async () => {
-      const id = toast.custom(
-        () => <Toast variant="loading" title="Verifying email address..." />,
-        {
+      const id = sonner.loading({
+        title: 'Verifying email address...',
+        toastData: {
           id: 'verify-email',
-        }
-      );
+        },
+      });
+
       const res = await verifyEmailVerificationAction(userId, secret);
       if (res.success) {
-        toast.custom(
-          () => <Toast variant="success" title="Email address verified" />,
-          { id }
-        );
+        sonner.success({
+          title: 'Email address verified',
+          toastData: {
+            id,
+          },
+        });
         router.replace('/profile#email-address');
       } else {
-        toast.custom(
-          () => (
-            <Toast
-              variant="destructive"
-              title="Failed to verify email address"
-              description={res.error.message}
-            />
-          ),
-          {
+        sonner.error({
+          title: 'Failed to verify email address',
+          description: res.error.message,
+          toastData: {
             id,
-          }
-        );
+          },
+        });
       }
     };
 

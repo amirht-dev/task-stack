@@ -1,11 +1,10 @@
 'use client';
 
-import Toast from '@/components/Toast';
 import { checkMemberInvitationAction } from '@/features/members/actions';
 import { InviteMembershipParamsSchema } from '@/features/workspaces/schemas';
+import sonner from '@/utils/toast';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { toast } from 'sonner';
 
 const InviteCallbackPage = () => {
   const router = useRouter();
@@ -19,27 +18,29 @@ const InviteCallbackPage = () => {
     const data = parseResult.data;
 
     async function checkInvite() {
-      const id = toast.custom(
-        () => <Toast variant="loading" title="Checking invite..." />,
-        { id: 'check-invite' }
-      );
+      const id = sonner.loading({
+        title: 'Checking invite...',
+        toastData: {
+          id: 'check-invite',
+        },
+      });
       const res = await checkMemberInvitationAction(data);
       if (res.success) {
-        toast.custom(
-          () => (
-            <Toast variant="success" title="You have successfully Invited" />
-          ),
-          { id }
-        );
+        sonner.success({
+          title: 'You have successfully Invited',
+          toastData: {
+            id,
+          },
+        });
         router.replace(`/workspaces/${data.workspaceId}`);
       } else {
-        toast.custom(() => (
-          <Toast
-            variant="destructive"
-            title="Invitation failed"
-            description={res.error.message}
-          />
-        ));
+        sonner.error({
+          title: 'Invitation failed',
+          description: res.error.message,
+          toastData: {
+            id,
+          },
+        });
         router.push('/');
       }
     }
