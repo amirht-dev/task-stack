@@ -4,27 +4,32 @@ import NavLink from '@/components/NavLink';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import LeaveWorkspaceDialog from '@/features/workspaces/components/LeaveWorkspaceDialog';
-import useWorkspaceQuery from '@/features/workspaces/hooks/useWorkspaceQuery';
-import { formatMembersCount } from '@/features/workspaces/utils';
+import useProjectQuery from '@/features/projects/hooks/useProjectQuery';
+import useSelectWorkspace from '@/features/workspaces/hooks/useSelectWorkspace';
 import { NotFoundException } from '@/utils/exceptions';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { use } from 'react';
+import { use, useEffect } from 'react';
 import { GoChevronLeft } from 'react-icons/go';
 
-const WorkspaceLayout = ({
+const ProjectLayout = ({
   children,
   params,
-}: LayoutProps<'/workspaces/[workspace_id]'>) => {
-  const { workspace_id } = use(params);
+}: LayoutProps<'/projects/[project_id]'>) => {
+  const { project_id } = use(params);
   const {
+    data: project,
+    isSuccess,
     isLoading,
-    data: workspace,
     isError,
     error,
-  } = useWorkspaceQuery(workspace_id);
+  } = useProjectQuery(project_id);
+  const { selectWorkspace } = useSelectWorkspace();
+
+  useEffect(() => {
+    if (isSuccess) selectWorkspace(project.workspace);
+  }, [selectWorkspace, project, isSuccess]);
 
   if (isError && error instanceof NotFoundException) return notFound();
 
@@ -33,7 +38,7 @@ const WorkspaceLayout = ({
       <div className="shrink-0 bg-secondary text-secondary-foreground">
         <div className="container py-8">
           <span className="uppercase text-xs text-muted-foreground ms-10">
-            workspace
+            project
           </span>
           <div className="flex flex-col sm:flex-row sm:justify-between gap-6">
             <div className="flex items-start gap-2">
@@ -46,14 +51,14 @@ const WorkspaceLayout = ({
               <div className="flex flex-col gap-2">
                 <h3 className="text-2xl">
                   <Skeleton size="text" className="w-50" loading={isLoading}>
-                    {workspace?.name}
+                    {project?.name}
                   </Skeleton>
                 </h3>
-                <small className="text-xs text-muted-foreground">
+                {/* <small className="text-xs text-muted-foreground">
                   <Skeleton size="text" className="w-20" loading={isLoading}>
                     {workspace && formatMembersCount(workspace.totalMembers)}
                   </Skeleton>
-                </small>
+                </small> */}
               </div>
             </div>
 
@@ -61,15 +66,15 @@ const WorkspaceLayout = ({
               <span
                 className="text-muted-foreground text-xs lg:text-sm"
                 title={
-                  workspace?.$createdAt
-                    ? new Date(workspace?.$createdAt).toLocaleString()
+                  project?.$createdAt
+                    ? new Date(project?.$createdAt).toLocaleString()
                     : undefined
                 }
               >
                 <Skeleton size="text" className="w-40" loading={isLoading}>
                   Created{' '}
-                  {workspace?.$createdAt &&
-                    formatDistanceToNow(workspace.$createdAt, {
+                  {project?.$createdAt &&
+                    formatDistanceToNow(project.$createdAt, {
                       addSuffix: true,
                     })}
                 </Skeleton>
@@ -77,15 +82,15 @@ const WorkspaceLayout = ({
               <span
                 className="text-muted-foreground text-xs lg:text-sm"
                 title={
-                  workspace?.$updatedAt
-                    ? new Date(workspace?.$updatedAt).toLocaleString()
+                  project?.$updatedAt
+                    ? new Date(project?.$updatedAt).toLocaleString()
                     : undefined
                 }
               >
                 <Skeleton size="text" className="w-40" loading={isLoading}>
                   Updated{' '}
-                  {workspace?.$updatedAt &&
-                    formatDistanceToNow(workspace.$updatedAt, {
+                  {project?.$updatedAt &&
+                    formatDistanceToNow(project.$updatedAt, {
                       addSuffix: true,
                     })}
                 </Skeleton>
@@ -98,24 +103,24 @@ const WorkspaceLayout = ({
               <TabsList size="sm">
                 <TabsTrigger value="overview" asChild>
                   <NavLink
-                    href={`/workspaces/${workspace_id}`}
-                    basePath={`/workspaces/${workspace_id}`}
+                    href={`/projects/${project_id}`}
+                    basePath={`/projects/${project_id}`}
                   >
                     Overview
                   </NavLink>
                 </TabsTrigger>
                 <TabsTrigger value="members" asChild>
                   <NavLink
-                    href={`/workspaces/${workspace_id}/members`}
-                    basePath={`/workspaces/${workspace_id}`}
+                    href={`/projects/${project_id}/members`}
+                    basePath={`/projects/${project_id}`}
                   >
                     Members
                   </NavLink>
                 </TabsTrigger>
                 <TabsTrigger value="projects" asChild>
                   <NavLink
-                    href={`/workspaces/${workspace_id}/projects`}
-                    basePath={`/workspaces/${workspace_id}`}
+                    href={`/projects/${project_id}/projects`}
+                    basePath={`/projects/${project_id}`}
                   >
                     Projects
                   </NavLink>
@@ -123,7 +128,7 @@ const WorkspaceLayout = ({
               </TabsList>
             </Tabs>
 
-            <LeaveWorkspaceDialog />
+            {/* <LeaveWorkspaceDialog /> */}
           </div>
         </div>
       </div>
@@ -133,4 +138,4 @@ const WorkspaceLayout = ({
   );
 };
 
-export default WorkspaceLayout;
+export default ProjectLayout;

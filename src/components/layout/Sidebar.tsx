@@ -1,7 +1,10 @@
 'use client';
 
 import { useGlobalStore } from '@/contexts/GlobalStoreContext';
+import CreateProjectModal from '@/features/projects/components/CreateProjectModal';
+import useProjectsQuery from '@/features/projects/hooks/useProjectsQuery';
 import WorkspaceSwitcher from '@/features/workspaces/components/WorkspaceSwitcher';
+import useSelectWorkspace from '@/features/workspaces/hooks/useSelectWorkspace';
 import useIsActiveLink from '@/hooks/useIsActiveLink';
 import useIsDesktop from '@/hooks/useIsDesktop';
 import { cn } from '@/lib/utils';
@@ -27,6 +30,7 @@ import {
 import { HiOutlineUser, HiUser } from 'react-icons/hi2';
 import { MdOutlineWorkspaces, MdWorkspaces } from 'react-icons/md';
 import Logo from '../Logo';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Button } from '../ui/button';
 import { Separator } from '../ui/separator';
 import {
@@ -36,6 +40,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '../ui/sheet';
+import { Skeleton } from '../ui/skeleton';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 
 const SheetSidebarContext = createContext<{
@@ -98,20 +103,24 @@ function SidebarGroup({ children, action, title }: SidebarGroupProps) {
 type SidebarNavLinkProps = {
   label: string;
   href: string;
-  disactiveIcon: ReactNode;
-  activeIcon: ReactNode;
-  collapsable: boolean;
+  basePath?: string;
+  disactiveIcon?: ReactNode;
+  activeIcon?: ReactNode;
+  collapsable?: boolean;
+  icon?: ReactNode;
 };
 
 const SidebarNavLink = ({
   label,
   href,
+  basePath,
   disactiveIcon,
   activeIcon,
-  collapsable,
+  collapsable = false,
+  icon,
 }: SidebarNavLinkProps) => {
   const sidebarStatus = useGlobalStore((store) => store.sidebarState);
-  const isActive = useIsActiveLink(href);
+  const isActive = useIsActiveLink(href, basePath);
   const { toggleOpen } = useContext(SheetSidebarContext) ?? {};
 
   const isExpanded = sidebarStatus === 'expanded';
@@ -129,7 +138,7 @@ const SidebarNavLink = ({
           onNavigate={toggleOpen}
         >
           <Slot className="size-4 shrink-0">
-            {isActive ? activeIcon : disactiveIcon}
+            {icon ?? (isActive ? activeIcon : disactiveIcon)}
           </Slot>
 
           <span>{label}</span>
@@ -147,7 +156,7 @@ const SidebarNavLink = ({
         >
           <Link href={href}>
             <Slot className="size-4 shrink-0">
-              {isActive ? activeIcon : disactiveIcon}
+              {icon ?? (isActive ? activeIcon : disactiveIcon)}
             </Slot>
           </Link>
         </Button>
@@ -157,6 +166,60 @@ const SidebarNavLink = ({
     </Tooltip>
   );
 };
+// const SidebarNavLink = ({
+//   label,
+//   href,
+//   disactiveIcon,
+//   activeIcon,
+//   collapsable,
+// }: SidebarNavLinkProps) => {
+//   const sidebarStatus = useGlobalStore((store) => store.sidebarState);
+//   const isActive = useIsActiveLink(href);
+//   const { toggleOpen } = useContext(SheetSidebarContext) ?? {};
+
+//   const isExpanded = sidebarStatus === 'expanded';
+
+//   if ((collapsable && isExpanded) || !collapsable)
+//     return (
+//       <Button
+//         className="block justify-start"
+//         variant={isActive ? 'primary' : 'secondary'}
+//         asChild
+//       >
+//         <Link
+//           href={href}
+//           className={cn('flex items-center font-semibold transition-colors')}
+//           onNavigate={toggleOpen}
+//         >
+//           <Slot className="size-4 shrink-0">
+//             {isActive ? activeIcon : disactiveIcon}
+//           </Slot>
+
+//           <span>{label}</span>
+//         </Link>
+//       </Button>
+//     );
+
+//   return (
+//     <Tooltip>
+//       <TooltipTrigger asChild>
+//         <Button
+//           variant={isActive ? 'primary' : 'secondary'}
+//           mode="icon"
+//           asChild
+//         >
+//           <Link href={href}>
+//             <Slot className="size-4 shrink-0">
+//               {isActive ? activeIcon : disactiveIcon}
+//             </Slot>
+//           </Link>
+//         </Button>
+//       </TooltipTrigger>
+
+//       <TooltipContent side="right">{label}</TooltipContent>
+//     </Tooltip>
+//   );
+// };
 
 const SidebarRoot = ({ className, ...props }: ComponentProps<'aside'>) => {
   return (
@@ -276,6 +339,62 @@ const SidebarNavigation = ({ collapsable }: { collapsable: boolean }) => {
   );
 };
 
+const SidebarWorkspaceProjects = ({
+  collapsable,
+}: {
+  collapsable: boolean;
+}) => {
+  const { selectedWorkspace } = useSelectWorkspace();
+  const { data: projects, isLoading, isSuccess } = useProjectsQuery();
+  const sidebarStatus = useGlobalStore((state) => state.sidebarState);
+
+  if (!selectedWorkspace) return;
+
+  return (
+    <SidebarGroup
+      title="projects"
+      action={
+        <CreateProjectModal
+          trigger={
+            (!collapsable || (collapsable && sidebarStatus === 'expanded')) && (
+              <button>
+                <BsPlusCircleFill className="size-4 text-neutral-400 hover:text-neutral-500 transition-colors" />
+              </button>
+            )
+          }
+        />
+      }
+    >
+      <div>
+        {isLoading
+          ? Array.from({ length: 5 }, (_, idx) => (
+              <div className="flex items-center gap-2 px-2 h-8.5" key={idx}>
+                <Skeleton size="box" className="size-5 rounded-full" />
+                <span>
+                  <Skeleton size="text" className="w-20 text-xs" />
+                </span>
+              </div>
+            ))
+          : isSuccess &&
+            projects.map((project) => (
+              <SidebarNavLink
+                key={project.$id}
+                label={project.name}
+                href={`/projects/${project.$id}`}
+                collapsable={collapsable}
+                icon={
+                  <Avatar>
+                    <AvatarImage src={project.image?.url} alt={project.name} />
+                    <AvatarFallback>{project.name.at(0)}</AvatarFallback>
+                  </Avatar>
+                }
+              />
+            ))}
+      </div>
+    </SidebarGroup>
+  );
+};
+
 const CollapsableSidebar = () => {
   const sidebarStatus = useGlobalStore((store) => store.sidebarState);
   const toggleSidebar = useGlobalStore((store) => store.toggleSidebar);
@@ -308,10 +427,11 @@ const CollapsableSidebar = () => {
             <ArrowRightToLine />
           </Button>
         )}
-
         {isExpanded && <SidebarWorkspaceSwitcher />}
-
+        <Separator />
         <SidebarNavigation collapsable />
+        <Separator />
+        <SidebarWorkspaceProjects collapsable />
       </SidebarContent>
     </SidebarRoot>
   );
@@ -340,10 +460,13 @@ const SheetSidebar = () => {
                 onClose={() => setOpen(false)}
               />
             </SheetHeader>
-
+            <Separator />
             <SidebarContent>
               <SidebarWorkspaceSwitcher />
+              <Separator />
               <SidebarNavigation collapsable={false} />
+              <Separator />
+              <SidebarWorkspaceProjects collapsable={false} />
             </SidebarContent>
           </SidebarRoot>
         </SheetContent>

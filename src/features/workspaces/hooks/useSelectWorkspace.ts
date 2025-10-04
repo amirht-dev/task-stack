@@ -1,4 +1,5 @@
 import { useGlobalStore } from '@/contexts/GlobalStoreContext';
+import { useCallback } from 'react';
 import useWorkspacesQuery from './useWorkspacesQuery';
 
 function useSelectWorkspace() {
@@ -6,12 +7,15 @@ function useSelectWorkspace() {
   const setWorkspace = useGlobalStore((store) => store.setWorkspace);
   const { data, isSuccess } = useWorkspacesQuery();
 
-  const selectWorkspace = (workspaceId: string) => {
-    if (isSuccess)
-      setWorkspace(
-        data.find((workspace) => workspace.$id === workspaceId) ?? null
-      );
-  };
+  const selectWorkspace = useCallback(
+    (workspaceId: string) => {
+      if (isSuccess)
+        setWorkspace(
+          data.find((workspace) => workspace.$id === workspaceId) ?? null
+        );
+    },
+    [isSuccess, setWorkspace, data]
+  );
 
   return { selectedWorkspace: workspace, selectWorkspace };
 }

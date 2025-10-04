@@ -2,6 +2,7 @@ import { DiscriminatedResponseWithData } from '@/types/utils';
 import { UseQueryResult } from '@tanstack/react-query';
 import type { Models } from 'node-appwrite';
 import { Merge, Simplify } from 'type-fest';
+import { DatabaseProject } from '../projects/types';
 import { getWorkspaceAction } from './actions';
 import useWorkspacesQuery from './hooks/useWorkspacesQuery';
 
@@ -12,6 +13,7 @@ export type DatabaseWorkspace = Merge<
     userId: string;
     imageId: string | null;
     teamId: string;
+    projects: DatabaseProject[];
   }
 >;
 

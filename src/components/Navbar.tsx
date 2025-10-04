@@ -2,10 +2,13 @@
 
 import UserButton from '@/components/UserButton';
 import { useGlobalStore } from '@/contexts/GlobalStoreContext';
+import CreateProjectModal from '@/features/projects/components/CreateProjectModal';
 import WorkspaceFormDialog from '@/features/workspaces/components/WorkspaceFormDialog';
 import WorkspaceSwitcher from '@/features/workspaces/components/WorkspaceSwitcher';
+import useWorkspacesQuery from '@/features/workspaces/hooks/useWorkspacesQuery';
 import useIsDesktop from '@/hooks/useIsDesktop';
 import { BsPlusCircle } from 'react-icons/bs';
+import { HiOutlineViewGridAdd } from 'react-icons/hi';
 import { MdOutlineWorkspaces } from 'react-icons/md';
 import { SheetSidebar } from './layout/Sidebar';
 import { Button } from './ui/button';
@@ -53,6 +56,8 @@ const Navbar = () => {
 export default Navbar;
 
 function AddNewDropdownMenu() {
+  const { data: workspaces } = useWorkspacesQuery();
+
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
@@ -67,6 +72,17 @@ function AddNewDropdownMenu() {
             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
               <MdOutlineWorkspaces />
               <span>add new workspace</span>
+            </DropdownMenuItem>
+          }
+        />
+        <CreateProjectModal
+          trigger={
+            <DropdownMenuItem
+              onSelect={(e) => e.preventDefault()}
+              disabled={!workspaces?.length}
+            >
+              <HiOutlineViewGridAdd />
+              <span>create new project</span>
             </DropdownMenuItem>
           }
         />
