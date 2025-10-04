@@ -276,9 +276,9 @@ function MultipleMembersRemoveCard({
         >
           <Card>
             <CardContent className="flex items-center justify-between gap-4">
-              <CardTitle className="leading-none">
+              <CardTitle className="leading-none font-normal">
                 {selectedMembersCount}
-                <span className="hidden md:inline">members are </span> selected
+                <span className="hidden md:inline"> members are </span> selected
               </CardTitle>
               <CardToolbar>
                 <Button

@@ -6,11 +6,11 @@ import { OneOrMore } from '@/types/utils';
 import { handleResponse, unwrapDiscriminatedResponse } from '@/utils/server';
 import { Transaction } from '@/utils/transaction';
 import { Models, Query } from 'node-appwrite';
+import { setSessionCookie } from '../auth/utils/server';
 import {
   createProfileAction,
   deleteProfileAsAdminAction,
-} from '../auth/actions';
-import { setSessionCookie } from '../auth/utils/server';
+} from '../profile/actions';
 import { getWorkspaceAction } from '../workspaces/actions';
 import {
   InviteMemberFormSchema,
