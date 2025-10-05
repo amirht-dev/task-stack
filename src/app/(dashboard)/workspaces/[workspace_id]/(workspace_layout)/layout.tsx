@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import LeaveWorkspaceDialog from '@/features/workspaces/components/LeaveWorkspaceDialog';
+import WorkspaceNotFound from '@/features/workspaces/components/WorkspaceNotFound';
 import useWorkspaceQuery from '@/features/workspaces/hooks/useWorkspaceQuery';
 import { formatMembersCount } from '@/features/workspaces/utils';
 import { NotFoundException } from '@/utils/exceptions';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
 import { use } from 'react';
 import { GoChevronLeft } from 'react-icons/go';
 
@@ -26,7 +26,8 @@ const WorkspaceLayout = ({
     error,
   } = useWorkspaceQuery(workspace_id);
 
-  if (isError && error instanceof NotFoundException) return notFound();
+  if (isError && error instanceof NotFoundException)
+    return <WorkspaceNotFound />;
 
   return (
     <div className="flex flex-col h-full">
