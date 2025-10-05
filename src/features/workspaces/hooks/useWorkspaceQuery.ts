@@ -1,5 +1,6 @@
 import { NotFoundException } from '@/utils/exceptions';
 import { queryOptions, useQuery } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
 import { getWorkspaceAction } from '../actions';
 
 export function getWorkspaceQueryOptions(workspaceId: string) {
@@ -30,11 +31,17 @@ export function getWorkspaceQueryOptions(workspaceId: string) {
   });
 }
 
-function useWorkspaceQuery(workspaceId: string) {
+function useWorkspaceQuery(workspaceId?: string) {
   // const queryClient = useQueryClient();
+  const { workspace_id } = useParams<{ workspace_id: string }>();
+  const id = workspaceId ?? workspace_id;
+  if (!id)
+    throw new Error(
+      'you must either pass workspaceId or use it in dynamic workspace_id page'
+    );
 
   return useQuery({
-    ...getWorkspaceQueryOptions(workspaceId),
+    ...getWorkspaceQueryOptions(id),
     // placeholderData: () => {
     //   const workspaceData = queryClient
     //     .getQueryData(getWorkspacesQueryOptions().queryKey)

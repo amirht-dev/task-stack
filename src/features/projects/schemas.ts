@@ -17,3 +17,17 @@ export const CreateProjectFormSchema = z.object({
     .nullable(),
 });
 export type CreateProjectFormSchema = z.infer<typeof CreateProjectFormSchema>;
+
+export const UpdateProjectNameFormSchema = z.object({
+  name: CreateProjectFormSchema.shape.name,
+});
+export type UpdateProjectNameFormSchema = z.infer<
+  typeof UpdateProjectNameFormSchema
+>;
+
+export const UpdateProjectImageFormSchema = z.object({
+  image: CreateProjectFormSchema.shape.image,
+});
+export type UpdateProjectImageFormSchema = z.infer<
+  typeof UpdateProjectImageFormSchema
+>;

@@ -7,8 +7,8 @@ import useProjects from './hooks/useProjectsQuery';
 export type DatabaseProject = Models.Row & {
   name: string;
   ownerId: string;
+  workspaceId: string;
   imageId: string | null;
-  workspace: string;
 };
 
 export type ResponseProjectsList = UnwrapDiscriminatedResponseData<

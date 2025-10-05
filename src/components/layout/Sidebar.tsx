@@ -166,60 +166,6 @@ const SidebarNavLink = ({
     </Tooltip>
   );
 };
-// const SidebarNavLink = ({
-//   label,
-//   href,
-//   disactiveIcon,
-//   activeIcon,
-//   collapsable,
-// }: SidebarNavLinkProps) => {
-//   const sidebarStatus = useGlobalStore((store) => store.sidebarState);
-//   const isActive = useIsActiveLink(href);
-//   const { toggleOpen } = useContext(SheetSidebarContext) ?? {};
-
-//   const isExpanded = sidebarStatus === 'expanded';
-
-//   if ((collapsable && isExpanded) || !collapsable)
-//     return (
-//       <Button
-//         className="block justify-start"
-//         variant={isActive ? 'primary' : 'secondary'}
-//         asChild
-//       >
-//         <Link
-//           href={href}
-//           className={cn('flex items-center font-semibold transition-colors')}
-//           onNavigate={toggleOpen}
-//         >
-//           <Slot className="size-4 shrink-0">
-//             {isActive ? activeIcon : disactiveIcon}
-//           </Slot>
-
-//           <span>{label}</span>
-//         </Link>
-//       </Button>
-//     );
-
-//   return (
-//     <Tooltip>
-//       <TooltipTrigger asChild>
-//         <Button
-//           variant={isActive ? 'primary' : 'secondary'}
-//           mode="icon"
-//           asChild
-//         >
-//           <Link href={href}>
-//             <Slot className="size-4 shrink-0">
-//               {isActive ? activeIcon : disactiveIcon}
-//             </Slot>
-//           </Link>
-//         </Button>
-//       </TooltipTrigger>
-
-//       <TooltipContent side="right">{label}</TooltipContent>
-//     </Tooltip>
-//   );
-// };
 
 const SidebarRoot = ({ className, ...props }: ComponentProps<'aside'>) => {
   return (
@@ -380,7 +326,7 @@ const SidebarWorkspaceProjects = ({
               <SidebarNavLink
                 key={project.$id}
                 label={project.name}
-                href={`/projects/${project.$id}`}
+                href={`/workspaces/${project.workspaceId}/projects/${project.$id}`}
                 collapsable={collapsable}
                 icon={
                   <Avatar>

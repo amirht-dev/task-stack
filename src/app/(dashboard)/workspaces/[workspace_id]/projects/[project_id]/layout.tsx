@@ -4,6 +4,7 @@ import NavLink from '@/components/NavLink';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import useAuth from '@/features/auth/hooks/useAuth';
 import useProjectQuery from '@/features/projects/hooks/useProjectQuery';
 import useSelectWorkspace from '@/features/workspaces/hooks/useSelectWorkspace';
 import { NotFoundException } from '@/utils/exceptions';
@@ -16,8 +17,8 @@ import { GoChevronLeft } from 'react-icons/go';
 const ProjectLayout = ({
   children,
   params,
-}: LayoutProps<'/projects/[project_id]'>) => {
-  const { project_id } = use(params);
+}: LayoutProps<'/workspaces/[workspace_id]/projects/[project_id]'>) => {
+  const { project_id, workspace_id } = use(params);
   const {
     data: project,
     isSuccess,
@@ -26,9 +27,11 @@ const ProjectLayout = ({
     error,
   } = useProjectQuery(project_id);
   const { selectWorkspace } = useSelectWorkspace();
+  const { user } = useAuth();
+  const isUserIsOwner = project?.ownerId === user?.$id;
 
   useEffect(() => {
-    if (isSuccess) selectWorkspace(project.workspace);
+    if (isSuccess) selectWorkspace(project.workspaceId);
   }, [selectWorkspace, project, isSuccess]);
 
   if (isError && error instanceof NotFoundException) return notFound();
@@ -54,11 +57,6 @@ const ProjectLayout = ({
                     {project?.name}
                   </Skeleton>
                 </h3>
-                {/* <small className="text-xs text-muted-foreground">
-                  <Skeleton size="text" className="w-20" loading={isLoading}>
-                    {workspace && formatMembersCount(workspace.totalMembers)}
-                  </Skeleton>
-                </small> */}
               </div>
             </div>
 
@@ -103,32 +101,24 @@ const ProjectLayout = ({
               <TabsList size="sm">
                 <TabsTrigger value="overview" asChild>
                   <NavLink
-                    href={`/projects/${project_id}`}
-                    basePath={`/projects/${project_id}`}
+                    href={`/workspaces/${workspace_id}/projects/${project_id}`}
+                    basePath={`/workspaces/${workspace_id}/projects/${project_id}`}
                   >
                     Overview
                   </NavLink>
                 </TabsTrigger>
-                <TabsTrigger value="members" asChild>
-                  <NavLink
-                    href={`/projects/${project_id}/members`}
-                    basePath={`/projects/${project_id}`}
-                  >
-                    Members
-                  </NavLink>
-                </TabsTrigger>
-                <TabsTrigger value="projects" asChild>
-                  <NavLink
-                    href={`/projects/${project_id}/projects`}
-                    basePath={`/projects/${project_id}`}
-                  >
-                    Projects
-                  </NavLink>
-                </TabsTrigger>
+                {isUserIsOwner && (
+                  <TabsTrigger value="settings" asChild>
+                    <NavLink
+                      href={`/workspaces/${workspace_id}/projects/${project_id}/settings`}
+                      basePath={`/workspaces/${workspace_id}/projects/${project_id}`}
+                    >
+                      Settings
+                    </NavLink>
+                  </TabsTrigger>
+                )}
               </TabsList>
             </Tabs>
-
-            {/* <LeaveWorkspaceDialog /> */}
           </div>
         </div>
       </div>

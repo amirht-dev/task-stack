@@ -63,7 +63,7 @@ const CreateProjectModal = ({ trigger }: WorkspaceFormDialogProps) => {
     console.log(data);
 
     if (isSubmitting) return;
-    createProject(data);
+    createProject(data, { onSuccess: () => setOpen(false) });
   });
 
   return (
