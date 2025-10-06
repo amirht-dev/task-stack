@@ -25,9 +25,9 @@ export function getProjectsQueryOptions(workspaceId?: string) {
 function useProjectsQuery(workspaceId?: string) {
   const { selectedWorkspace } = useSelectWorkspace();
 
-  return useQuery(
-    getProjectsQueryOptions(workspaceId ?? selectedWorkspace?.$id)
-  );
+  const id = workspaceId ?? selectedWorkspace?.$id;
+
+  return useQuery(getProjectsQueryOptions(id));
 }
 
 export default useProjectsQuery;

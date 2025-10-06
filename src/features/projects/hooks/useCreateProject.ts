@@ -1,4 +1,3 @@
-import useSelectWorkspace from '@/features/workspaces/hooks/useSelectWorkspace';
 import sonner from '@/utils/toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createProjectAction } from '../actions';
@@ -7,8 +6,6 @@ import { getProjectsQueryOptions } from './useProjectsQuery';
 
 function useCreateProject() {
   const queryClient = useQueryClient();
-
-  const { selectedWorkspace } = useSelectWorkspace();
 
   return useMutation({
     mutationKey: ['create-project'],
@@ -24,13 +21,13 @@ function useCreateProject() {
       });
       return { toastId };
     },
-    onSuccess(_, __, onMutateResult) {
+    onSuccess(data, __, onMutateResult) {
       sonner.success({
         title: 'Project created',
         toastData: { id: onMutateResult?.toastId },
       });
       queryClient.invalidateQueries({
-        queryKey: getProjectsQueryOptions(selectedWorkspace?.$id).queryKey,
+        queryKey: getProjectsQueryOptions(data?.workspaceId).queryKey,
       });
     },
     onError(error, _, onMutateResult) {

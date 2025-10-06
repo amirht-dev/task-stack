@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import useAuth from '@/features/auth/hooks/useAuth';
+import ProjectNotFound from '@/features/projects/components/ProjectNotFound';
 import useProjectQuery from '@/features/projects/hooks/useProjectQuery';
 import useSelectWorkspace from '@/features/workspaces/hooks/useSelectWorkspace';
 import { NotFoundException } from '@/utils/exceptions';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
 import { use, useEffect } from 'react';
 import { GoChevronLeft } from 'react-icons/go';
 
@@ -34,7 +34,7 @@ const ProjectLayout = ({
     if (isSuccess) selectWorkspace(project.workspaceId);
   }, [selectWorkspace, project, isSuccess]);
 
-  if (isError && error instanceof NotFoundException) return notFound();
+  if (isError && error instanceof NotFoundException) return <ProjectNotFound />;
 
   return (
     <div className="flex flex-col h-full">
@@ -46,7 +46,7 @@ const ProjectLayout = ({
           <div className="flex flex-col sm:flex-row sm:justify-between gap-6">
             <div className="flex items-start gap-2">
               <Button variant="dim" size="icon" asChild>
-                <Link href="/workspaces">
+                <Link href={`/workspaces/${workspace_id}/projects`}>
                   <GoChevronLeft />
                 </Link>
               </Button>

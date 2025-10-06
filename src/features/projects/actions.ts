@@ -1,7 +1,7 @@
 'use server';
 
 import { getImageAction } from '@/actions';
-import { createSessionClient } from '@/lib/appwrite/server';
+import { createAdminClient, createSessionClient } from '@/lib/appwrite/server';
 import { handleResponse, unwrapDiscriminatedResponse } from '@/utils/server';
 import { Transaction } from '@/utils/transaction';
 import { ID, Permission, Query, Role } from 'node-appwrite';
@@ -20,6 +20,7 @@ export async function getProjectsAction({
 }) {
   return handleResponse(async () => {
     const { database } = await createSessionClient();
+    const { users } = await createAdminClient();
     const projectsList = await database.listRows<DatabaseProject>({
       databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
       tableId: process.env.NEXT_PUBLIC_APPWRITE_PROJECTS_ID,
@@ -32,8 +33,11 @@ export async function getProjectsAction({
           ? await getImageAction(project.imageId)
           : null;
 
+        const owner = await users.get({ userId: project.ownerId });
+
         return {
           ...project,
+          owner: { id: owner.$id, name: owner.name },
           image: image ? { id: image.info.$id, blob: image.image.blob } : null,
         };
       })
@@ -59,9 +63,7 @@ export async function createProjectAction({
       await getWorkspaceAction(workspaceId)
     );
 
-    const transaction = new Transaction({
-      onError: ({ operationName, error }) => console.log(operationName, error),
-    });
+    const transaction = new Transaction();
 
     const projectImage = await transaction.operation({
       name: 'upload image',
@@ -85,8 +87,9 @@ export async function createProjectAction({
 
     const project = await transaction.operation({
       name: 'create project',
-      fn: () =>
-        database.createRow<DatabaseProject>({
+      fn: async () => {
+        const admin = await createAdminClient();
+        const project = await database.createRow<DatabaseProject>({
           databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
           tableId: process.env.NEXT_PUBLIC_APPWRITE_PROJECTS_ID,
           rowId: ID.unique(),
@@ -96,14 +99,21 @@ export async function createProjectAction({
             ownerId: user.$id,
             imageId: projectImage?.$id ?? null,
           },
+        });
+
+        const updatedProject = await admin.database.updateRow<DatabaseProject>({
+          databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+          tableId: process.env.NEXT_PUBLIC_APPWRITE_PROJECTS_ID,
+          rowId: project.$id,
           permissions: [
             Permission.write(Role.user(user.$id)),
             Permission.read(Role.user(user.$id)),
-            Permission.write(Role.user(workspace.userId)),
-            Permission.read(Role.user(workspace.userId)),
+            Permission.write(Role.team(workspace.teamId, 'owner')),
             Permission.read(Role.team(workspace.teamId)),
           ],
-        }),
+        });
+        return updatedProject;
+      },
       rollbackFn: (project) =>
         database.deleteRow({
           databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
@@ -111,7 +121,6 @@ export async function createProjectAction({
           rowId: project.$id,
         }),
     })();
-    console.log({ project });
 
     transaction.handleThrowError();
 
@@ -262,34 +271,14 @@ export async function deleteProjectAction(projectId: string) {
     const transaction = new Transaction();
 
     await transaction.operation({
-      name: 'delete image',
-      fn: async () => {
-        if (currentProject.imageId)
-          storage.deleteFile({
-            bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
-            fileId: currentProject.imageId,
-          });
-      },
-      rollbackFn: () => {
-        if (image)
-          storage.createFile({
-            bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
-            fileId: image.info.$id,
-            file: new File([image.image.blob], image.info.name, {
-              type: image.info.mimeType,
-            }),
-          });
-      },
-    })();
-
-    await transaction.operation({
       name: 'delete project',
-      fn: async () =>
-        database.deleteRow({
+      fn: async () => {
+        return database.deleteRow({
           databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
           tableId: process.env.NEXT_PUBLIC_APPWRITE_PROJECTS_ID,
           rowId: projectId,
-        }),
+        });
+      },
       rollbackFn: () =>
         database.createRow<DatabaseProject>({
           databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
@@ -307,6 +296,101 @@ export async function deleteProjectAction(projectId: string) {
         }),
     })();
 
+    await transaction.operation({
+      name: 'delete image',
+      fn: async () => {
+        if (image)
+          storage.deleteFile({
+            bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
+            fileId: image.info.$id,
+          });
+      },
+      rollbackFn: async () => {
+        if (!image) return;
+        await storage.createFile({
+          bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
+          fileId: image.info.$id,
+          file: new File([image.image.blob], image.info.name, {
+            type: image.info.mimeType,
+          }),
+        });
+      },
+    })();
+
     transaction.handleThrowError();
+
+    return currentProject;
+  });
+}
+
+export async function deleteProjectsAction(projectIds: string[]) {
+  return handleResponse(async () => {
+    const { database, storage } = await createSessionClient();
+
+    const transaction = new Transaction();
+
+    const projects = await Promise.all(
+      projectIds.map(async (projectId) => {
+        const currentProject = unwrapDiscriminatedResponse(
+          await getProjectAction(projectId)
+        );
+
+        const image = currentProject.imageId
+          ? await getImageAction(currentProject.imageId)
+          : undefined;
+
+        await transaction.operation({
+          name: 'delete image',
+          fn: async () => {
+            if (currentProject.imageId)
+              storage.deleteFile({
+                bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
+                fileId: currentProject.imageId,
+              });
+          },
+          rollbackFn: () => {
+            if (image)
+              storage.createFile({
+                bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
+                fileId: image.info.$id,
+                file: new File([image.image.blob], image.info.name, {
+                  type: image.info.mimeType,
+                }),
+              });
+          },
+        })();
+
+        await transaction.operation({
+          name: 'delete project',
+          fn: async () =>
+            database.deleteRow({
+              databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+              tableId: process.env.NEXT_PUBLIC_APPWRITE_PROJECTS_ID,
+              rowId: projectId,
+            }),
+          rollbackFn: () =>
+            database.createRow<DatabaseProject>({
+              databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+              tableId: process.env.NEXT_PUBLIC_APPWRITE_PROJECTS_ID,
+              rowId: currentProject.$id,
+              data: {
+                name: currentProject.name,
+                ownerId: currentProject.ownerId,
+                imageId: currentProject.imageId,
+                workspaceId: currentProject.workspaceId,
+                $createdAt: currentProject.$createdAt,
+                $updatedAt: currentProject.$updatedAt,
+              },
+              permissions: currentProject.$permissions,
+            }),
+        })();
+
+        return currentProject;
+      })
+    );
+
+    transaction.handleThrowError();
+
+    return projects;
   });
 }

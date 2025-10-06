@@ -44,10 +44,11 @@ import {
   UpdateProjectImageFormSchema,
   UpdateProjectNameFormSchema,
 } from '@/features/projects/schemas';
+import useWorkspaceParam from '@/features/workspaces/hooks/useWorkspaceParam';
 import useWorkspaceQuery from '@/features/workspaces/hooks/useWorkspaceQuery';
 import { FileWithPreview } from '@/hooks/useFileUpload';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { redirect, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { use, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
@@ -57,14 +58,18 @@ const ProjectSettingsPage = ({
   const { project_id, workspace_id } = use(params);
   const project = useProjectQuery();
   const workspace = useWorkspaceQuery();
+  const router = useRouter();
 
   const { user } = useAuth();
 
   if (
-    (project.isSuccess && project.data.ownerId !== user?.$id) ||
-    (workspace.isSuccess && workspace.data.userId !== user?.$id)
+    user &&
+    project.isSuccess &&
+    project.data.ownerId !== user.$id &&
+    workspace.isSuccess &&
+    workspace.data.userId !== user.$id
   )
-    redirect(`/workspaces/${workspace_id}/projects/${project_id}`);
+    router.replace(`/workspaces/${workspace_id}/projects/${project_id}`);
 
   return (
     <div className="space-y-6">
@@ -208,11 +213,14 @@ function DeleteSection() {
   const [open, setOpen] = useState(false);
   const { isLoading, isSuccess, data: project } = useProjectQuery();
   const projectId = useProjectParam();
+  const workspace_id = useWorkspaceParam();
   const { mutate: deleteProject, isPending: isDeleting } = useDeleteProject();
   const router = useRouter();
 
   const handleDelete = () => {
-    deleteProject(projectId);
+    deleteProject(projectId, {
+      onSuccess: () => router.replace(`/workspaces/${workspace_id}/projects`),
+    });
     setOpen(false);
     if (project?.workspaceId)
       router.replace(`/workspaces/${project.workspaceId}/projects`);

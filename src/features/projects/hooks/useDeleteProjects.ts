@@ -1,16 +1,18 @@
+import useWorkspaceParam from '@/features/workspaces/hooks/useWorkspaceParam';
 import sonner from '@/utils/toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { deleteProjectAction } from '../actions';
+import { deleteProjectsAction } from '../actions';
 import { getProjectQueryOptions } from './useProjectQuery';
 import { getProjectsQueryOptions } from './useProjectsQuery';
 
-function useDeleteProject() {
+function useDeleteProjects() {
   const queryClient = useQueryClient();
+  const workspace_id = useWorkspaceParam();
 
   return useMutation({
     mutationKey: ['delete-project'],
-    mutationFn: async (projectId: string) => {
-      const res = await deleteProjectAction(projectId);
+    mutationFn: async (projectIds: string[]) => {
+      const res = await deleteProjectsAction(projectIds);
       if (!res.success) throw new Error(res.error.message);
       return res.data;
     },
@@ -22,16 +24,18 @@ function useDeleteProject() {
 
       return { toastId };
     },
-    onSuccess(project, __, onMutateResult) {
+    onSuccess(projects, __, onMutateResult) {
       sonner.success({
         title: 'Project deleted',
         toastData: { id: onMutateResult?.toastId },
       });
-      queryClient.removeQueries({
-        queryKey: getProjectQueryOptions(project.$id).queryKey,
-      });
+      projects.forEach((project) =>
+        queryClient.removeQueries({
+          queryKey: getProjectQueryOptions(project.$id).queryKey,
+        })
+      );
       queryClient.invalidateQueries({
-        queryKey: getProjectsQueryOptions(project.workspaceId).queryKey,
+        queryKey: getProjectsQueryOptions(workspace_id).queryKey,
       });
     },
     onError(error, _, onMutateResult) {
@@ -44,4 +48,4 @@ function useDeleteProject() {
   });
 }
 
-export default useDeleteProject;
+export default useDeleteProjects;

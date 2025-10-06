@@ -39,9 +39,13 @@ import { CreateProjectFormSchema } from '../schemas';
 
 type WorkspaceFormDialogProps = {
   trigger: ReactNode;
+  defaultWorkspaceId?: string;
 };
 
-const CreateProjectModal = ({ trigger }: WorkspaceFormDialogProps) => {
+const CreateProjectModal = ({
+  trigger,
+  defaultWorkspaceId,
+}: WorkspaceFormDialogProps) => {
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<FileWithPreview>();
   const workspaces = useWorkspacesQuery();
@@ -49,7 +53,7 @@ const CreateProjectModal = ({ trigger }: WorkspaceFormDialogProps) => {
   const form = useForm<CreateProjectFormSchema>({
     defaultValues: {
       name: '',
-      workspaceId: selectedWorkspace?.$id ?? '',
+      workspaceId: defaultWorkspaceId ?? selectedWorkspace?.$id ?? '',
       image: null,
     },
     disabled: workspaces.isLoading,
@@ -60,8 +64,6 @@ const CreateProjectModal = ({ trigger }: WorkspaceFormDialogProps) => {
   const { isSubmitting } = form.formState;
 
   const handleSubmit = form.handleSubmit(async (data) => {
-    console.log(data);
-
     if (isSubmitting) return;
     createProject(data, { onSuccess: () => setOpen(false) });
   });

@@ -1,3 +1,4 @@
+import { NotFoundException } from '@/utils/exceptions';
 import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getProjectAction } from '../actions';
 import useProjectParam from './useProjectParam';
@@ -8,6 +9,8 @@ export function getProjectQueryOptions(projectId: string) {
     queryKey: ['project', projectId],
     queryFn: async () => {
       const res = await getProjectAction(projectId);
+      if (!res.success && res.error.type === 'row_not_found')
+        throw new NotFoundException(res.error.message);
       if (!res.success) throw new Error(res.error.message);
       return {
         ...res.data,
@@ -15,6 +18,9 @@ export function getProjectQueryOptions(projectId: string) {
           ? { ...res.data.image, url: URL.createObjectURL(res.data.image.blob) }
           : null,
       };
+    },
+    retry(_, error) {
+      return error instanceof NotFoundException ? false : true;
     },
   });
 }
