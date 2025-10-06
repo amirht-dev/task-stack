@@ -7,11 +7,10 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import useAuth from '@/features/auth/hooks/useAuth';
 import ProjectNotFound from '@/features/projects/components/ProjectNotFound';
 import useProjectQuery from '@/features/projects/hooks/useProjectQuery';
-import useSelectWorkspace from '@/features/workspaces/hooks/useSelectWorkspace';
 import { NotFoundException } from '@/utils/exceptions';
 import { formatDistanceToNow } from 'date-fns/formatDistanceToNow';
 import Link from 'next/link';
-import { use, useEffect } from 'react';
+import { use } from 'react';
 import { GoChevronLeft } from 'react-icons/go';
 
 const ProjectLayout = ({
@@ -21,18 +20,12 @@ const ProjectLayout = ({
   const { project_id, workspace_id } = use(params);
   const {
     data: project,
-    isSuccess,
     isLoading,
     isError,
     error,
   } = useProjectQuery(project_id);
-  const { selectWorkspace } = useSelectWorkspace();
   const { user } = useAuth();
   const isUserIsOwner = project?.ownerId === user?.$id;
-
-  useEffect(() => {
-    if (isSuccess) selectWorkspace(project.workspaceId);
-  }, [selectWorkspace, project, isSuccess]);
 
   if (isError && error instanceof NotFoundException) return <ProjectNotFound />;
 
