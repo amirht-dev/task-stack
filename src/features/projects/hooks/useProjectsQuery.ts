@@ -22,12 +22,18 @@ export function getProjectsQueryOptions(workspaceId?: string) {
   });
 }
 
-function useProjectsQuery(workspaceId?: string) {
+function useProjectsQuery(
+  workspaceId?: string,
+  options?: Partial<ReturnType<typeof getProjectsQueryOptions>>
+) {
   const { selectedWorkspace } = useSelectWorkspace();
 
   const id = workspaceId ?? selectedWorkspace?.$id;
 
-  return useQuery(getProjectsQueryOptions(id));
+  return useQuery({
+    ...getProjectsQueryOptions(id),
+    ...options,
+  });
 }
 
 export default useProjectsQuery;

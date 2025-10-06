@@ -71,7 +71,7 @@ function AddNewDropdownMenu() {
           trigger={
             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
               <MdOutlineWorkspaces />
-              <span>add new workspace</span>
+              <span>create new workspace</span>
             </DropdownMenuItem>
           }
         />
