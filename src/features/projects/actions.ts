@@ -5,6 +5,8 @@ import { createAdminClient, createSessionClient } from '@/lib/appwrite/server';
 import { handleResponse, unwrapDiscriminatedResponse } from '@/utils/server';
 import { Transaction } from '@/utils/transaction';
 import { ID, Permission, Query, Role } from 'node-appwrite';
+import { deleteTasksAction, getTasksAction } from '../tasks/actions';
+import { DatabaseTask } from '../tasks/types';
 import { getWorkspaceAction } from '../workspaces/actions';
 import {
   CreateProjectFormSchema,
@@ -271,6 +273,27 @@ export async function deleteProjectAction(projectId: string) {
     const transaction = new Transaction();
 
     await transaction.operation({
+      name: 'delete project tasks',
+      fn: async () => {
+        const tasks = unwrapDiscriminatedResponse(
+          await getTasksAction(currentProject.$id)
+        );
+        const deletedTasks = unwrapDiscriminatedResponse(
+          await deleteTasksAction(tasks.map((task) => task.$id))
+        );
+        return deletedTasks;
+      },
+      rollbackFn: async (tasks) => {
+        const { database } = await createAdminClient();
+        database.createRows<DatabaseTask>({
+          databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+          tableId: process.env.NEXT_PUBLIC_APPWRITE_TASKS_ID,
+          rows: tasks,
+        });
+      },
+    })();
+
+    await transaction.operation({
       name: 'delete project',
       fn: async () => {
         return database.deleteRow({
@@ -325,71 +348,13 @@ export async function deleteProjectAction(projectId: string) {
 
 export async function deleteProjectsAction(projectIds: string[]) {
   return handleResponse(async () => {
-    const { database, storage } = await createSessionClient();
-
-    const transaction = new Transaction();
-
     const projects = await Promise.all(
       projectIds.map(async (projectId) => {
-        const currentProject = unwrapDiscriminatedResponse(
-          await getProjectAction(projectId)
+        return unwrapDiscriminatedResponse(
+          await deleteProjectAction(projectId)
         );
-
-        const image = currentProject.imageId
-          ? await getImageAction(currentProject.imageId)
-          : undefined;
-
-        await transaction.operation({
-          name: 'delete image',
-          fn: async () => {
-            if (currentProject.imageId)
-              storage.deleteFile({
-                bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
-                fileId: currentProject.imageId,
-              });
-          },
-          rollbackFn: () => {
-            if (image)
-              storage.createFile({
-                bucketId: process.env.NEXT_PUBLIC_APPWRITE_IMAGES_BUCKET_ID,
-                fileId: image.info.$id,
-                file: new File([image.image.blob], image.info.name, {
-                  type: image.info.mimeType,
-                }),
-              });
-          },
-        })();
-
-        await transaction.operation({
-          name: 'delete project',
-          fn: async () =>
-            database.deleteRow({
-              databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
-              tableId: process.env.NEXT_PUBLIC_APPWRITE_PROJECTS_ID,
-              rowId: projectId,
-            }),
-          rollbackFn: () =>
-            database.createRow<DatabaseProject>({
-              databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
-              tableId: process.env.NEXT_PUBLIC_APPWRITE_PROJECTS_ID,
-              rowId: currentProject.$id,
-              data: {
-                name: currentProject.name,
-                ownerId: currentProject.ownerId,
-                imageId: currentProject.imageId,
-                workspaceId: currentProject.workspaceId,
-                $createdAt: currentProject.$createdAt,
-                $updatedAt: currentProject.$updatedAt,
-              },
-              permissions: currentProject.$permissions,
-            }),
-        })();
-
-        return currentProject;
       })
     );
-
-    transaction.handleThrowError();
 
     return projects;
   });
