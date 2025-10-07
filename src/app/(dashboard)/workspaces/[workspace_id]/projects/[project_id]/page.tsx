@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import useProjectQuery from '@/features/projects/hooks/useProjectQuery';
 import CreateTaskModal from '@/features/tasks/components/CreateTaskModal';
+import TasksTable from '@/features/tasks/components/TasksTable';
 import { use } from 'react';
 import { MdAddTask } from 'react-icons/md';
 
@@ -50,7 +51,9 @@ const ProjectPage = ({
           )}
         </div>
 
-        <TabsContent value={tab.table.id}>table</TabsContent>
+        <TabsContent value={tab.table.id}>
+          <TasksTable />
+        </TabsContent>
         <TabsContent value={tab.kanban.id}>kanban</TabsContent>
         <TabsContent value={tab.calendar.id}>calendar</TabsContent>
       </Tabs>

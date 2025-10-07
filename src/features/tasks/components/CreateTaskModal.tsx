@@ -66,12 +66,10 @@ const CreateTaskModal = ({
   });
   const workspaceId = form.watch('workspaceId');
   const projects = useProjectsQuery(workspaceId, { enabled: !!workspaceId });
-  const { mutate: createTask } = useCreateTask();
-
-  const { isSubmitting } = form.formState;
+  const { mutate: createTask, isPending: isCreatingTask } = useCreateTask();
 
   const handleSubmit = form.handleSubmit(async (data) => {
-    if (isSubmitting) return;
+    if (isCreatingTask) return;
     createTask(data, {
       onSuccess: () => {
         setOpen(false);
@@ -250,19 +248,19 @@ const CreateTaskModal = ({
               <ResponsibleModalFooter>
                 <ResponsibleModalClose
                   onClick={() => form.reset()}
-                  disabled={isSubmitting}
+                  disabled={isCreatingTask}
                   asChild
                 >
                   <Button
                     variant="outline"
                     type="button"
-                    disabled={isSubmitting}
+                    disabled={isCreatingTask}
                   >
                     Cancel
                   </Button>
                 </ResponsibleModalClose>
 
-                <Button type="submit" disabled={isSubmitting}>
+                <Button type="submit" disabled={isCreatingTask}>
                   Add Task
                 </Button>
               </ResponsibleModalFooter>

@@ -1,4 +1,6 @@
+import { UseQueryResult } from '@tanstack/react-query';
 import { Models } from 'node-appwrite';
+import useTasksQuery from './hooks/useTasksQuery';
 
 export enum TaskStatus {
   BACKLOG = 'BACKLOG',
@@ -18,3 +20,7 @@ export type DatabaseTask = Models.Row & {
   workspaceId: string;
   assigneeId: string;
 };
+
+export type Tasks = Awaited<
+  ReturnType<typeof useTasksQuery> extends UseQueryResult<infer T> ? T : never
+>;

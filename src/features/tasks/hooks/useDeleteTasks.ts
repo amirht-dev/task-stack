@@ -1,36 +1,31 @@
 import useProjectParam from '@/features/projects/hooks/useProjectParam';
 import sonner from '@/utils/toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createTaskAction } from '../actions';
-import { CreateTaskFormSchema } from '../schemas';
+import { deleteTasksAction } from '../actions';
 import { getTasksQueryOptions } from './useTasksQuery';
 
-function useCreateTask() {
+function useDeleteTasks() {
   const queryClient = useQueryClient();
   const project_id = useProjectParam();
   return useMutation({
-    mutationKey: ['create-task'],
-    mutationFn: async (data: CreateTaskFormSchema) => {
-      const res = await createTaskAction(data);
+    mutationKey: ['delete-tasks'],
+    mutationFn: async (taskIds: string[]) => {
+      const res = await deleteTasksAction(taskIds);
       if (!res.success) throw new Error(res.error.message);
       return res.data;
     },
-    onMutate(variables) {
+    onMutate(taskIds) {
       const toastId = sonner.loading({
-        title: 'Creating task...',
-        toastData: {
-          id: `create-task-${variables.name}`,
-        },
+        title: `Deleting ${taskIds.length} tasks...`,
+        toastData: { id: `delete-tasks` },
       });
 
       return { toastId };
     },
     onSuccess(data, variables, onMutateResult) {
       sonner.success({
-        title: 'Task created',
-        toastData: {
-          id: onMutateResult?.toastId,
-        },
+        title: `All ${data.length} Tasks deleted`,
+        toastData: { id: onMutateResult?.toastId },
       });
       queryClient.invalidateQueries({
         queryKey: getTasksQueryOptions(project_id).queryKey,
@@ -38,14 +33,12 @@ function useCreateTask() {
     },
     onError(error, variables, onMutateResult) {
       sonner.error({
-        title: 'Failed to create Task',
+        title: `Failed to delete Tasks`,
         description: error.message,
-        toastData: {
-          id: onMutateResult?.toastId,
-        },
+        toastData: { id: onMutateResult?.toastId },
       });
     },
   });
 }
 
-export default useCreateTask;
+export default useDeleteTasks;
