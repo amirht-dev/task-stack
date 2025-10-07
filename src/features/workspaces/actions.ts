@@ -12,6 +12,7 @@ import { Transaction } from '@/utils/transaction';
 import { ID, Permission, Query, Role } from 'node-appwrite';
 import { ArrayValues } from 'type-fest';
 import { getMembersAction } from '../members/actions';
+import { deleteProjectsAction, getProjectsAction } from '../projects/actions';
 import {
   WorkspaceImageFormUpdateSchema,
   WorkspaceNameFormUpdateSchema,
@@ -320,6 +321,22 @@ export async function deleteWorkspaceAction(workspaceId: string) {
           },
           permissions: workspace.$permissions,
         }),
+    })();
+
+    await transaction.operation({
+      name: 'delete projects',
+      fn: async () => {
+        const projects = unwrapDiscriminatedResponse(
+          await getProjectsAction({ workspaceId })
+        );
+
+        return unwrapDiscriminatedResponse(
+          await deleteProjectsAction(
+            projects.rows.map((project) => project.$id)
+          )
+        );
+      },
+      rollbackFn: () => {},
     })();
 
     if (image)
