@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/Form';
 import { Input } from '@/components/ui/input';
 import { ProgressCircle } from '@/components/ui/progress';
+import { useGlobalStore } from '@/contexts/GlobalStoreContext';
 import useAuth from '@/features/auth/hooks/useAuth';
 import {
   deleteWorkspaceAction,
@@ -40,6 +41,7 @@ import {
   updateWorkspaceNameAction,
 } from '@/features/workspaces/actions';
 import WorkspaceImageInput from '@/features/workspaces/components/WorkspaceImageInput';
+import useSelectWorkspace from '@/features/workspaces/hooks/useSelectWorkspace';
 import useWorkspaceQuery from '@/features/workspaces/hooks/useWorkspaceQuery';
 import {
   WorkspaceImageFormUpdateSchema,
@@ -314,6 +316,8 @@ function DeleteWorkspaceSectionCard() {
   const queryClient = useQueryClient();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const { selectedWorkspace } = useSelectWorkspace();
+  const setWorkspace = useGlobalStore((state) => state.setWorkspace);
 
   const [pending, startTransition] = useTransition();
 
@@ -339,6 +343,7 @@ function DeleteWorkspaceSectionCard() {
         queryClient.invalidateQueries({
           queryKey: ['workspaces'],
         });
+        if (workspace_id === selectedWorkspace?.$id) setWorkspace(null);
         router.replace('/workspaces');
       } else {
         sonner.error({

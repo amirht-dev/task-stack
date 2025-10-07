@@ -222,8 +222,6 @@ function DeleteSection() {
       onSuccess: () => router.replace(`/workspaces/${workspace_id}/projects`),
     });
     setOpen(false);
-    if (project?.workspaceId)
-      router.replace(`/workspaces/${project.workspaceId}/projects`);
   };
 
   return (

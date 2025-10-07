@@ -19,19 +19,24 @@ import { useState } from 'react';
 import { BsThreeDots } from 'react-icons/bs';
 import { Tasks } from '../types';
 import DeleteTaskDialog from './DeleteTaskDialog';
+import useProjectParam from '@/features/projects/hooks/useProjectParam';
+import useProjectQuery from '@/features/projects/hooks/useProjectQuery';
 
 function TaskActions({ cell }: { cell: CellContext<Tasks[number], unknown> }) {
   const [open, setOpen] = useState(false);
   const workspace_id = useWorkspaceParam();
-  const { user, isAuthenticating, isUnauthenticated } = useAuth();
+  const project_id = useProjectParam();
+  const { user, isAuthenticating } = useAuth();
   const workspace = useWorkspaceQuery(workspace_id);
+  const project = useProjectQuery(project_id);
 
-  const isOwner = workspace.data?.userId === user?.$id;
+  const isWorkspaceOwner = workspace.data?.userId === user?.$id;
+  const isProjectOwner = project.data?.ownerId === user?.$id;
+
+  const isOwner = isWorkspaceOwner || isProjectOwner;
 
   if (isAuthenticating || workspace.isLoading)
     return <Skeleton size="box" className="size-8" />;
-
-  if (isUnauthenticated || !isOwner) return null;
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>

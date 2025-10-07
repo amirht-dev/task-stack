@@ -11,13 +11,14 @@ import { DatabaseTask } from './types';
 export async function createTaskAction(data: CreateTaskFormSchema) {
   return handleResponse(async () => {
     const { database, account } = await createSessionClient();
+    const admin = await createAdminClient();
     const user = await account.get();
 
     const workspace = unwrapDiscriminatedResponse(
       await getWorkspaceAction(data.workspaceId)
     );
 
-    return await database.createRow<DatabaseTask>({
+    const task = await database.createRow<DatabaseTask>({
       databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
       tableId: process.env.NEXT_PUBLIC_APPWRITE_TASKS_ID,
       rowId: ID.unique(),
@@ -26,6 +27,12 @@ export async function createTaskAction(data: CreateTaskFormSchema) {
         assigneeId: user.$id,
         order: data.order ?? 1,
       },
+    });
+
+    await admin.database.updateRow({
+      databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+      tableId: process.env.NEXT_PUBLIC_APPWRITE_TASKS_ID,
+      rowId: task.$id,
       permissions: [
         Permission.write(Role.user(user.$id)),
         Permission.read(Role.user(user.$id)),
@@ -34,6 +41,8 @@ export async function createTaskAction(data: CreateTaskFormSchema) {
         Permission.read(Role.team(workspace.teamId)),
       ],
     });
+
+    return task;
   });
 }
 

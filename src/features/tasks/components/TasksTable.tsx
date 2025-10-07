@@ -51,7 +51,7 @@ const TasksTable = () => {
   const workspace_id = useWorkspaceParam();
   const project_id = useProjectParam();
   const workspace = useWorkspaceQuery(workspace_id);
-  const project = useProjectQuery(workspace_id);
+  const project = useProjectQuery(project_id);
   const tasks = useTasksQuery(project_id);
   const { user } = useAuth();
 

@@ -2,9 +2,11 @@
 
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import useAuth from '@/features/auth/hooks/useAuth';
 import useProjectQuery from '@/features/projects/hooks/useProjectQuery';
 import CreateTaskModal from '@/features/tasks/components/CreateTaskModal';
 import TasksTable from '@/features/tasks/components/TasksTable';
+import useWorkspaceQuery from '@/features/workspaces/hooks/useWorkspaceQuery';
 import { use } from 'react';
 import { MdAddTask } from 'react-icons/md';
 
@@ -19,6 +21,14 @@ const ProjectPage = ({
 }: PageProps<'/workspaces/[workspace_id]/projects/[project_id]'>) => {
   const { project_id, workspace_id } = use(params);
   const project = useProjectQuery(project_id);
+  const workspace = useWorkspaceQuery(workspace_id);
+
+  const { user } = useAuth();
+
+  const isProjectOwner = project.data?.ownerId === user?.$id;
+  const isWorkspaceOwner = workspace.data?.userId === user?.$id;
+
+  const isOwner = isProjectOwner || isWorkspaceOwner;
 
   return (
     <div>
@@ -35,7 +45,7 @@ const ProjectPage = ({
             ))}
           </TabsList>
 
-          {project.isSuccess && (
+          {project.isSuccess && isOwner && (
             <CreateTaskModal
               defaultProjectId={project_id}
               defaultWorkspaceId={workspace_id}
