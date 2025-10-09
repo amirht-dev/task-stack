@@ -19,6 +19,7 @@ export function getAuthQueryOptions() {
         };
       else throw new Error(res.error.message);
     },
+    staleTime: 60 * 1000,
   });
 }
 

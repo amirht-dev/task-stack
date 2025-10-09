@@ -28,6 +28,7 @@ export function getWorkspaceQueryOptions(workspaceId: string) {
       if (error instanceof NotFoundException) return false;
       return failureCount < 3;
     },
+    staleTime: 60 * 1000,
   });
 }
 

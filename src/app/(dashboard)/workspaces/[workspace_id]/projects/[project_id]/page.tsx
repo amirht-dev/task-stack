@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import useAuth from '@/features/auth/hooks/useAuth';
 import useProjectQuery from '@/features/projects/hooks/useProjectQuery';
 import CreateTaskModal from '@/features/tasks/components/CreateTaskModal';
+import TasksKanban from '@/features/tasks/components/TasksKanban';
 import TasksTable from '@/features/tasks/components/TasksTable';
 import useWorkspaceQuery from '@/features/workspaces/hooks/useWorkspaceQuery';
 import { use } from 'react';
@@ -64,7 +65,9 @@ const ProjectPage = ({
         <TabsContent value={tab.table.id}>
           <TasksTable />
         </TabsContent>
-        <TabsContent value={tab.kanban.id}>kanban</TabsContent>
+        <TabsContent value={tab.kanban.id}>
+          <TasksKanban />
+        </TabsContent>
         <TabsContent value={tab.calendar.id}>calendar</TabsContent>
       </Tabs>
     </div>

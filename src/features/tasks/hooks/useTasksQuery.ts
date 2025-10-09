@@ -7,8 +7,21 @@ export function getTasksQueryOptions(projectId: string) {
     queryFn: async () => {
       const res = await getTasksAction(projectId);
       if (!res.success) throw new Error(res.error.message);
-      return res.data;
+
+      return res.data.map((task) => ({
+        ...task,
+        assignee: {
+          ...task.assignee,
+          avatar: task.assignee.avatar
+            ? {
+                ...task.assignee.avatar,
+                url: URL.createObjectURL(task.assignee.avatar.blob),
+              }
+            : null,
+        },
+      }));
     },
+    staleTime: 60 * 1000,
   });
 }
 

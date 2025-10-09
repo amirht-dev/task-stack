@@ -19,6 +19,7 @@ export function getProjectsQueryOptions(workspaceId?: string) {
         }
       : skipToken,
     enabled: !!workspaceId,
+    staleTime: 60 * 1000,
   });
 }
 

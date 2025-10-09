@@ -22,6 +22,7 @@ export function getProjectQueryOptions(projectId: string) {
     retry(_, error) {
       return error instanceof NotFoundException ? false : true;
     },
+    staleTime: 60 * 1000,
   });
 }
 
