@@ -12,6 +12,7 @@ import {
   createProfileAction,
   deleteProfileAsAdminAction,
   getProfileAction,
+  getProfileAsAdmin,
 } from '../profile/actions';
 import { setSessionCookie } from './utils/server';
 
@@ -139,3 +140,16 @@ export const getCurrentUserAction = async () => {
     };
   });
 };
+
+export async function getUserAsAdmin(userId: string) {
+  const { users } = await createAdminClient();
+
+  const user = await users.get({ userId });
+
+  const profile = await getProfileAsAdmin({ userId: user.$id });
+
+  return {
+    ...user,
+    profile,
+  };
+}

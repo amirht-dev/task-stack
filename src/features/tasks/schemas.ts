@@ -11,3 +11,16 @@ export const CreateTaskFormSchema = z.object({
   workspaceId: z.string().trim(),
 });
 export type CreateTaskFormSchema = z.infer<typeof CreateTaskFormSchema>;
+
+export const UpdateTaskFormSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(4, 'task name must be at least 4 characters')
+    .optional(),
+  description: z.string().optional(),
+  dueDate: z.iso.datetime().optional(),
+  status: z.enum(TaskStatus).optional(),
+  order: z.number().min(1, 'minimum number of order must be 1').optional(),
+});
+export type UpdateTaskFormSchema = z.infer<typeof UpdateTaskFormSchema>;

@@ -39,6 +39,7 @@ import compact from 'lodash/compact';
 import { Columns3 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useMemo } from 'react';
+import { BsThreeDots } from 'react-icons/bs';
 import useTasksQuery from '../hooks/useTasksQuery';
 import { Tasks } from '../types';
 import DeleteTaskDialog from './DeleteTaskDialog';
@@ -173,7 +174,14 @@ const TasksTable = () => {
             id: 'actions',
             cell: (props) => (
               <span className="flex items-center justify-center">
-                <TaskActions cell={props} />
+                <TaskActions
+                  task={props.row.original}
+                  trigger={
+                    <Button variant="ghost" size="icon">
+                      <BsThreeDots className="size-4" />
+                    </Button>
+                  }
+                />
               </span>
             ),
             meta: {

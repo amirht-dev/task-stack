@@ -3,9 +3,10 @@
 import { createAdminClient, createSessionClient } from '@/lib/appwrite/server';
 import { handleResponse, unwrapDiscriminatedResponse } from '@/utils/server';
 import { ID, Permission, Query, Role } from 'node-appwrite';
+import { getUserAsAdmin } from '../auth/actions';
 import { getProjectAction } from '../projects/actions';
 import { getWorkspaceAction } from '../workspaces/actions';
-import { CreateTaskFormSchema } from './schemas';
+import { CreateTaskFormSchema, UpdateTaskFormSchema } from './schemas';
 import { DatabaseTask } from './types';
 
 export async function createTaskAction(data: CreateTaskFormSchema) {
@@ -49,7 +50,6 @@ export async function createTaskAction(data: CreateTaskFormSchema) {
 export async function getTasksAction(projectId: string) {
   return handleResponse(async () => {
     const { database } = await createSessionClient();
-    const { users } = await createAdminClient();
 
     const tasksList = await database.listRows<DatabaseTask>({
       databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
@@ -59,13 +59,15 @@ export async function getTasksAction(projectId: string) {
 
     const populatedTasks = await Promise.all(
       tasksList.rows.map(async (task) => {
-        const project = unwrapDiscriminatedResponse(
-          await getProjectAction(task.projectId)
-        );
-        const workspace = unwrapDiscriminatedResponse(
-          await getWorkspaceAction(task.workspaceId)
-        );
-        const assignee = await users.get({ userId: task.assigneeId });
+        const [projectRes, workspaceRes, assignee] = await Promise.all([
+          getProjectAction(task.projectId),
+          getWorkspaceAction(task.workspaceId),
+          getUserAsAdmin(task.assigneeId),
+        ]);
+
+        const project = unwrapDiscriminatedResponse(projectRes);
+        const workspace = unwrapDiscriminatedResponse(workspaceRes);
+
         return {
           ...task,
           workspace,
@@ -73,6 +75,7 @@ export async function getTasksAction(projectId: string) {
           assignee: {
             id: assignee.$id,
             name: assignee.name,
+            avatar: assignee.profile.avatar,
           },
         };
       })
@@ -119,5 +122,21 @@ export async function deleteTasksAction(taskIds: string[]) {
     );
 
     return tasks.rows;
+  });
+}
+
+export async function updateTaskAction(
+  taskId: string,
+  changes: UpdateTaskFormSchema
+) {
+  return handleResponse(async () => {
+    const { database } = await createSessionClient();
+
+    return await database.updateRow<DatabaseTask>({
+      databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+      tableId: process.env.NEXT_PUBLIC_APPWRITE_TASKS_ID,
+      rowId: taskId,
+      data: changes,
+    });
   });
 }

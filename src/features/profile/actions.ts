@@ -4,7 +4,7 @@ import { getImageAction } from '@/actions';
 import { createAdminClient, createSessionClient } from '@/lib/appwrite/server';
 import { handleResponse, unwrapDiscriminatedResponse } from '@/utils/server';
 import { Transaction } from '@/utils/transaction';
-import { ID, Permission, Role } from 'node-appwrite';
+import { ID, Permission, Query, Role } from 'node-appwrite';
 import {
   UpdateProfileEmailFormSchema,
   UpdateProfilePasswordFormSchema,
@@ -41,6 +41,27 @@ export async function getProfileAction() {
 
     return profiles.rows[0];
   });
+}
+
+export async function getProfileAsAdmin({ userId }: { userId: string }) {
+  const { database } = await createAdminClient();
+
+  const profiles = await database.listRows<DatabaseProfile>({
+    databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+    tableId: process.env.NEXT_PUBLIC_APPWRITE_PROFILES_ID,
+    queries: [Query.equal('userId', userId), Query.limit(1)],
+  });
+
+  const profile = profiles.rows[0];
+
+  const avatar = profile.avatarImageId
+    ? await getImageAction(profile.avatarImageId)
+    : undefined;
+
+  return {
+    ...profile,
+    avatar: avatar ? { id: avatar.info.$id, blob: avatar.image.blob } : null,
+  };
 }
 
 export async function deleteProfileAction() {
