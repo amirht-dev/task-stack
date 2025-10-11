@@ -260,7 +260,11 @@ const FullCalendarCalendar = <T extends Event>({
   }, [current]);
 
   const sensors = useSensors(
-    useSensor(MouseSensor),
+    useSensor(MouseSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
     useSensor(TouchSensor, {
       activationConstraint: {
         delay: 500,

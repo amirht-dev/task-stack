@@ -17,6 +17,7 @@ import { taskStatusColorClassName } from '../constants';
 import useTasksQuery from '../hooks/useTasksQuery';
 import useUpdateTasks from '../hooks/useUpdateTasks';
 import { Tasks } from '../types';
+import EditTaskModal from './EditTaskModal';
 
 function mapTasksToEvents(tasks: Tasks) {
   return tasks?.map((task) => ({
@@ -114,16 +115,21 @@ function CalendarEventTask({
   ...props
 }: Omit<ComponentProps<'div'>, 'children'> & { task: Tasks[number] }) {
   return (
-    <div
-      {...props}
-      className={cn(
-        taskStatusColorClassName[task.status],
-        'p-1 text-xs text-nowrap text-ellipsis overflow-hidden rounded',
-        props.className
-      )}
-    >
-      {task.name}
-    </div>
+    <EditTaskModal
+      task={task}
+      trigger={
+        <div
+          {...props}
+          className={cn(
+            taskStatusColorClassName[task.status],
+            'p-1 text-xs text-nowrap text-ellipsis overflow-hidden rounded',
+            props.className
+          )}
+        >
+          {task.name}
+        </div>
+      }
+    />
   );
 }
 
