@@ -1,22 +1,13 @@
 import { Badge } from '@/components/ui/badge';
+import { taskStatusColorClassName } from '../constants';
 import { TaskStatus } from '../types';
 
 export type TaskStatusBadgeProps = {
   status: TaskStatus;
 };
 
-const statusColorClassNameMap: Record<TaskStatus, string> = {
-  BACKLOG:
-    'dark:bg-slate-800/50 dark:border-slate-400 dark:dark:text-slate-400',
-  TODO: 'dark:bg-indigo-800/50 dark:border-indigo-400 dark:dark:text-indigo-400',
-  IN_PROGRESS:
-    'dark:bg-teal-800/50 dark:border-teal-400 dark:dark:text-teal-400',
-  IN_REVIEW: 'dark:bg-rose-800/50 dark:border-rose-400 dark:dark:text-rose-400',
-  DONE: 'dark:bg-green-800/50 dark:border-green-400 dark:text-green-400',
-};
-
 const TaskStatusBadge = ({ status }: TaskStatusBadgeProps) => {
-  return <Badge className={statusColorClassNameMap[status]}>{status}</Badge>;
+  return <Badge className={taskStatusColorClassName[status]}>{status}</Badge>;
 };
 
 export default TaskStatusBadge;

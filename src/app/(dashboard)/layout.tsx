@@ -9,10 +9,10 @@ const DashboardLayout = async ({ children }: LayoutProps<'/'>) => {
   return (
     <>
       <SetPasswordAlertDialog />
-      <div className="h-dvh flex bg-background text-foreground">
+      <div className="h-dvh flex bg-background text-foreground overflow-hidden max-w-screen">
         <CollapsableSidebar />
 
-        <div className="flex-1 flex flex-col h-full">
+        <div className="flex-1 min-w-0 flex flex-col h-full max-w-screen">
           <Navbar />
           <div className="flex-1 overflow-y-auto">{children}</div>
         </div>
