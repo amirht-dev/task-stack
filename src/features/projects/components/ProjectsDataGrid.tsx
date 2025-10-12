@@ -1,5 +1,6 @@
 'use client';
 
+import ColumnVisibilitySwitcher from '@/components/ColumnVisibilitySwitcher';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,7 +14,6 @@ import {
 } from '@/components/ui/card';
 import { DataGrid } from '@/components/ui/data-grid';
 import { DataGridColumnHeader } from '@/components/ui/data-grid-column-header';
-import { DataGridColumnVisibility } from '@/components/ui/data-grid-column-visibility';
 import { DataGridPagination } from '@/components/ui/data-grid-pagination';
 import {
   DataGridTable,
@@ -35,7 +35,6 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import compact from 'lodash/compact';
-import { Columns3 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
 import { useMemo } from 'react';
@@ -189,14 +188,7 @@ const ProjectsDataGrid = () => {
           <CardHeader className="py-3.5">
             <CardTitle>Projects</CardTitle>
             <CardToolbar>
-              <DataGridColumnVisibility
-                table={table}
-                trigger={
-                  <Button variant="outline" size="icon">
-                    <Columns3 />
-                  </Button>
-                }
-              />
+              <ColumnVisibilitySwitcher table={table} />
               <DataGridCreateProjectModal />
             </CardToolbar>
           </CardHeader>

@@ -1,5 +1,6 @@
 'use client';
 
+import ColumnVisibilitySwitcher from '@/components/ColumnVisibilitySwitcher';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -12,7 +13,6 @@ import {
 } from '@/components/ui/card';
 import { DataGrid } from '@/components/ui/data-grid';
 import { DataGridColumnHeader } from '@/components/ui/data-grid-column-header';
-import { DataGridColumnVisibility } from '@/components/ui/data-grid-column-visibility';
 import { DataGridPagination } from '@/components/ui/data-grid-pagination';
 import {
   DataGridTable,
@@ -36,7 +36,6 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import compact from 'lodash/compact';
-import { Columns3 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useMemo } from 'react';
 import { BsThreeDots } from 'react-icons/bs';
@@ -91,6 +90,7 @@ const TasksTable = () => {
           })
         : undefined,
       columnHelper.accessor('name', {
+        id: 'name',
         header: ({ column }) => (
           <DataGridColumnHeader
             title="Name"
@@ -121,7 +121,7 @@ const TasksTable = () => {
         },
       }),
       columnHelper.accessor('dueDate', {
-        id: 'Due Date',
+        id: 'due Date',
         header: ({ column }) => (
           <DataGridColumnHeader
             title="Due date"
@@ -139,7 +139,7 @@ const TasksTable = () => {
         },
       }),
       columnHelper.accessor('assignee.name', {
-        id: 'Assignee',
+        id: 'assignee',
         header: ({ column }) => (
           <DataGridColumnHeader
             title="Assignee"
@@ -155,7 +155,7 @@ const TasksTable = () => {
         },
       }),
       columnHelper.accessor('status', {
-        id: 'Status',
+        id: 'status',
         header: ({ column }) => (
           <DataGridColumnHeader
             title="Status"
@@ -221,14 +221,7 @@ const TasksTable = () => {
           <CardHeader className="py-3.5">
             <CardTitle>Tasks</CardTitle>
             <CardToolbar>
-              <DataGridColumnVisibility
-                table={table}
-                trigger={
-                  <Button variant="outline" size="icon">
-                    <Columns3 />
-                  </Button>
-                }
-              />
+              <ColumnVisibilitySwitcher table={table} />
             </CardToolbar>
           </CardHeader>
           <CardTable>

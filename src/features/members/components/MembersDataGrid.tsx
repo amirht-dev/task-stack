@@ -1,5 +1,6 @@
 'use client';
 
+import ColumnVisibilitySwitcher from '@/components/ColumnVisibilitySwitcher';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,7 +14,6 @@ import {
 } from '@/components/ui/card';
 import { DataGrid } from '@/components/ui/data-grid';
 import { DataGridColumnHeader } from '@/components/ui/data-grid-column-header';
-import { DataGridColumnVisibility } from '@/components/ui/data-grid-column-visibility';
 import { DataGridPagination } from '@/components/ui/data-grid-pagination';
 import {
   DataGridTable,
@@ -35,7 +35,6 @@ import {
 } from '@tanstack/react-table';
 import { Models } from 'appwrite';
 import compact from 'lodash/compact';
-import { Columns3 } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useMemo } from 'react';
 import MemberActions from './MemberActions';
@@ -216,14 +215,7 @@ const MembersDataGrid = ({ workspaceId }: { workspaceId: string }) => {
           <CardHeader className="py-3.5">
             <CardTitle>Members</CardTitle>
             <CardToolbar>
-              <DataGridColumnVisibility
-                table={table}
-                trigger={
-                  <Button variant="outline" size="icon">
-                    <Columns3 />
-                  </Button>
-                }
-              />
+              <ColumnVisibilitySwitcher table={table} />
               {isOwner && workspace.isSuccess && (
                 <InviteMemberDialog
                   teamId={workspace.data?.teamId}
