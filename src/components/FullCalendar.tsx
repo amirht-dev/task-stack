@@ -166,7 +166,7 @@ const FullCalendarDayCell = ({
         'p-2 bg-background flex flex-col aspect-square rounded text-xs md:text-sm overflow-hidden',
         _isSameMonth
           ? 'dark:text-white text-neutral-950'
-          : 'text-muted-foreground',
+          : 'text-muted-foreground line-pattern bg-center',
         isToday(date) && 'bg-primary/10',
         selected && isSameDay(selected, date) && 'border-primary border',
         disabled &&
