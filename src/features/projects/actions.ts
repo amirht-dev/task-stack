@@ -278,12 +278,13 @@ export async function deleteProjectAction(projectId: string) {
         const tasks = unwrapDiscriminatedResponse(
           await getTasksAction(currentProject.$id)
         );
-        const deletedTasks = unwrapDiscriminatedResponse(
-          await deleteTasksAction(tasks.map((task) => task.$id))
-        );
-        return deletedTasks;
+        if (tasks.length)
+          return unwrapDiscriminatedResponse(
+            await deleteTasksAction(tasks.map((task) => task.$id))
+          );
       },
       rollbackFn: async (tasks) => {
+        if (!tasks) return;
         const { database } = await createAdminClient();
         database.createRows<DatabaseTask>({
           databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
