@@ -1,6 +1,7 @@
 import { Table } from '@tanstack/react-table';
 import { Columns3 } from 'lucide-react';
 import { useMemo } from 'react';
+import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { DataGridColumnVisibility } from './ui/data-grid-column-visibility';
 
@@ -22,9 +23,9 @@ function ColumnVisibilitySwitcher({ table }: { table: Table<any> }) {
       trigger={
         <Button variant="outline">
           <Columns3 />
-          <span className="text-xs dark:bg-secondary dark:text-secondary-foreground bg-secondary flex items-center justify-center text-secondary-foreground size-5 rounded">
+          <Badge size="sm" variant="outline">
             {visibleColumnsCount}
-          </span>
+          </Badge>
         </Button>
       }
     />

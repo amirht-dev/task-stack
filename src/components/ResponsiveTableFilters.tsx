@@ -43,6 +43,7 @@ import {
   ComboboxValue,
   ComboboxValueType,
 } from './Combobox';
+import { Badge } from './ui/badge';
 import {
   Select,
   SelectContent,
@@ -89,9 +90,9 @@ function ResponsiveTableFilter({
           <Button variant="outline">
             <HiOutlineFilter />
             <span>Filters</span>
-            <span className="size-5 bg-secondary text-secondary-foreground rounded">
+            <Badge size="sm" variant="outline">
               {table.getState().columnFilters.length}
-            </span>
+            </Badge>
           </Button>
         </PopoverTrigger>
 
@@ -108,9 +109,9 @@ function ResponsiveTableFilter({
       <DrawerTrigger asChild>
         <Button variant="outline">
           <HiOutlineFilter />
-          <span className="size-5 bg-secondary text-secondary-foreground rounded">
-            2
-          </span>
+          <Badge size="sm" variant="outline">
+            {table.getState().columnFilters.length}
+          </Badge>
         </Button>
       </DrawerTrigger>
 
