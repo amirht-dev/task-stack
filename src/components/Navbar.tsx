@@ -27,14 +27,6 @@ const Navbar = () => {
   return (
     <div className="bg-secondary text-secondary-foreground border-b border-neutral-200 dark:border-neutral-700">
       <div className="container h-16 flex items-center">
-        {isDesktop && (
-          <div className="flex flex-col">
-            <span className="text-lg font-semibold">Home</span>
-            <span className="text-neutral-600 text-sm text-nowrap">
-              Monitor all your projects and tasks here
-            </span>
-          </div>
-        )}
         {isDesktop && sidebarState === 'collapsed' && (
           <WorkspaceSwitcher classname="ms-4 max-w-[250px]" />
         )}
