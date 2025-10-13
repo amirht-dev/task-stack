@@ -1,6 +1,12 @@
 'use client';
 
 import ColumnVisibilitySwitcher from '@/components/ColumnVisibilitySwitcher';
+import {
+  ResponsiveTableFilter,
+  TableComboboxFilter,
+  TableSearchFilter,
+  TableSelectFilter,
+} from '@/components/ResponsiveTableFilters';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -30,6 +36,8 @@ import useWorkspaceQuery from '@/features/workspaces/hooks/useWorkspaceQuery';
 import {
   createColumnHelper,
   getCoreRowModel,
+  getFacetedUniqueValues,
+  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   Table,
@@ -40,7 +48,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useMemo } from 'react';
 import { BsThreeDots } from 'react-icons/bs';
 import useTasksQuery from '../hooks/useTasksQuery';
-import { Tasks } from '../types';
+import { Tasks, TaskStatus } from '../types';
 import DeleteTaskDialog from './DeleteTaskDialog';
 import TaskActions from './TaskActions';
 import TaskStatusBadge from './TaskStatusBadge';
@@ -167,6 +175,7 @@ const TasksTable = () => {
         meta: {
           skeleton: <Skeleton className="w-16 h-7" />,
         },
+        filterFn: 'arrIncludesSome',
       }),
       isOwner
         ? columnHelper.display({
@@ -203,7 +212,14 @@ const TasksTable = () => {
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getFacetedUniqueValues: getFacetedUniqueValues(),
     enableRowSelection: () => isOwner,
+    globalFilterFn: (row, columnId, value) =>
+      !!(
+        row.original.name.includes(value) ||
+        row.original.description?.includes(value)
+      ),
   });
 
   return (
@@ -221,6 +237,43 @@ const TasksTable = () => {
           <CardHeader className="py-3.5">
             <CardTitle>Tasks</CardTitle>
             <CardToolbar>
+              <ResponsiveTableFilter table={table}>
+                <TableSearchFilter />
+                <TableSelectFilter
+                  placeholder="select assignee"
+                  column="assignee"
+                  valuePrefix={<span>assignee: </span>}
+                />
+                <TableComboboxFilter
+                  column="status"
+                  multiple
+                  searchInput={false}
+                  placeholder="select status"
+                  renderValueLabel={(values) => {
+                    const _values = values.slice();
+                    const visibleValues = _values.splice(0, 2);
+                    return (
+                      <div className="space-x-2">
+                        {visibleValues.map(({ value, api }) => (
+                          <TaskStatusBadge
+                            key={value}
+                            status={value as TaskStatus}
+                            onRemove={api.remove}
+                          />
+                        ))}
+                        {_values.length > 0 && (
+                          <span className="text-muted-foreground">
+                            + {_values.length} more
+                          </span>
+                        )}
+                      </div>
+                    );
+                  }}
+                  renderItem={(option) => (
+                    <TaskStatusBadge status={option.value as TaskStatus} />
+                  )}
+                />
+              </ResponsiveTableFilter>
               <ColumnVisibilitySwitcher table={table} />
             </CardToolbar>
           </CardHeader>

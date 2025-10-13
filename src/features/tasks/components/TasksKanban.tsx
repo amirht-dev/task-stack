@@ -30,19 +30,12 @@ import { FaArrowsRotate } from 'react-icons/fa6';
 import { IoSaveOutline } from 'react-icons/io5';
 import { twJoin } from 'tailwind-merge';
 import { Entries, Merge } from 'type-fest';
+import { taskStatusLabelMap } from '../constants';
 import useTasksQuery from '../hooks/useTasksQuery';
 import useUpdateTask from '../hooks/useUpdateTask';
 import { Tasks, TaskStatus } from '../types';
 import { groupTasksByStatus } from '../utils';
 import TaskActions from './TaskActions';
-
-const COLUMN_TITLES: Record<TaskStatus, string> = {
-  BACKLOG: 'Backlog',
-  TODO: 'Todo',
-  IN_PROGRESS: 'In Progress',
-  IN_REVIEW: 'Review',
-  DONE: 'Done',
-};
 
 interface TaskCardProps
   extends Omit<React.ComponentProps<typeof KanbanItem>, 'value' | 'children'> {
@@ -143,7 +136,9 @@ function TaskColumn({
     >
       <div className="flex items-center justify-between mb-2.5">
         <div className="flex items-center gap-2.5">
-          <span className="font-semibold text-sm">{COLUMN_TITLES[value]}</span>
+          <span className="font-semibold text-sm">
+            {taskStatusLabelMap[value]}
+          </span>
           <Badge variant="secondary">{tasks.length}</Badge>
         </div>
         {draggable && (

@@ -3,6 +3,7 @@ import QueryClientProvider from '@/providers/QueryClientProvider';
 import type { Metadata } from 'next';
 import { ThemeProvider } from 'next-themes';
 import { Inter } from 'next/font/google';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { Toaster } from 'sonner';
 import './globals.css';
 
@@ -13,15 +14,15 @@ export const metadata: Metadata = {
   description: 'an application for managing tasks',
 };
 
-export default function RootLayout({
-  children,
-}: LayoutProps<'/'>) {
+export default function RootLayout({ children }: LayoutProps<'/'>) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body className={`text-base antialiased ${inter.className}`}>
         <QueryClientProvider>
           <GlobalStoreProvider>
-            <ThemeProvider attribute="class">{children}</ThemeProvider>
+            <ThemeProvider attribute="class">
+              <NuqsAdapter>{children}</NuqsAdapter>
+            </ThemeProvider>
           </GlobalStoreProvider>
         </QueryClientProvider>
         <Toaster position="top-center" />

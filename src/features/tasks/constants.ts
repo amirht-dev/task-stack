@@ -9,3 +9,11 @@ export const taskStatusColorClassName: Record<TaskStatus, string> = {
   IN_REVIEW: 'dark:bg-rose-800/50 dark:border-rose-400 dark:dark:text-rose-400',
   DONE: 'dark:bg-green-800/50 dark:border-green-400 dark:text-green-400',
 };
+
+export const taskStatusLabelMap: Record<TaskStatus, string> = {
+  BACKLOG: 'Backlog',
+  TODO: 'Todo',
+  IN_PROGRESS: 'In Progress',
+  IN_REVIEW: 'Review',
+  DONE: 'Done',
+};
