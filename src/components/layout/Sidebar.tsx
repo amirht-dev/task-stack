@@ -128,7 +128,7 @@ const SidebarNavLink = ({
   if ((collapsable && isExpanded) || !collapsable)
     return (
       <Button
-        className="block justify-start"
+        className="block justify-start shadow-none"
         variant={isActive ? 'primary' : 'secondary'}
         asChild
       >
