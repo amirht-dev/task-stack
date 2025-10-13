@@ -1,6 +1,11 @@
 'use client';
 
 import ColumnVisibilitySwitcher from '@/components/ColumnVisibilitySwitcher';
+import {
+  ResponsiveTableFilter,
+  TableColumnSearchFilter,
+  TableSelectFilter,
+} from '@/components/ResponsiveTableFilters';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,6 +34,8 @@ import useIsDesktop from '@/hooks/useIsDesktop';
 import {
   createColumnHelper,
   getCoreRowModel,
+  getFacetedUniqueValues,
+  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   Table,
@@ -102,13 +109,14 @@ const ProjectsDataGrid = () => {
             <span className="text-nowrap">{cell.getValue()}</span>
           </span>
         ),
+        filterFn: 'includesString',
         enableHiding: false,
         meta: {
           skeleton: <Skeleton className="w-20 h-7" />,
         },
       }),
       columnHelper.accessor('owner.name', {
-        id: 'Owner',
+        id: 'owner',
         header: ({ column }) => (
           <DataGridColumnHeader
             title="Owner"
@@ -119,6 +127,7 @@ const ProjectsDataGrid = () => {
         cell: (props) => (
           <span className="text-nowrap">{props.getValue() || '-'}</span>
         ),
+        filterFn: 'equalsString',
         meta: {
           skeleton: <Skeleton className="w-40 h-7" />,
         },
@@ -169,6 +178,8 @@ const ProjectsDataGrid = () => {
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getFacetedUniqueValues: getFacetedUniqueValues(),
+    getFilteredRowModel: getFilteredRowModel(),
     enableRowSelection: () => isOwner,
   });
 
@@ -188,6 +199,14 @@ const ProjectsDataGrid = () => {
           <CardHeader className="py-3.5">
             <CardTitle>Projects</CardTitle>
             <CardToolbar>
+              <ResponsiveTableFilter table={table}>
+                <TableColumnSearchFilter column="name" />
+                <TableSelectFilter
+                  column="owner"
+                  placeholder="select owner"
+                  valuePrefix="owner: "
+                />
+              </ResponsiveTableFilter>
               <ColumnVisibilitySwitcher table={table} />
               <DataGridCreateProjectModal />
             </CardToolbar>

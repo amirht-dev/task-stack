@@ -4,7 +4,7 @@ import ColumnVisibilitySwitcher from '@/components/ColumnVisibilitySwitcher';
 import {
   ResponsiveTableFilter,
   TableComboboxFilter,
-  TableSearchFilter,
+  TableGlobalSearchFilter,
   TableSelectFilter,
 } from '@/components/ResponsiveTableFilters';
 import { Button } from '@/components/ui/button';
@@ -238,7 +238,7 @@ const TasksTable = () => {
             <CardTitle>Tasks</CardTitle>
             <CardToolbar>
               <ResponsiveTableFilter table={table}>
-                <TableSearchFilter />
+                <TableGlobalSearchFilter />
                 <TableSelectFilter
                   placeholder="select assignee"
                   column="assignee"

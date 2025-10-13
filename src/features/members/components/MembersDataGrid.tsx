@@ -1,6 +1,11 @@
 'use client';
 
 import ColumnVisibilitySwitcher from '@/components/ColumnVisibilitySwitcher';
+import {
+  ResponsiveTableFilter,
+  TableGlobalSearchFilter,
+  TableSelectFilter,
+} from '@/components/ResponsiveTableFilters';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,6 +33,8 @@ import useWorkspaceQuery from '@/features/workspaces/hooks/useWorkspaceQuery';
 import {
   createColumnHelper,
   getCoreRowModel,
+  getFacetedUniqueValues,
+  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   Table,
@@ -106,6 +113,7 @@ const MembersDataGrid = ({ workspaceId }: { workspaceId: string }) => {
         },
       }),
       columnHelper.accessor('roles', {
+        id: 'roles',
         header: ({ column }) => (
           <DataGridColumnHeader
             title="Roles"
@@ -124,6 +132,7 @@ const MembersDataGrid = ({ workspaceId }: { workspaceId: string }) => {
               {role}
             </Badge>
           )),
+        filterFn: 'equalsString',
         meta: {
           skeleton: <Skeleton className="w-16 h-7" />,
         },
@@ -143,31 +152,35 @@ const MembersDataGrid = ({ workspaceId }: { workspaceId: string }) => {
           cellClassName: 'text-nowrap',
         },
       }),
-      columnHelper.accessor('confirm', {
-        id: 'status',
-        header: ({ column }) => (
-          <DataGridColumnHeader
-            title="Status"
-            visibility={true}
-            column={column}
-          />
-        ),
-        cell: (props) => {
-          const isConfirmed = props.getValue();
+      columnHelper.accessor(
+        (row) => (row.confirm ? 'confirmed' : 'unconfirmed'),
+        {
+          id: 'status',
+          header: ({ column }) => (
+            <DataGridColumnHeader
+              title="Status"
+              visibility={true}
+              column={column}
+            />
+          ),
+          cell: (props) => {
+            const isConfirmed = props.row.original.confirm;
 
-          return (
-            <Badge
-              variant={isConfirmed ? 'success' : 'warning'}
-              appearance="outline"
-            >
-              {isConfirmed ? 'confirmed' : 'unconfirmed'}
-            </Badge>
-          );
-        },
-        meta: {
-          skeleton: <Skeleton className="w-16 h-7" />,
-        },
-      }),
+            return (
+              <Badge
+                variant={isConfirmed ? 'success' : 'warning'}
+                appearance="outline"
+              >
+                {isConfirmed ? 'confirmed' : 'unconfirmed'}
+              </Badge>
+            );
+          },
+          filterFn: 'equalsString',
+          meta: {
+            skeleton: <Skeleton className="w-16 h-7" />,
+          },
+        }
+      ),
       isOwner
         ? columnHelper.display({
             header: '',
@@ -196,7 +209,12 @@ const MembersDataGrid = ({ workspaceId }: { workspaceId: string }) => {
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getFacetedUniqueValues: getFacetedUniqueValues(),
     enableRowSelection: (row) => !row.original.roles.includes('owner'),
+    globalFilterFn: (row, columnId, value) =>
+      row.original.userName.includes(value) ||
+      row.original.userEmail.includes(value),
   });
 
   return (
@@ -215,6 +233,11 @@ const MembersDataGrid = ({ workspaceId }: { workspaceId: string }) => {
           <CardHeader className="py-3.5">
             <CardTitle>Members</CardTitle>
             <CardToolbar>
+              <ResponsiveTableFilter table={table}>
+                <TableGlobalSearchFilter />
+                <TableSelectFilter column="roles" valuePrefix="role: " />
+                <TableSelectFilter column="status" valuePrefix="status: " />
+              </ResponsiveTableFilter>
               <ColumnVisibilitySwitcher table={table} />
               {isOwner && workspace.isSuccess && (
                 <InviteMemberDialog

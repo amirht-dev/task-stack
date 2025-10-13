@@ -108,7 +108,6 @@ function ResponsiveTableFilter({
       <DrawerTrigger asChild>
         <Button variant="outline">
           <HiOutlineFilter />
-          <span>Filters</span>
           <span className="size-5 bg-secondary text-secondary-foreground rounded">
             2
           </span>
@@ -127,11 +126,67 @@ function ResponsiveTableFilter({
   );
 }
 
+type TableColumnSearchFilterProps = ComponentProps<typeof Input> & {
+  debounceDelay?: number;
+  column: string;
+};
+
+const TableColumnSearchFilter = ({
+  debounceDelay = 500,
+  column,
+  ...props
+}: TableColumnSearchFilterProps) => {
+  const { table } = useResponsiveTableFilterContext();
+  const _column = useMemo(() => table.getColumn(column), [column, table]);
+  const [value, setValue] = useState<string>(() => {
+    const filterValue = _column?.getFilterValue();
+    return typeof filterValue === 'string' ? filterValue : '';
+  });
+  const debouncedValue = useDebounce(value, debounceDelay);
+
+  useEffect(() => {
+    if (!_column) return;
+    if (!value) _column.setFilterValue('');
+  }, [value, _column]);
+
+  useEffect(() => {
+    _column?.setFilterValue(debouncedValue);
+  }, [debouncedValue, _column]);
+
+  const handleClear = () => setValue('');
+
+  return (
+    <InputWrapper>
+      <Input
+        placeholder={`search ${column}...`}
+        {...props}
+        value={value}
+        onChange={(e) => {
+          props.onChange?.(e);
+          if (e.isDefaultPrevented() || props.disabled) return;
+
+          setValue(e.target.value);
+        }}
+      />
+      {value && (
+        <Button
+          variant="dim"
+          size="icon"
+          onClick={handleClear}
+          className="size-auto"
+        >
+          <X size={16} />
+        </Button>
+      )}
+    </InputWrapper>
+  );
+};
+
 type TableFilterSearchProps = ComponentProps<typeof Input> & {
   debounceDelay?: number;
 };
 
-const TableSearchFilter = ({
+const TableGlobalSearchFilter = ({
   debounceDelay = 500,
   ...props
 }: TableFilterSearchProps) => {
@@ -362,7 +417,8 @@ const TableComboboxFilter = <T extends ComboboxValueType>({
 
 export {
   ResponsiveTableFilter,
+  TableColumnSearchFilter,
   TableComboboxFilter,
-  TableSearchFilter,
+  TableGlobalSearchFilter,
   TableSelectFilter,
 };
