@@ -1,6 +1,6 @@
 'use client';
 
-import { verifyEmailVerificationAction } from '@/features/auth/actions';
+import { verifyEmailVerificationAction } from '@/features/profile/actions';
 import sonner from '@/utils/toast';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
