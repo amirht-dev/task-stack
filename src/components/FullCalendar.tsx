@@ -174,7 +174,15 @@ const FullCalendarDayCell = ({
         className
       )}
     >
-      <span className="shrink-0">{date.getDate()}</span>
+      <span
+        className={twJoin(
+          'shrink-0',
+          isToday(date) &&
+            'bg-primary text-primary-foreground size-5 flex items-center justify-center rounded-full'
+        )}
+      >
+        {date.getDate()}
+      </span>
       <div className="flex flex-1 min-w-0 overflow-y-auto [&>*]:shrink-0 flex-col gap-1 mt-2">
         {children}
       </div>
