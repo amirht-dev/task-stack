@@ -3,7 +3,6 @@
 
 import { cn } from '@/lib/utils';
 import {
-  Active,
   defaultDropAnimation,
   defaultDropAnimationSideEffects,
   DndContext,
@@ -13,8 +12,8 @@ import {
   DragStartEvent,
   DropAnimation,
   KeyboardSensor,
-  Over,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   UniqueIdentifier,
   useSensor,
   useSensors,
@@ -118,9 +117,15 @@ function Kanban<T>({
   const [activeId, setActiveId] = React.useState<UniqueIdentifier | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
       activationConstraint: {
         distance: 10,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 500,
+        tolerance: 5,
       },
     }),
     useSensor(KeyboardSensor, {
