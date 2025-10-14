@@ -2,7 +2,6 @@ import sonner from '@/utils/toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateTaskAction } from '../actions';
 import { UpdateTaskFormSchema } from '../schemas';
-import { getTasksQueryOptions } from './useTasksQuery';
 
 function useUpdateTask() {
   const queryClient = useQueryClient();
@@ -36,7 +35,9 @@ function useUpdateTask() {
           id: onMutateResult?.toastId,
         },
       });
-      queryClient.invalidateQueries(getTasksQueryOptions(data.projectId));
+      queryClient.invalidateQueries({
+        queryKey: ['project', data.projectId],
+      });
     },
     onError(error, variables, onMutateResult) {
       sonner.error({

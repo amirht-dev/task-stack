@@ -2,7 +2,6 @@ import useProjectParam from '@/features/projects/hooks/useProjectParam';
 import sonner from '@/utils/toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteTaskAction } from '../actions';
-import { getTasksQueryOptions } from './useTasksQuery';
 
 function useDeleteTask() {
   const queryClient = useQueryClient();
@@ -28,7 +27,7 @@ function useDeleteTask() {
         toastData: { id: onMutateResult?.toastId },
       });
       queryClient.invalidateQueries({
-        queryKey: getTasksQueryOptions(project_id).queryKey,
+        queryKey: ['project', project_id],
       });
     },
     onError(error, variables, onMutateResult) {

@@ -33,7 +33,7 @@ function useCreateTask() {
         },
       });
       queryClient.invalidateQueries({
-        queryKey: getTasksQueryOptions(project_id).queryKey,
+        queryKey: ['project', project_id],
       });
     },
     onError(error, variables, onMutateResult) {

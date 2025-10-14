@@ -46,8 +46,9 @@ function useUpdateTasks() {
           id: onMutateResult?.toastId,
         },
       });
+
       await queryClient.invalidateQueries({
-        queryKey: getTasksQueryOptions(project_id).queryKey,
+        queryKey: ['project', project_id],
       });
     },
     onError(error, variables, onMutateResult) {

@@ -3,13 +3,15 @@
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import useAuth from '@/features/auth/hooks/useAuth';
+import { getProjectAnalyticsAction } from '@/features/projects/actions';
+import ProjectAnalytics from '@/features/projects/components/ProjectAnalytics';
 import useProjectQuery from '@/features/projects/hooks/useProjectQuery';
 import CreateTaskModal from '@/features/tasks/components/CreateTaskModal';
 import TasksCalendar from '@/features/tasks/components/TasksCalendar';
 import TasksKanban from '@/features/tasks/components/TasksKanban';
 import TasksTable from '@/features/tasks/components/TasksTable';
 import useWorkspaceQuery from '@/features/workspaces/hooks/useWorkspaceQuery';
-import { use } from 'react';
+import { use, useEffect } from 'react';
 import { MdAddTask } from 'react-icons/md';
 
 const tab = {
@@ -32,8 +34,13 @@ const ProjectPage = ({
 
   const isOwner = isProjectOwner || isWorkspaceOwner;
 
+  useEffect(() => {
+    getProjectAnalyticsAction(project_id).then((res) => console.log(res));
+  }, [project_id]);
+
   return (
-    <div>
+    <div className="space-y-4">
+      <ProjectAnalytics />
       <Tabs defaultValue={tab.table.id}>
         <div className="flex flex-col justify-between gap-4 md:flex-row">
           <TabsList

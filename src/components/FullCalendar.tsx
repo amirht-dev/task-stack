@@ -389,9 +389,9 @@ const FullCalendarCurrentValue = ({
       {format(
         current,
         formatString === 'short'
-          ? 'MMM'
+          ? 'MMM YYY'
           : formatString === 'full'
-          ? 'MMMM'
+          ? 'MMMM YYY'
           : formatString
       )}
     </span>
