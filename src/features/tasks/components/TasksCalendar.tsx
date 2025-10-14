@@ -18,6 +18,9 @@ import useTasksQuery from '../hooks/useTasksQuery';
 import useUpdateTasks from '../hooks/useUpdateTasks';
 import { Tasks } from '../types';
 import EditTaskModal from './EditTaskModal';
+import useProjectQuery from '@/features/projects/hooks/useProjectQuery';
+import useWorkspaceQuery from '@/features/workspaces/hooks/useWorkspaceQuery';
+import useAuth from '@/features/auth/hooks/useAuth';
 
 function mapTasksToEvents(tasks: Tasks) {
   return tasks?.map((task) => ({
@@ -39,6 +42,12 @@ const TasksCalendar = () => {
     isFetching: isFetchingTasks,
   } = useTasksQuery(project_id);
   const { mutate: updateTasks, isPending: isUpdatingTasks } = useUpdateTasks();
+  const { data: project } = useProjectQuery();
+  const { data: workspace } = useWorkspaceQuery();
+  const { user } = useAuth();
+
+  const isOwner =
+    project?.ownerId === user?.$id || workspace?.userId === user?.$id;
 
   const [events, setEvents] = useState<TaskEvent[]>(() =>
     tasks ? mapTasksToEvents(tasks) : []
@@ -103,6 +112,7 @@ const TasksCalendar = () => {
                 <CalendarEventTask key={event.id} task={event.task} />
               )}
               disabled={isUpdatingTasks}
+              readonly={!isOwner}
             />
           </CardContent>
         </FullCalendar>

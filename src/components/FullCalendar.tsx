@@ -48,7 +48,7 @@ import {
   useState,
 } from 'react';
 import { twJoin } from 'tailwind-merge';
-import { LiteralUnion } from 'type-fest';
+import { LiteralUnion, Merge } from 'type-fest';
 import { Button } from './ui/button';
 import { ScrollArea, ScrollBar } from './ui/scroll-area';
 
@@ -242,21 +242,25 @@ const FullCalendarHeader = (props: ComponentProps<'div'>) => {
   );
 };
 
-const FullCalendarCalendar = <T extends Event>({
-  disablePast = false,
-  switchToMonthOnSelectDay = true,
-  events = [],
-  disabled,
-  onEventsChange,
-  renderEvent,
-}: {
+type FullCalendarCalendarProps<T> = {
   disablePast?: boolean;
   switchToMonthOnSelectDay?: boolean;
   events?: T[];
   onEventsChange?: (events: T[]) => void;
   renderEvent?: (event: T) => ReactNode;
   disabled?: boolean;
-}) => {
+  readonly?: boolean;
+};
+
+const FullCalendarCalendar = <T extends Event>({
+  disablePast = false,
+  switchToMonthOnSelectDay = true,
+  events = [],
+  disabled,
+  readonly = false,
+  onEventsChange,
+  renderEvent,
+}: FullCalendarCalendarProps<T>) => {
   const { current } = useCalendarContext();
   const [activeEvent, setActiveEvent] = useState<T | null>(null);
 
@@ -349,6 +353,7 @@ const FullCalendarCalendar = <T extends Event>({
                     event={event}
                     key={event.id}
                     disabled={disabled}
+                    readonly={readonly}
                   >
                     {renderEvent?.(event) ?? (
                       <FullCalendarEvent event={event} />
@@ -393,18 +398,25 @@ const FullCalendarCurrentValue = ({
   );
 };
 
+type FullCalendarEventDragWrapperProps = PropsWithAsChild<
+  Merge<
+    ComponentProps<'div'>,
+    { event: Event; disabled?: boolean; readonly?: boolean }
+  >
+>;
+
 const FullCalendarEventDragWrapper = ({
   event,
   asChild,
   disabled = false,
+  readonly = false,
   ...props
-}: ComponentProps<'div'> &
-  PropsWithAsChild<{ event: Event; disabled?: boolean }>) => {
+}: FullCalendarEventDragWrapperProps) => {
   const { setNodeRef, listeners, attributes, transform, isDragging } =
     useDraggable({
       id: event.id,
       data: { event } satisfies DraggableData,
-      disabled,
+      disabled: disabled || readonly,
     });
 
   if (isDragging) return null;
@@ -417,6 +429,9 @@ const FullCalendarEventDragWrapper = ({
       {...attributes}
       {...props}
       ref={setNodeRef}
+      data-dragging={isDragging}
+      data-disabled={disabled}
+      data-readonly={readonly}
       style={{ ...props.style, transform: CSS.Translate.toString(transform) }}
       className={cn(
         isDragging ? 'cursor-grabbing' : 'cursor-grab',
