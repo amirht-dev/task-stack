@@ -2,6 +2,7 @@ import { NotFoundException } from '@/utils/exceptions';
 import { queryOptions, useQuery } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import { getWorkspaceAction } from '../actions';
+import useWorkspaceParam from './useWorkspaceParam';
 
 export function getWorkspaceQueryOptions(workspaceId: string) {
   return queryOptions({
@@ -34,7 +35,8 @@ export function getWorkspaceQueryOptions(workspaceId: string) {
 
 function useWorkspaceQuery(workspaceId?: string) {
   // const queryClient = useQueryClient();
-  const { workspace_id } = useParams<{ workspace_id: string }>();
+  // const { workspace_id } = useParams<{ workspace_id: string }>();
+  const workspace_id = useWorkspaceParam();
   const id = workspaceId ?? workspace_id;
   if (!id)
     throw new Error(

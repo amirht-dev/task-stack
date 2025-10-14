@@ -456,6 +456,7 @@ export interface KanbanItemProps {
   className?: string;
   children: React.ReactNode;
   disabled?: boolean;
+  readonly?: boolean;
 }
 
 function KanbanItem({
@@ -464,7 +465,9 @@ function KanbanItem({
   className,
   children,
   disabled,
+  readonly = false,
 }: KanbanItemProps) {
+  const { activeId, isColumn } = React.useContext(KanbanContext);
   const {
     setNodeRef,
     transform,
@@ -474,10 +477,9 @@ function KanbanItem({
     isDragging: isSortableDragging,
   } = useSortable({
     id: value,
-    disabled,
+    disabled: disabled || readonly,
   });
 
-  const { activeId, isColumn } = React.useContext(KanbanContext);
   const isItemDragging = activeId ? !isColumn(activeId) : false;
 
   const style = {
@@ -496,6 +498,7 @@ function KanbanItem({
         data-value={value}
         data-dragging={isSortableDragging}
         data-disabled={disabled}
+        data-readonly={readonly}
         ref={setNodeRef}
         style={style}
         {...attributes}

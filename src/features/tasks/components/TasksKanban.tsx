@@ -36,6 +36,13 @@ import useUpdateTask from '../hooks/useUpdateTask';
 import { Tasks, TaskStatus } from '../types';
 import { groupTasksByStatus } from '../utils';
 import TaskActions from './TaskActions';
+import useProjectQuery from '@/features/projects/hooks/useProjectQuery';
+import useWorkspaceQuery from '@/features/workspaces/hooks/useWorkspaceQuery';
+import useAuth from '@/features/auth/hooks/useAuth';
+
+const TasksKanbanContext = React.createContext({
+  readonly: false,
+});
 
 interface TaskCardProps
   extends Omit<React.ComponentProps<typeof KanbanItem>, 'value' | 'children'> {
@@ -45,6 +52,7 @@ interface TaskCardProps
 
 function TaskCard({ task, asHandle, ...props }: TaskCardProps) {
   const [show, setShow] = React.useState(false);
+  const { readonly } = React.useContext(TasksKanbanContext);
 
   const desc = task.description ?? '';
 
@@ -53,14 +61,16 @@ function TaskCard({ task, asHandle, ...props }: TaskCardProps) {
       <div className="flex flex-col gap-2.5 flex-1">
         <div className="flex items-center justify-between gap-2">
           <span className="line-clamp-1 font-medium text-sm">{task.name}</span>
-          <TaskActions
-            task={task}
-            trigger={
-              <Button variant="ghost" size="icon" className="size-6">
-                <BsThreeDotsVertical className="size-3" />
-              </Button>
-            }
-          />
+          {!readonly && (
+            <TaskActions
+              task={task}
+              trigger={
+                <Button variant="ghost" size="icon" className="size-6">
+                  <BsThreeDotsVertical className="size-3" />
+                </Button>
+              }
+            />
+          )}
         </div>
         <p className="text-xs text-muted-foreground" title={desc}>
           {desc?.length > 40 ? desc?.substring(0, show ? Infinity : 40) : desc}{' '}
@@ -99,7 +109,7 @@ function TaskCard({ task, asHandle, ...props }: TaskCardProps) {
   );
 
   return (
-    <KanbanItem value={task.$id} {...props}>
+    <KanbanItem readonly={readonly} value={task.$id} {...props}>
       {asHandle ? (
         <KanbanItemHandle>{cardContent}</KanbanItemHandle>
       ) : (
@@ -180,6 +190,12 @@ export default function TasksKanban() {
     groupTasksByStatus(tasks ?? [])
   );
   const { mutate: updateTask, isPending: isUpdatingTask } = useUpdateTask();
+  const { data: project } = useProjectQuery();
+  const { data: workspace } = useWorkspaceQuery();
+  const { user } = useAuth();
+
+  const isOwner =
+    project?.ownerId === user?.$id || workspace?.userId === user?.$id;
 
   React.useEffect(() => {
     if (isTasksSuccess) setColumns(groupTasksByStatus(tasks));
@@ -248,46 +264,48 @@ export default function TasksKanban() {
         </CardToolbar>
       </CardHeader>
       <CardContent>
-        <Kanban
-          value={columns}
-          onValueChange={handleValueChange}
-          getItemValue={(item) => item.$id}
-        >
-          <KanbanBoard className="grid max-sm:items-start auto-rows-auto sm:auto-rows-fr sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {(Object.entries(columns) as Entries<typeof columns>).map(
-              ([columnValue, tasks]) => (
-                <TaskColumn
-                  key={columnValue}
-                  isLoading={isTasksLoading}
-                  value={columnValue}
-                  tasks={tasks}
-                />
-              )
-            )}
-          </KanbanBoard>
-          <KanbanOverlay>
-            {({ value, variant }) => {
-              if (variant === 'column') {
-                const tasks = columns[value as TaskStatus];
-                return (
+        <TasksKanbanContext.Provider value={{ readonly: !isOwner }}>
+          <Kanban
+            value={columns}
+            onValueChange={handleValueChange}
+            getItemValue={(item) => item.$id}
+          >
+            <KanbanBoard className="grid max-sm:items-start auto-rows-auto sm:auto-rows-fr sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              {(Object.entries(columns) as Entries<typeof columns>).map(
+                ([columnValue, tasks]) => (
                   <TaskColumn
-                    value={value.toString() as TaskStatus}
+                    key={columnValue}
+                    isLoading={isTasksLoading}
+                    value={columnValue}
                     tasks={tasks}
-                    isOverlay
                   />
-                );
-              }
+                )
+              )}
+            </KanbanBoard>
+            <KanbanOverlay>
+              {({ value, variant }) => {
+                if (variant === 'column') {
+                  const tasks = columns[value as TaskStatus];
+                  return (
+                    <TaskColumn
+                      value={value.toString() as TaskStatus}
+                      tasks={tasks}
+                      isOverlay
+                    />
+                  );
+                }
 
-              const task = Object.values(columns)
-                .flat()
-                .find((task) => task.$id === value);
+                const task = Object.values(columns)
+                  .flat()
+                  .find((task) => task.$id === value);
 
-              if (!task) return null;
+                if (!task) return null;
 
-              return <TaskCard task={task} />;
-            }}
-          </KanbanOverlay>
-        </Kanban>
+                return <TaskCard task={task} />;
+              }}
+            </KanbanOverlay>
+          </Kanban>
+        </TasksKanbanContext.Provider>
       </CardContent>
     </Card>
   );
