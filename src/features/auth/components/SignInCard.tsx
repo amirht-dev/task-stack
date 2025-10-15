@@ -24,8 +24,8 @@ const SignInCard = () => {
   const { signIn } = useSignIn();
   const form = useForm<SignInSchemaType>({
     defaultValues: {
-      email: '',
-      password: '',
+      email: 'test@gmail.com',
+      password: '12345678',
     },
     resolver: zodResolver(signInSchema),
   });
