@@ -1,4 +1,5 @@
 import useProjectParam from '@/features/projects/hooks/useProjectParam';
+import useWorkspaceParam from '@/features/workspaces/hooks/useWorkspaceParam';
 import sonner from '@/utils/toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateTaskAction } from '../actions';
@@ -7,7 +8,10 @@ import { getTasksQueryOptions } from './useTasksQuery';
 
 function useUpdateTasks() {
   const queryClient = useQueryClient();
+
   const project_id = useProjectParam();
+  const workspace_id = useWorkspaceParam();
+
   return useMutation({
     mutationKey: ['update-tasks'],
     mutationFn: async (
@@ -46,8 +50,10 @@ function useUpdateTasks() {
           id: onMutateResult?.toastId,
         },
       });
-
-      await queryClient.invalidateQueries({
+      queryClient.invalidateQueries({
+        queryKey: ['workspace', workspace_id, 'analytics'],
+      });
+      queryClient.invalidateQueries({
         queryKey: ['project', project_id],
       });
     },

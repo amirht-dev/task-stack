@@ -4,6 +4,7 @@ import NavLink from '@/components/NavLink';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import useAuth from '@/features/auth/hooks/useAuth';
 import LeaveWorkspaceDialog from '@/features/workspaces/components/LeaveWorkspaceDialog';
 import WorkspaceNotFound from '@/features/workspaces/components/WorkspaceNotFound';
 import useWorkspaceQuery from '@/features/workspaces/hooks/useWorkspaceQuery';
@@ -25,9 +26,12 @@ const WorkspaceLayout = ({
     isError,
     error,
   } = useWorkspaceQuery(workspace_id);
+  const { user } = useAuth();
 
   if (isError && error instanceof NotFoundException)
     return <WorkspaceNotFound />;
+
+  const isOwner = workspace?.userId === user?.$id;
 
   return (
     <div className="flex flex-col h-full">
@@ -121,6 +125,16 @@ const WorkspaceLayout = ({
                     Projects
                   </NavLink>
                 </TabsTrigger>
+                {isOwner && (
+                  <TabsTrigger value="settings" asChild>
+                    <NavLink
+                      href={`/workspaces/${workspace_id}/settings`}
+                      basePath={`/workspaces/${workspace_id}`}
+                    >
+                      Settings
+                    </NavLink>
+                  </TabsTrigger>
+                )}
               </TabsList>
             </Tabs>
 

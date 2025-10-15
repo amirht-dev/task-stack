@@ -1,11 +1,15 @@
 import useProjectParam from '@/features/projects/hooks/useProjectParam';
+import useWorkspaceParam from '@/features/workspaces/hooks/useWorkspaceParam';
 import sonner from '@/utils/toast';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { deleteTasksAction } from '../actions';
 
 function useDeleteTasks() {
   const queryClient = useQueryClient();
+
   const project_id = useProjectParam();
+  const workspace_id = useWorkspaceParam();
+
   return useMutation({
     mutationKey: ['delete-tasks'],
     mutationFn: async (taskIds: string[]) => {
@@ -28,6 +32,9 @@ function useDeleteTasks() {
       });
       queryClient.invalidateQueries({
         queryKey: ['project', project_id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ['workspace', workspace_id, 'analytics'],
       });
     },
     onError(error, variables, onMutateResult) {

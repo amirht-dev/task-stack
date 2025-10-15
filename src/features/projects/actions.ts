@@ -22,6 +22,7 @@ import {
   UpdateProjectNameFormSchema,
 } from './schemas';
 import { DatabaseProject } from './types';
+import { getMonthInterval } from '@/lib/utils';
 
 export async function getProjectsAction({
   workspaceId,
@@ -367,10 +368,6 @@ export async function deleteProjectsAction(projectIds: string[]) {
 
     return projects;
   });
-}
-
-function getMonthInterval(month: Date) {
-  return interval(startOfMonth(month), endOfMonth(month));
 }
 
 export async function getProjectAnalyticsAction(projectId: string) {

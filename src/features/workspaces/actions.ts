@@ -7,12 +7,15 @@ import {
   ResponseWorkspaces,
 } from '@/features/workspaces/types';
 import { createAdminClient, createSessionClient } from '@/lib/appwrite/server';
+import { getMonthInterval } from '@/lib/utils';
 import { handleResponse, unwrapDiscriminatedResponse } from '@/utils/server';
 import { Transaction } from '@/utils/transaction';
+import { isBefore, isWithinInterval, subMonths } from 'date-fns';
 import { ID, Permission, Query, Role } from 'node-appwrite';
 import { ArrayValues } from 'type-fest';
 import { getMembersAction } from '../members/actions';
 import { deleteProjectsAction, getProjectsAction } from '../projects/actions';
+import { DatabaseTask, TaskStatus } from '../tasks/types';
 import {
   WorkspaceImageFormUpdateSchema,
   WorkspaceNameFormUpdateSchema,
@@ -387,5 +390,86 @@ export async function leaveWorkspaceAction({
       );
 
     await Teams.deleteMembership({ teamId, membershipId });
+  });
+}
+
+export async function getWorkspaceAnalyticsAction(workspaceId: string) {
+  return handleResponse(async () => {
+    const { database, account } = await createSessionClient();
+    const user = await account.get();
+
+    const now = new Date();
+    const currentMonthInterval = getMonthInterval(now);
+    const lastMonthInterval = getMonthInterval(subMonths(now, 1));
+
+    const tasks = await database.listRows<DatabaseTask>({
+      databaseId: process.env.NEXT_PUBLIC_APPWRITE_DATABASE_ID,
+      tableId: process.env.NEXT_PUBLIC_APPWRITE_TASKS_ID,
+      queries: [
+        Query.equal('workspaceId', workspaceId),
+        Query.greaterThanEqual(
+          '$createdAt',
+          lastMonthInterval.start.toISOString()
+        ),
+      ],
+    });
+
+    const lastMonthTasks = tasks.rows.filter((task) =>
+      isWithinInterval(task.$createdAt, lastMonthInterval)
+    );
+    const currentMonthTasks = tasks.rows.filter((task) =>
+      isWithinInterval(task.$createdAt, currentMonthInterval)
+    );
+    const differenceTasksCount =
+      currentMonthTasks.length - lastMonthTasks.length;
+
+    const currentMonthAssigneeTasks = currentMonthTasks.filter(
+      (task) => task.assigneeId === user.$id
+    );
+    const lastMonthAssigneeTasks = lastMonthTasks.filter(
+      (task) => task.assigneeId === user.$id
+    );
+    const differenceAssigneeTasksCount =
+      currentMonthAssigneeTasks.length - lastMonthAssigneeTasks.length;
+
+    const currentMonthIncompleteTasks = currentMonthTasks.filter(
+      (task) => task.status !== TaskStatus.DONE
+    );
+    const lastMonthIncompleteTasks = lastMonthTasks.filter(
+      (task) => task.status !== TaskStatus.DONE
+    );
+    const differenceIncompleteTasksCount =
+      currentMonthIncompleteTasks.length - lastMonthIncompleteTasks.length;
+
+    const currentMonthCompletedTasks = currentMonthTasks.filter(
+      (task) => task.status !== TaskStatus.DONE
+    );
+    const lastMonthCompletedTasks = lastMonthTasks.filter(
+      (task) => task.status !== TaskStatus.DONE
+    );
+    const differenceCompletedTasksCount =
+      currentMonthCompletedTasks.length - lastMonthCompletedTasks.length;
+
+    const currentMonthOverDueTasks = currentMonthTasks.filter(
+      (task) => task.status !== TaskStatus.DONE && isBefore(task.dueDate, now)
+    );
+    const lastMonthOverDueTasks = lastMonthTasks.filter(
+      (task) => task.status !== TaskStatus.DONE && isBefore(task.dueDate, now)
+    );
+    const differenceOverDueTasksCount =
+      currentMonthOverDueTasks.length - lastMonthOverDueTasks.length;
+
+    return {
+      tasksCount: currentMonthTasks.length,
+      differenceTasksCount,
+      assigneeTasksCount: currentMonthAssigneeTasks.length,
+      differenceAssigneeTasksCount,
+      incompleteTasksCount: currentMonthIncompleteTasks.length,
+      differenceIncompleteTasksCount,
+      completedTasksCount: currentMonthCompletedTasks.length,
+      differenceCompletedTasksCount,
+      overDueTasksCount: currentMonthOverDueTasks.length,
+      differenceOverDueTasksCount,
+    };
   });
 }
