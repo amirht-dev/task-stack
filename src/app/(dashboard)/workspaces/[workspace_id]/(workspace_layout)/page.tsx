@@ -3,17 +3,32 @@
 import AnalyticCard, { AnalyticSkeletonCard } from '@/components/AnalyticCard';
 import ErrorCard from '@/components/ErrorCard';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardToolbar,
+} from '@/components/ui/card';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
+import MemberCard, {
+  MemberCardSkeleton,
+} from '@/features/members/components/MemberCard';
+import useMembersQuery from '@/features/members/hooks/useMembersQuery';
 import useWorkspaceAnalyticsQuery from '@/features/workspaces/hooks/useWorkspaceAnalyticsQuery';
+import useWorkspaceParam from '@/features/workspaces/hooks/useWorkspaceParam';
 import useWorkspaceQuery from '@/features/workspaces/hooks/useWorkspaceQuery';
 import { formatAvatarFallback } from '@/features/workspaces/utils';
+import Link from 'next/link';
 
 const WorkspaceOverviewPage = ({}: PageProps<'/workspaces/[workspace_id]'>) => {
   return (
-    <div className="space-y-4 lg:space-y-6">
+    <div className="gap-4 lg:gap-6 grid grid-cols-1 lg:grid-cols-2">
       <WorkspaceInfoCard />
       <WorkspaceAnalytics />
+      <MembersCard />
     </div>
   );
 };
@@ -31,7 +46,7 @@ function WorkspaceInfoCard() {
   if (isErrorWorkspace) return 'error';
 
   return (
-    <Card className="">
+    <Card className="col-span-2">
       <CardContent>
         <div className="flex items-center gap-4 md:gap-8">
           {isLoadingWorkspace ? (
@@ -83,7 +98,7 @@ function WorkspaceAnalytics() {
   if (isErrorAnalytics && !isRefetching)
     return (
       <ErrorCard
-        className="h-[116px]"
+        className="h-[116px] col-span-2"
         title="Failed to load analytics"
         onRetry={() => refetch()}
       />
@@ -92,7 +107,7 @@ function WorkspaceAnalytics() {
   const isLoading = isLoadingAnalytics || (isErrorAnalytics && isRefetching);
 
   return (
-    <div className="w-full">
+    <div className="w-full col-span-2">
       <div className="flex overflow-x-auto max-w-full gap-4 snap-x snap-mandatory">
         {isLoading
           ? Array.from({ length: 5 }, (_, idx) => (
@@ -129,5 +144,53 @@ function WorkspaceAnalytics() {
             )}
       </div>
     </div>
+  );
+}
+
+function MembersCard() {
+  const workspace_id = useWorkspaceParam();
+  const { data, isLoading, isSuccess, isError, isRefetching, refetch } =
+    useMembersQuery({ workspaceId: workspace_id });
+
+  if (isError && !isRefetching)
+    return (
+      <ErrorCard
+        title="Failed to load members"
+        className="h-[220px]"
+        onRetry={() => refetch()}
+      />
+    );
+
+  return (
+    <Card className="h-[220px]">
+      <CardHeader>
+        <CardTitle>Members</CardTitle>
+        <CardToolbar>
+          <Button asChild variant="dim">
+            <Link href={`${workspace_id}/members`}>Show All</Link>
+          </Button>
+        </CardToolbar>
+      </CardHeader>
+
+      <CardContent>
+        <ScrollArea>
+          <ScrollBar orientation="horizontal" />
+          <div className="flex gap-4">
+            {isLoading || (isRefetching && !isSuccess)
+              ? Array.from({ length: 4 }, (_, idx) => (
+                  <MemberCardSkeleton key={idx} />
+                ))
+              : isSuccess &&
+                data.memberships.map((member) => (
+                  <MemberCard
+                    key={member.$id}
+                    name={member.userName}
+                    avatar={member.profile.avatar?.url}
+                  />
+                ))}
+          </div>
+        </ScrollArea>
+      </CardContent>
+    </Card>
   );
 }

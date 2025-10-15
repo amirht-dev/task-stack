@@ -32,7 +32,23 @@ export const getMembersQueryOptions = ({
 
       if (!res.success) throw new Error(res.error.message);
 
-      return res.data;
+      const mappedMemberships = res.data.memberships.map((membership) => ({
+        ...membership,
+        profile: {
+          ...membership.profile,
+          avatar: membership.profile.avatar
+            ? {
+                ...membership.profile.avatar,
+                url: URL.createObjectURL(membership.profile.avatar.blob),
+              }
+            : null,
+        },
+      }));
+
+      return {
+        ...res.data,
+        memberships: mappedMemberships,
+      };
     },
   });
 };

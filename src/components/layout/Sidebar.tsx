@@ -21,12 +21,7 @@ import {
   useState,
 } from 'react';
 import { BsPlusCircleFill } from 'react-icons/bs';
-import {
-  GoHome,
-  GoHomeFill,
-  GoSidebarCollapse,
-  GoSidebarExpand,
-} from 'react-icons/go';
+import { GoSidebarCollapse, GoSidebarExpand } from 'react-icons/go';
 import { HiOutlineUser, HiUser } from 'react-icons/hi2';
 import { MdOutlineWorkspaces, MdWorkspaces } from 'react-icons/md';
 import Logo from '../Logo';
@@ -54,11 +49,6 @@ const WorkspaceFormDialog = dynamic(
 );
 
 const navigationItems = [
-  {
-    label: 'Home',
-    href: '/',
-    icon: { disactive: <GoHome />, active: <GoHomeFill /> },
-  },
   {
     label: 'Workspaces',
     href: '/workspaces',

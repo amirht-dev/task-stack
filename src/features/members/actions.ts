@@ -6,6 +6,7 @@ import { OneOrMore } from '@/types/utils';
 import { handleResponse, unwrapDiscriminatedResponse } from '@/utils/server';
 import { Transaction } from '@/utils/transaction';
 import { Models, Query } from 'node-appwrite';
+import { getUserAsAdmin } from '../auth/actions';
 import { setSessionCookie } from '../auth/utils/server';
 import {
   createProfileAction,
@@ -24,7 +25,23 @@ export async function getMembersAction(teamId: string) {
     const list = await Teams.listMemberships({
       teamId: teamId,
     });
-    return list;
+
+    const mappedMemberships = await Promise.all(
+      list.memberships.map(async (membership) => {
+        const user = await getUserAsAdmin(membership.userId);
+        return {
+          ...membership,
+          profile: {
+            avatar: user.profile.avatar,
+          },
+        };
+      })
+    );
+
+    return {
+      ...list,
+      memberships: mappedMemberships,
+    };
   });
 }
 
